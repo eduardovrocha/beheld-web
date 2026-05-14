@@ -15,7 +15,7 @@
  */
 import { useState } from "react";
 
-import { useT } from "@/i18n/I18nProvider";
+import { useI18n, useT } from "@/i18n/I18nProvider";
 import type {
   Bundle,
   BundleL1Section,
@@ -80,6 +80,23 @@ function daysAgo(iso: string | null | undefined, t: TFunc): string {
   if (days === 0) return t("common.today");
   if (days === 1) return t("common.one_day_ago");
   return t("common.days_ago", { days });
+}
+
+const LOCALE_DATE_TAG: Record<string, string> = {
+  pt: "pt-BR",
+  en: "en",
+  es: "es",
+};
+
+/** Locale-aware "14 mai 2026" / "14 May 2026" / "14 may 2026". */
+function formatCommitDate(iso: string | null | undefined, locale: string): string {
+  const d = parseIso(iso);
+  if (!d) return "—";
+  return d.toLocaleDateString(LOCALE_DATE_TAG[locale] ?? locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 const WORKFLOW_LABELS: Record<string, string> = {
@@ -432,6 +449,7 @@ function TechChip({ name, accented = false }: { name: string; accented?: boolean
 
 function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
   const t = useT();
+  const { locale } = useI18n();
   const present = l1 !== null && l1.total_repos > 0;
   return (
     <section>
@@ -451,7 +469,18 @@ function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
             value={l1.avg_test_ratio.toFixed(2)}
             valueClassName={testRatioColorClass(l1.avg_test_ratio)}
           />
-          <FactRow label={t("profile.l1.last_commit")}      descKey="profile.l1.last_commit.desc"      value={daysAgo(l1.latest_commit, t)} />
+          <FactRow
+            label={t("profile.l1.last_commit")}
+            descKey="profile.l1.last_commit.desc"
+            value={
+              <>
+                <span>{formatCommitDate(l1.latest_commit, locale)}</span>
+                <span className="ml-2 text-[11px] font-normal text-slate-500 dark:text-slate-400">
+                  · {daysAgo(l1.latest_commit, t)}
+                </span>
+              </>
+            }
+          />
 
           <div className="space-y-3 pt-2">
             <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l1.primary_ecosystems")}</div>

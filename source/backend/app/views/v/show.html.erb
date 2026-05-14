@@ -217,7 +217,7 @@
         <div class="fact-row"><span class="fact-label">Total Commits<%= fact_info["Total Commits"] %></span><span class="fact-value"><%= l1["total_commits"].to_i.to_fs(:delimited, delimiter: ",") %></span></div>
         <div class="fact-row"><span class="fact-label">Activity Window<%= fact_info["Activity Window"] %></span><span class="fact-value small"><%= format_l1_activity_window(l1) %></span></div>
         <div class="fact-row"><span class="fact-label">Average Test Ratio<%= fact_info.call("Average Test Ratio", extra: :test_ratio_scale) %></span><span class="fact-value <%= test_ratio_color_class(l1['avg_test_ratio']) %>"><%= sprintf("%.2f", l1["avg_test_ratio"].to_f) %></span></div>
-        <div class="fact-row"><span class="fact-label">Last Commit<%= fact_info["Last Commit"] %></span><span class="fact-value"><%= format_days_ago(l1["latest_commit"]) %></span></div>
+        <div class="fact-row"><span class="fact-label">Last Commit<%= fact_info["Last Commit"] %></span><span class="fact-value"><%= format_iso_date(l1["latest_commit"]) %><span class="fact-value-suffix"> · <%= format_days_ago(l1["latest_commit"]) %></span></span></div>
 
         <div class="chip-block">
           <div class="chip-label">Primary Ecosystems</div>

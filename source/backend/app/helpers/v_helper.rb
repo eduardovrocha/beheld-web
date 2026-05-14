@@ -56,6 +56,14 @@ module VHelper
     "text-accent"
   end
 
+  # Locale-aware short date — "14 mai 2026".  Used by the Last Commit
+  # row so the reader sees the actual date, not just "Nd ago".
+  def format_iso_date(iso)
+    d = parse_iso(iso)
+    return "—" unless d
+    l10n_day_month_year(d)
+  end
+
   def format_days_ago(iso)
     return "—" if iso.blank?
     dt = parse_iso(iso)
