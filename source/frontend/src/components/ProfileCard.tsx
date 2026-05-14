@@ -242,12 +242,18 @@ function InfoTooltip({
   title,
   description,
   extra,
+  align = "left",
 }: {
   title: string;
   description: string;
   extra?: React.ReactNode;
+  /** `left` (default) — tooltip extends rightward from the icon.
+   *  `right`           — tooltip extends leftward (use in right-column
+   *                      cells so it stays inside the article). */
+  align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
+  const alignClass = align === "right" ? "right-0" : "left-0";
   return (
     <span
       className="relative inline-flex"
@@ -267,7 +273,7 @@ function InfoTooltip({
       {open && (
         <span
           role="tooltip"
-          className="absolute bottom-full left-0 z-20 mb-2 flex w-[20rem] max-w-[80vw] flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+          className={`absolute bottom-full ${alignClass} z-20 mb-2 flex w-[20rem] max-w-[80vw] flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800`}
         >
           <span className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
             <InfoIcon size={14} />
@@ -323,16 +329,18 @@ function StatLabel({
   label,
   titleKey,
   descKey,
+  align,
 }: {
   label: string;
   titleKey: string;
   descKey: string;
+  align?: "left" | "right";
 }) {
   const t = useT();
   return (
     <div className="mb-4 flex items-center gap-1.5">
       <span className="font-mono text-[10px] uppercase text-slate-500">{label}</span>
-      <InfoTooltip title={t(titleKey)} description={t(descKey)} />
+      <InfoTooltip title={t(titleKey)} description={t(descKey)} align={align} />
     </div>
   );
 }
@@ -344,6 +352,7 @@ function StatCell({
   value,
   withBar = true,
   accent = false,
+  tooltipAlign,
 }: {
   label: string;
   titleKey: string;
@@ -351,11 +360,12 @@ function StatCell({
   value: number;
   withBar?: boolean;
   accent?: boolean;
+  tooltipAlign?: "left" | "right";
 }) {
   const fill = accent ? FILL_ACCENT : FILL_CLASSES[scoreBucket(value)];
   return (
     <div className="border-b border-slate-200 p-6 last:border-r-0 dark:border-slate-800 md:border-b-0 md:border-r">
-      <StatLabel label={label} titleKey={titleKey} descKey={descKey} />
+      <StatLabel label={label} titleKey={titleKey} descKey={descKey} align={tooltipAlign} />
       <div className="font-mono text-xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{value}</div>
       {withBar && (
         <div
@@ -387,19 +397,17 @@ function FactRow({
   valueClassName,
   descKey,
   tooltipExtra,
+  tooltipAlign,
 }: {
   label: string;
   value: React.ReactNode;
-  /** Shorthand for the emerald-accent value color. */
   accent?: boolean;
-  /** Explicit color class for the value; wins over `accent` when set. */
   valueClassName?: string;
-  /** When set, an ⓘ button is rendered next to the label whose tooltip
-   *  carries this description (resolved via i18n). */
   descKey?: string;
-  /** Optional rich content appended to the tooltip body (e.g. a scale
-   *  legend for Average Test Ratio). */
   tooltipExtra?: React.ReactNode;
+  /** Passed through to <InfoTooltip>. Use "right" in right-column cells
+   *  (L2) so the tooltip extends leftward instead of overflowing. */
+  tooltipAlign?: "left" | "right";
 }) {
   const t = useT();
   const colorClass = valueClassName
@@ -408,7 +416,14 @@ function FactRow({
     <div className="flex items-end justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
       <span className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
         {label}
-        {descKey && <InfoTooltip title={label} description={t(descKey)} extra={tooltipExtra} />}
+        {descKey && (
+          <InfoTooltip
+            title={label}
+            description={t(descKey)}
+            extra={tooltipExtra}
+            align={tooltipAlign}
+          />
+        )}
       </span>
       <span className={`font-mono font-bold ${colorClass}`}>{value}</span>
     </div>
@@ -528,18 +543,18 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
         <div className="space-y-3">
           <FactRow
             label={t("profile.l2.sessions_analyzed")}
-            descKey="profile.l2.sessions_analyzed.desc"
+            tooltipAlign="right" descKey="profile.l2.sessions_analyzed.desc"
             value={l2.sessions_analyzed}
           />
           <FactRow
             label={t("profile.l2.period")}
-            descKey="profile.l2.period.desc"
+            tooltipAlign="right" descKey="profile.l2.period.desc"
             value={<span className="text-sm">{t("common.period_days", { days: l2.period_days })}</span>}
           />
           {l2.workflow_metrics?.test_after_ratio !== undefined && (
             <FactRow
               label={t("profile.l2.test_after_ratio")}
-              descKey="profile.l2.test_after_ratio.desc"
+              tooltipAlign="right" descKey="profile.l2.test_after_ratio.desc"
               value={l2.workflow_metrics.test_after_ratio.toFixed(2)}
               accent
             />
@@ -547,21 +562,21 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
           {l2.workflow_metrics?.bash_to_read_ratio !== undefined && (
             <FactRow
               label={t("profile.l2.bash_to_read")}
-              descKey="profile.l2.bash_to_read.desc"
+              tooltipAlign="right" descKey="profile.l2.bash_to_read.desc"
               value={`${l2.workflow_metrics.bash_to_read_ratio.toFixed(2)}×`}
             />
           )}
           {l2.workflow_metrics?.session_avg_duration_min !== undefined && (
             <FactRow
               label={t("profile.l2.avg_session_duration")}
-              descKey="profile.l2.avg_session_duration.desc"
+              tooltipAlign="right" descKey="profile.l2.avg_session_duration.desc"
               value={t("common.duration_min", { min: Math.round(l2.workflow_metrics.session_avg_duration_min) })}
             />
           )}
           {l2.workflow_metrics?.tool_variety_avg !== undefined && (
             <FactRow
               label={t("profile.l2.tool_variety")}
-              descKey="profile.l2.tool_variety.desc"
+              tooltipAlign="right" descKey="profile.l2.tool_variety.desc"
               value={l2.workflow_metrics.tool_variety_avg.toFixed(1)}
             />
           )}
@@ -727,7 +742,7 @@ function ProofFooter({
   // Footer shares the card's surface palette — same hierarchy as the header
   // and the L1 / L2 panels, just one tone darker to mark a section break.
   return (
-    <footer className="border-t border-slate-200 bg-slate-50/80 p-6 font-mono text-slate-900 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-100">
+    <footer className="rounded-b-2xl border-t border-slate-200 bg-slate-50/80 p-6 font-mono text-slate-900 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-100">
       <div className="mb-4 flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
           {t("profile.proof.title", { version: (bundle as unknown as { version?: string }).version ?? "?" })}
@@ -782,9 +797,12 @@ export function ProfileCard({ bundle, result, verifying, shortId, banner }: Prop
   return (
     <>
       {banner}
-      <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+      {/* Note: NO `overflow-hidden` here — tooltips need to escape the article
+          bounds. Inner children round their top / bottom corners explicitly
+          to preserve the original visual frame. */}
+      <article className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
         {/* ── header ──────────────────────────────────────────────────────── */}
-        <header className="border-b border-slate-200 bg-slate-50/80 p-8 dark:border-slate-800 dark:bg-slate-900/60">
+        <header className="rounded-t-2xl border-b border-slate-200 bg-slate-50/80 p-8 dark:border-slate-800 dark:bg-slate-900/60">
           <div className="flex items-start justify-between gap-6">
             <div className="flex items-center gap-6">
               <Avatar short={opaqueId} />
@@ -806,8 +824,8 @@ export function ProfileCard({ bundle, result, verifying, shortId, banner }: Prop
           <StatCell label={t("profile.stats.prompt")}   titleKey="profile.stats.prompt.title"   descKey="profile.stats.prompt.desc"   value={scores.prompt_quality} />
           <StatCell label={t("profile.stats.test")}     titleKey="profile.stats.test.title"     descKey="profile.stats.test.desc"     value={scores.test_maturity} />
           <StatCell label={t("profile.stats.breadth")}  titleKey="profile.stats.breadth.title"  descKey="profile.stats.breadth.desc"  value={scores.tech_breadth} />
-          <StatCell label={t("profile.stats.growth")}   titleKey="profile.stats.growth.title"   descKey="profile.stats.growth.desc"   value={scores.growth_rate} accent />
-          <StatCell label={t("profile.stats.sessions")} titleKey="profile.stats.sessions.title" descKey="profile.stats.sessions.desc" value={l2?.sessions_analyzed ?? 0} withBar={false} />
+          <StatCell label={t("profile.stats.growth")}   titleKey="profile.stats.growth.title"   descKey="profile.stats.growth.desc"   value={scores.growth_rate} accent tooltipAlign="right" />
+          <StatCell label={t("profile.stats.sessions")} titleKey="profile.stats.sessions.title" descKey="profile.stats.sessions.desc" value={l2?.sessions_analyzed ?? 0} withBar={false} tooltipAlign="right" />
         </div>
 
         {/* ── trend placeholder (chain not available client-side) ─────────── */}

@@ -205,11 +205,12 @@
           <span class="tip-scale-row good"><span class="tip-scale-bar"></span><span class="tip-scale-range">0.25 – 0.50</span><span class="tip-scale-label">bom</span></span>
           <span class="tip-scale-row excellent"><span class="tip-scale-bar"></span><span class="tip-scale-range">&gt; 0.50</span><span class="tip-scale-label">excelente</span></span>
         HTML
-        fact_info = ->(label, extra: nil) {
+        fact_info = ->(label, extra: nil, align: :left) {
           desc = fact_descs[label]
           return "" unless desc
           extras_html = extra == :test_ratio_scale ? scale_html : ""
-          %(<span class="stat-info" tabindex="0" aria-label="#{label} — #{desc}">#{info_svg}<span class="stat-tip" role="tooltip"><span class="stat-tip-head">#{info_svg}#{label}</span><span class="stat-tip-desc">#{desc}</span>#{extras_html}</span></span>).html_safe
+          align_class = align == :right ? " align-right" : ""
+          %(<span class="stat-info#{align_class}" tabindex="0" aria-label="#{label} — #{desc}">#{info_svg}<span class="stat-tip" role="tooltip"><span class="stat-tip-head">#{info_svg}#{label}</span><span class="stat-tip-desc">#{desc}</span>#{extras_html}</span></span>).html_safe
         }
       %>
       <% if l1_present?(l1) %>
@@ -257,20 +258,20 @@
         <span>L2: <strong>Agentic Workflow Metrics</strong></span>
       </h3>
       <% if l2_present?(l2) %>
-        <div class="fact-row"><span class="fact-label">Sessions Analyzed<%= fact_info["Sessions Analyzed"] %></span><span class="fact-value"><%= l2["sessions_analyzed"].to_i %></span></div>
-        <div class="fact-row"><span class="fact-label">Period<%= fact_info["Period"] %></span><span class="fact-value small"><%= l2["period_days"].to_i %> days</span></div>
+        <div class="fact-row"><span class="fact-label">Sessions Analyzed<%= fact_info.call("Sessions Analyzed", align: :right) %></span><span class="fact-value"><%= l2["sessions_analyzed"].to_i %></span></div>
+        <div class="fact-row"><span class="fact-label">Period<%= fact_info.call("Period", align: :right) %></span><span class="fact-value small"><%= l2["period_days"].to_i %> days</span></div>
         <% wm = l2["workflow_metrics"] || {} %>
         <% if wm["test_after_ratio"] %>
-          <div class="fact-row"><span class="fact-label">Test-after Ratio<%= fact_info["Test-after Ratio"] %></span><span class="fact-value text-accent"><%= sprintf("%.2f", wm["test_after_ratio"].to_f) %></span></div>
+          <div class="fact-row"><span class="fact-label">Test-after Ratio<%= fact_info.call("Test-after Ratio", align: :right) %></span><span class="fact-value text-accent"><%= sprintf("%.2f", wm["test_after_ratio"].to_f) %></span></div>
         <% end %>
         <% if wm["bash_to_read_ratio"] %>
-          <div class="fact-row"><span class="fact-label">Bash → Read<%= fact_info["Bash → Read"] %></span><span class="fact-value"><%= sprintf("%.2f", wm["bash_to_read_ratio"].to_f) %>×</span></div>
+          <div class="fact-row"><span class="fact-label">Bash → Read<%= fact_info.call("Bash → Read", align: :right) %></span><span class="fact-value"><%= sprintf("%.2f", wm["bash_to_read_ratio"].to_f) %>×</span></div>
         <% end %>
         <% if wm["session_avg_duration_min"] %>
-          <div class="fact-row"><span class="fact-label">Avg Session Duration<%= fact_info["Avg Session Duration"] %></span><span class="fact-value"><%= wm["session_avg_duration_min"].to_f.round %> min</span></div>
+          <div class="fact-row"><span class="fact-label">Avg Session Duration<%= fact_info.call("Avg Session Duration", align: :right) %></span><span class="fact-value"><%= wm["session_avg_duration_min"].to_f.round %> min</span></div>
         <% end %>
         <% if wm["tool_variety_avg"] %>
-          <div class="fact-row"><span class="fact-label">Tool Variety (avg)<%= fact_info["Tool Variety (avg)"] %></span><span class="fact-value"><%= sprintf("%.1f", wm["tool_variety_avg"].to_f) %></span></div>
+          <div class="fact-row"><span class="fact-label">Tool Variety (avg)<%= fact_info.call("Tool Variety (avg)", align: :right) %></span><span class="fact-value"><%= sprintf("%.1f", wm["tool_variety_avg"].to_f) %></span></div>
         <% end %>
 
         <% if l2["workflow_distribution"].present? %>

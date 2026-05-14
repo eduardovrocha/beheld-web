@@ -169,11 +169,13 @@
     :root:not([data-theme])   .theme-toggle .label-auto  { display: inline; }
 
     /* ── article shell ─────────────────────────────────────────────────────── */
+    /* No `overflow: hidden` — tooltips need to escape the article bounds.
+       Inner children (header + proof footer) round their own corners to
+       preserve the rounded-card visual frame. */
     article.profile {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      overflow: hidden;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
 
@@ -181,6 +183,8 @@
     header.profile-head {
       background: color-mix(in srgb, var(--surface-muted) 60%, transparent);
       border-bottom: 1px solid var(--border);
+      border-top-left-radius: var(--radius);
+      border-top-right-radius: var(--radius);
       padding: 32px;
       display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
     }
@@ -276,6 +280,10 @@
       letter-spacing: normal;
       pointer-events: none;
     }
+    /* Right-aligned variant for tooltips that sit in the right column
+       (L2 panel) or rightmost stats cell — extends leftward so it
+       doesn't overflow the article width. */
+    .stat-info.align-right .stat-tip { left: auto; right: 0; }
     .stat-info:hover .stat-tip,
     .stat-info:focus .stat-tip,
     .stat-info:focus-within .stat-tip { display: flex; }
@@ -434,6 +442,8 @@
       background: color-mix(in srgb, var(--surface-muted) 60%, transparent);
       color: var(--foreground);
       border-top: 1px solid var(--border);
+      border-bottom-left-radius: var(--radius);
+      border-bottom-right-radius: var(--radius);
       padding: 24px;
       font-family: var(--font-mono);
     }
