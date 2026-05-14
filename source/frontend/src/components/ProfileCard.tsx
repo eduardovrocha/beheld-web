@@ -475,7 +475,7 @@ function ProofChip({
         <div
           id={`proof-tip-${field}`}
           role="tooltip"
-          className="absolute left-0 top-full z-20 mt-2 w-[20rem] max-w-[90vw] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+          className="absolute bottom-full left-0 z-20 mb-2 w-[20rem] max-w-[90vw] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
         >
           <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
             <ProofFieldIcon field={field} />

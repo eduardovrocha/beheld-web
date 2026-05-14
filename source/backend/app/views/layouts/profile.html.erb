@@ -387,11 +387,11 @@
     .proof-chip:hover .proof-chip-label,
     .proof-chip:focus .proof-chip-label { color: var(--foreground); }
 
-    /* Tooltip card — same shape as the reference mock (icon + accent
-       label, value, muted description). */
+    /* Tooltip card — opens UPWARD (above the chip).  Same shape as the
+       reference mock (icon + accent label, value, muted description). */
     .proof-tip {
       position: absolute;
-      left: 0; top: calc(100% + 8px);
+      left: 0; bottom: calc(100% + 8px);
       z-index: 20;
       width: 20rem; max-width: 90vw;
       display: none;
@@ -401,7 +401,7 @@
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.08);
       pointer-events: none;
     }
     .proof-chip:hover .proof-tip,
