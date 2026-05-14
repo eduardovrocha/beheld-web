@@ -1,20 +1,37 @@
-# Public-facing endpoints for verified profile snapshots (Phase 5 / F5.5).
+# Public-facing endpoints for verified profile snapshots
+# (Phase 5 / F5.5; Phase 6 / Obj 2 — server-rendered HTML).
 #
 # GET /v/:id
-#   Returns the full .dpbundle JSON. Consumers (browser frontends, the CLI's
-#   `devprofile verify`) re-verify locally — server is just a content host.
+#   HTML (default): full profile page rendered server-side.  Scores, L1 and L2
+#                   sections are visible without JavaScript; the Ed25519
+#                   verification runs progressively via inline JS.
+#   JSON (Accept):  the full .dpbundle JSON (kept for backward compat with the
+#                   Vite SPA + CLI verify flow).
 #
 # GET /v/:id/badge.svg
-#   Renders a shields.io-style SVG with the overall score. Embeddable in
-#   READMEs, LinkedIn, etc.
+#   shields.io-style SVG badge.  Three color buckets (≥75 green, 50–74 yellow,
+#   <50 red).  Supports `?style=flat|for-the-badge` and `?label=...`.
 #
 # GET /v/:id/summary
 #   Lightweight JSON view (scores + signals + metadata) without proof fields —
 #   for casual rendering / OpenGraph previews.
 
-class VController < ApplicationController
+class VController < ActionController::Base
+  helper VHelper
+
+  # No CSRF for these public GET endpoints — there's no mutable state and no
+  # cookies.  `with: :null_session` keeps Rails happy without enabling session
+  # storage.
+  protect_from_forgery with: :null_session
+
+  layout "profile", only: [:show_html]
+
   def show
-    render json: bundle_for_id.payload
+    @bundle = bundle_for_id
+    respond_to do |format|
+      format.html { render :show, layout: "profile" }
+      format.json { render json: @bundle.payload }
+    end
   end
 
   def summary
@@ -24,52 +41,100 @@ class VController < ApplicationController
   def badge
     b = bundle_for_id
     score = b.payload.dig("payload", "scores", "overall").to_i
+    style = (params[:style].presence || "flat").to_s
+    label = params[:label].presence&.to_s || "devprofile"
     response.headers["Cache-Control"] = "public, max-age=300"
-    response.headers["Content-Type"] = "image/svg+xml"
-    render plain: build_badge_svg(score: score)
+    response.headers["Content-Type"]  = "image/svg+xml; charset=utf-8"
+    render plain: build_badge_svg(score: score, style: style, label: label)
   end
 
   private
 
+  # Public lookup intentionally returns expired bundles too — the view shows a
+  # warning banner and the content stays visible "para referência histórica"
+  # (Phase 6 / Obj 2). 404 is reserved for non-existent short_ids.
   def bundle_for_id
-    Bundle.live.find_by!(short_id: params[:id])
+    Bundle.find_by!(short_id: params[:id])
   rescue ActiveRecord::RecordNotFound
-    raise ActionController::RoutingError, "bundle not found or expired"
+    raise ActionController::RoutingError, "bundle not found"
   end
 
-  def build_badge_svg(score:)
-    color = score_color(score)
-    label = "devprofile"
-    value = "#{score}/100"
+  # ── badge SVG ──────────────────────────────────────────────────────────────
 
-    <<~SVG
-      <svg xmlns="http://www.w3.org/2000/svg" width="160" height="20" role="img" aria-label="#{label}: #{value}">
+  ALLOWED_STYLES = %w[flat for-the-badge].freeze
+
+  def build_badge_svg(score:, style:, label:)
+    style = "flat" unless ALLOWED_STYLES.include?(style)
+    color = score_hex(score)
+    value = "verified #{score}"
+
+    if style == "for-the-badge"
+      build_badge_for_the_badge(label: label, value: value, color: color)
+    else
+      build_badge_flat(label: label, value: value, color: color)
+    end
+  end
+
+  def score_hex(score)
+    case score
+    when 75..100 then "22c55e"
+    when 50..74  then "eab308"
+    else              "ef4444"
+    end
+  end
+
+  def text_width(text, char_px:)
+    # Crude approximation — Verdana 11px averages ~6.5px per char + 16px padding.
+    (text.length * char_px + 16).round
+  end
+
+  def build_badge_flat(label:, value:, color:)
+    label_w = text_width(label, char_px: 6.5)
+    value_w = text_width(value, char_px: 6.5)
+    total_w = label_w + value_w
+    label_center = label_w / 2
+    value_center = label_w + value_w / 2
+
+    <<~SVG.strip
+      <svg xmlns="http://www.w3.org/2000/svg" width="#{total_w}" height="20" role="img" aria-label="#{label}: #{value}">
         <linearGradient id="s" x2="0" y2="100%">
           <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
           <stop offset="1" stop-opacity=".1"/>
         </linearGradient>
-        <mask id="m"><rect width="160" height="20" rx="3" fill="#fff"/></mask>
+        <mask id="m"><rect width="#{total_w}" height="20" rx="3" fill="#fff"/></mask>
         <g mask="url(#m)">
-          <rect width="90" height="20" fill="#555"/>
-          <rect x="90" width="70" height="20" fill="##{color}"/>
-          <rect width="160" height="20" fill="url(#s)"/>
+          <rect width="#{label_w}" height="20" fill="#555"/>
+          <rect x="#{label_w}" width="#{value_w}" height="20" fill="##{color}"/>
+          <rect width="#{total_w}" height="20" fill="url(#s)"/>
         </g>
         <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">
-          <text x="45" y="14">#{label}</text>
-          <text x="125" y="14">#{value}</text>
+          <text x="#{label_center}" y="14">#{label}</text>
+          <text x="#{value_center}" y="14">#{value}</text>
         </g>
       </svg>
     SVG
   end
 
-  # 3-bucket thresholds per F6 portal spec.
-  # Returned as the bare hex (no leading "#") since `build_badge_svg`
-  # already prepends "#" when emitting the SVG.
-  def score_color(score)
-    case score
-    when 75..  then "22c55e" # green   — score ≥ 75
-    when 50..74 then "eab308" # yellow  — score 50–74
-    else            "ef4444" # red     — score < 50
-    end
+  def build_badge_for_the_badge(label:, value:, color:)
+    label_u = label.upcase
+    value_u = value.upcase
+    label_w = text_width(label_u, char_px: 8)
+    value_w = text_width(value_u, char_px: 8)
+    total_w = label_w + value_w
+    label_center = label_w / 2
+    value_center = label_w + value_w / 2
+
+    <<~SVG.strip
+      <svg xmlns="http://www.w3.org/2000/svg" width="#{total_w}" height="28" role="img" aria-label="#{label}: #{value}">
+        <g>
+          <rect width="#{label_w}" height="28" fill="#555"/>
+          <rect x="#{label_w}" width="#{value_w}" height="28" fill="##{color}"/>
+        </g>
+        <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11" font-weight="bold">
+          <text x="#{label_center}" y="18">#{label_u}</text>
+          <text x="#{value_center}" y="18">#{value_u}</text>
+        </g>
+      </svg>
+    SVG
   end
 end

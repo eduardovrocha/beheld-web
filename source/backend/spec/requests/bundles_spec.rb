@@ -152,31 +152,43 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
   # ── GET /v/:id ─────────────────────────────────────────────────────────────
 
   describe "GET /v/:id" do
-    it "devolve payload v1 contendo signals" do
+    it "devolve payload v1 contendo signals (JSON via Accept header)" do
       b = Bundle.create!(
         bundle_hash: "sha256:" + ("6" * 64),
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(v1_inner, hash_seed: "6"),
       )
-      get "/v/#{b.short_id}"
+      get "/v/#{b.short_id}", headers: { "Accept" => "application/json" }
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
       expect(body.dig("payload", "signals")).to be_a(Hash)
       expect(body.dig("payload", "l1")).to be_nil
     end
 
-    it "devolve payload v2 contendo l1 e l2 separados" do
+    it "devolve payload v2 contendo l1 e l2 separados (JSON via Accept header)" do
       b = Bundle.create!(
         bundle_hash: "sha256:" + ("7" * 64),
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(v2_inner, hash_seed: "7"),
       )
-      get "/v/#{b.short_id}"
+      get "/v/#{b.short_id}", headers: { "Accept" => "application/json" }
       expect(response).to have_http_status(:ok)
       body = JSON.parse(response.body)
       expect(body.dig("payload", "l1")).to be_a(Hash)
       expect(body.dig("payload", "l2")).to be_a(Hash)
       expect(body.dig("payload", "signals")).to be_nil
+    end
+
+    it "renderiza HTML por padrão (Phase 6 / Obj 2 — SSR sem JS obrigatório)" do
+      b = Bundle.create!(
+        bundle_hash: "sha256:" + ("0123456789abcdef" * 4),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(v2_inner, hash_seed: "f"),
+      )
+      get "/v/#{b.short_id}"
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to start_with("text/html")
+      expect(response.body).to include("BASE HISTÓRICA")
     end
 
     it "rotula schema_version no /v/:id/summary para v1" do

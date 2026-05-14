@@ -44,6 +44,10 @@ group :development, :test do
 
   # RSpec for model + request specs (Phase 6 / F6 retrocompat coverage).
   gem "rspec-rails", "~> 7.0"
+
+  # System-level specs for the public profile page (Phase 6 / Objetivo 2).
+  # Uses the :rack_test driver — pure HTML assertions, no real browser needed.
+  gem "capybara", "~> 3.40"
 end
 
 

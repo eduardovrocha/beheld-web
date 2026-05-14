@@ -1,0 +1,235 @@
+<%#
+  Public profile page (Phase 5 / F5.5 + Phase 6 / Objetivo 2).
+
+  Server-rendered HTML — scores, L1 and L2 sections are visible without
+  JavaScript. The verification status block is updated progressively by
+  inline JS that re-verifies the Ed25519 signature in the browser.
+
+  Privacy: NEVER renders root_commit_hashes as a list, repo names, paths,
+  branch names, or any free-text from the bundle.
+%>
+<% inner    = @bundle.payload["payload"] || {} %>
+<% scores   = inner["scores"] || {} %>
+<% l1       = inner["l1"] || {} %>
+<% l2       = inner["l2"] || inner["signals"] || {} %>
+<% is_v2    = @bundle.schema_version == "v2" %>
+
+<% if bundle_expired?(@bundle) %>
+  <div class="banner banner-warn" role="alert">
+    ⚠ Este perfil expirou em <strong><%= format_expiration_date(@bundle) %></strong>.
+    Os dados abaixo são apenas para referência histórica.
+  </div>
+<% end %>
+
+<h1>Perfil verificado · score
+  <span class="<%= score_text_class(scores["overall"].to_i) %>">
+    <%= scores["overall"].to_i %>/100
+  </span>
+</h1>
+<div class="subtitle">
+  Gerado em <%= format_created_at_long(inner["created_at"]) %> ·
+  devprofile v<%= inner["devprofile_version"] %>
+</div>
+
+<%# ── SCORE OVERALL — destaque visual ──────────────────────────────────── %>
+<section class="card overall" aria-labelledby="overall-label">
+  <div class="label" id="overall-label">SCORE GERAL</div>
+  <div>
+    <span class="value <%= score_text_class(scores["overall"].to_i) %>"><%= scores["overall"].to_i %></span>
+    <span class="of">/ 100</span>
+  </div>
+  <div class="bar" role="img" aria-label="score overall <%= scores["overall"].to_i %> de 100">
+    <div class="fill fill-<%= score_bucket(scores["overall"].to_i) %>" style="width: <%= scores["overall"].to_i %>%;"></div>
+  </div>
+</section>
+
+<%# ── 4 dimensões ──────────────────────────────────────────────────────── %>
+<section class="card" aria-labelledby="dim-label">
+  <h2 id="dim-label">Dimensões</h2>
+  <div class="scores-divider"></div>
+  <% [
+    ["Prompt Quality", scores["prompt_quality"].to_i],
+    ["Test Maturity",  scores["test_maturity"].to_i],
+    ["Tech Breadth",   scores["tech_breadth"].to_i],
+    ["Growth Rate",    scores["growth_rate"].to_i],
+  ].each do |label, value| %>
+    <div class="score-row">
+      <span class="name"><%= label %></span>
+      <div class="bar" role="img" aria-label="<%= label %> <%= value %> de 100">
+        <div class="fill fill-<%= score_bucket(value) %>" style="width: <%= value %>%;"></div>
+      </div>
+      <span class="num"><%= value %></span>
+    </div>
+  <% end %>
+</section>
+
+<%# ── L1 — base histórica (apenas v2) ──────────────────────────────────── %>
+<% if is_v2 %>
+  <section class="card" aria-labelledby="l1-label">
+    <h2 id="l1-label">BASE HISTÓRICA <span style="text-transform: none; color: #475569;">· Git Bootstrap</span></h2>
+    <% if l1_present?(l1) %>
+      <p class="section-headline">
+        <strong><%= l1["total_repos"] %> repositórios</strong>
+        · <%= l1["total_commits"].to_i.to_fs(:delimited, delimiter: ".") %> commits
+        <span class="meta">· <%= format_l1_period(l1) %></span>
+      </p>
+      <dl class="facts">
+        <dt>Ecosystems</dt><dd><%= join_true_keys(l1["ecosystems"]) %></dd>
+        <dt>Plataformas</dt><dd><%= join_true_keys(l1["platforms"]) %></dd>
+        <dt>Maturidade</dt>
+        <dd><%= (l1["avg_test_ratio"].to_f * 100).round %>% arquivos de teste</dd>
+      </dl>
+    <% else %>
+      <p class="empty-note">Não disponível — o dev ainda não realizou o Git Bootstrap.</p>
+    <% end %>
+  </section>
+<% end %>
+
+<%# ── L2 / signals — trajetória observada ──────────────────────────────── %>
+<section class="card" aria-labelledby="l2-label">
+  <h2 id="l2-label">
+    <% if is_v2 %>TRAJETÓRIA OBSERVADA <span style="text-transform: none; color: #475569;">· Claude Code</span>
+    <% else %>SINAIS DE SESSÃO<% end %>
+  </h2>
+  <p class="section-headline">
+    <strong><%= l2["sessions_analyzed"].to_i %> sessões</strong>
+    · <%= l2["period_days"].to_i %> dias
+  </p>
+  <dl class="facts">
+    <% if l2["workflow_distribution"].present? %>
+      <dt>Workflow</dt>
+      <dd><%= format_workflow_distribution(l2["workflow_distribution"]) %></dd>
+    <% end %>
+    <dt>Ecosystems</dt>
+    <dd><%= join_top_keys_by_value(l2["ecosystems"]) %></dd>
+    <dt>Plataformas</dt>
+    <dd><%= join_top_keys_by_value(l2["platforms"]) %></dd>
+  </dl>
+</section>
+
+<%# ── Verificação criptográfica (progressiva via JS) ───────────────────── %>
+<section class="card" id="verification" aria-labelledby="verif-label">
+  <h2 id="verif-label">🔐 Verificação de autenticidade</h2>
+
+  <%# Initial state — replaced by JS once verification finishes. %>
+  <div id="verif-rows" data-initial="true">
+    <div class="row pending" data-check="loading">
+      <span class="mark">⏳</span>
+      <span>Verificando autenticidade…</span>
+    </div>
+  </div>
+
+  <div class="pubkey">
+    <span>Chave pública:</span>
+    <code id="pubkey-trunc"><%= truncate_pubkey(@bundle.public_key) %></code>
+    <button type="button" id="copy-pubkey" data-clipboard="<%= @bundle.public_key %>">copiar</button>
+  </div>
+</section>
+
+<%# Bundle JSON inlined for the verification script — saves an extra HTTP round-trip. %>
+<script type="application/json" id="bundle-data"><%= raw @bundle.payload.to_json %></script>
+
+<%= javascript_tag nonce: true do %>
+  (function() {
+    const dataEl = document.getElementById('bundle-data');
+    if (!dataEl) return;
+    let bundle;
+    try { bundle = JSON.parse(dataEl.textContent); } catch (_) { return; }
+
+    const rows = document.getElementById('verif-rows');
+    const set = (states) => {
+      rows.dataset.initial = "false";
+      rows.innerHTML = states.map(s =>
+        `<div class="row ${s.kind}" data-check="${s.key}"><span class="mark">${s.mark}</span><span>${s.text}</span></div>`
+      ).join('');
+    };
+
+    // ── copy-to-clipboard (pubkey button) ──────────────────────────────────
+    const copyBtn = document.getElementById('copy-pubkey');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        const value = copyBtn.dataset.clipboard;
+        try {
+          await navigator.clipboard.writeText(value);
+          const orig = copyBtn.textContent;
+          copyBtn.textContent = '✓ copiado';
+          setTimeout(() => { copyBtn.textContent = orig; }, 1500);
+        } catch (_) {
+          /* permission denied or insecure context — leave button untouched */
+        }
+      });
+    }
+
+    if (!window.isSecureContext || !window.crypto || !window.crypto.subtle) {
+      set([{ kind: 'warn', mark: '⚠', key: 'no-subtle', text: 'Verificação requer HTTPS' }]);
+      return;
+    }
+
+    // ── canonical JSON (sort keys at every depth) ──────────────────────────
+    function sortDeep(v) {
+      if (v === null || typeof v !== 'object') return v;
+      if (Array.isArray(v)) return v.map(sortDeep);
+      const out = {};
+      for (const k of Object.keys(v).sort()) out[k] = sortDeep(v[k]);
+      return out;
+    }
+    const enc = new TextEncoder();
+    const toHex = (buf) => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    async function verify() {
+      // 1. recompute hash
+      const canonical = enc.encode(JSON.stringify(sortDeep(bundle.payload)));
+      const digest = await crypto.subtle.digest('SHA-256', canonical);
+      const hashOk = ('sha256:' + toHex(digest)) === bundle.hash;
+
+      if (!hashOk) {
+        set([
+          { kind: 'bad', mark: '✗', key: 'hash', text: 'Hash do payload divergente — bundle adulterado' },
+        ]);
+        return;
+      }
+
+      // 2. verify Ed25519 signature
+      const x = bundle.public_key.replace(/^ed25519:/, '');
+      const sigHex = bundle.signature.replace(/^ed25519:/, '');
+      const sigBytes = Uint8Array.from((sigHex.match(/.{2}/g) || []).map(b => parseInt(b, 16)));
+
+      let sigOk = false;
+      try {
+        const key = await crypto.subtle.importKey(
+          'jwk',
+          { kty: 'OKP', crv: 'Ed25519', x: x },
+          { name: 'Ed25519' },
+          false,
+          ['verify']
+        );
+        sigOk = await crypto.subtle.verify({ name: 'Ed25519' }, key, sigBytes, canonical);
+      } catch (e) {
+        sigOk = false;
+      }
+
+      const createdAt = (bundle.payload || {}).created_at;
+      let created = '—';
+      if (createdAt) {
+        const d = new Date(createdAt);
+        created = d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) +
+                  ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      if (sigOk) {
+        set([
+          { kind: 'ok', mark: '✓', key: 'signature', text: 'Assinatura Ed25519 válida' },
+          { kind: 'ok', mark: '✓', key: 'hash', text: 'Hash do payload íntegro' },
+          { kind: 'ok', mark: '✓', key: 'created', text: 'Gerado em ' + created },
+        ]);
+      } else {
+        set([
+          { kind: 'bad', mark: '✗', key: 'signature', text: 'Assinatura inválida' },
+          { kind: 'bad', mark: '✗', key: 'tampered', text: 'Este bundle pode ter sido adulterado' },
+        ]);
+      }
+    }
+
+    verify();
+  })();
+<% end %>
