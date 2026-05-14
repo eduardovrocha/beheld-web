@@ -400,7 +400,45 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
   );
 }
 
-function ProofRow({ field, value, copyable = false }: { field: string; value: string; copyable?: boolean }) {
+function CopyIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+    </svg>
+  );
+}
+
+function CheckIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+/** Compact proof chip — label + icon-only copy button, no value shown. */
+function ProofChip({ field, value }: { field: string; value: string }) {
   const t = useT();
   const [copied, setCopied] = useState(false);
   const onCopy = async () => {
@@ -410,21 +448,25 @@ function ProofRow({ field, value, copyable = false }: { field: string; value: st
       setTimeout(() => setCopied(false), 1500);
     } catch (_) {}
   };
+  const label = copied ? t("profile.proof.copied_aria", { field }) : t("profile.proof.copy_aria", { field });
   return (
-    <div className="flex gap-4 text-[11px] leading-relaxed">
-      <span className="w-16 shrink-0 text-slate-500">{field}</span>
-      <span className="break-all text-slate-700 dark:text-slate-300">
-        {value}
-        {copyable && (
-          <button
-            type="button"
-            onClick={onCopy}
-            className="ml-2 rounded border border-slate-300 px-2 py-0.5 font-mono text-[10px] text-slate-500 hover:bg-slate-200/50 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
-          >
-            {copied ? t("profile.proof.copied") : t("profile.proof.copy")}
-          </button>
-        )}
+    <div className="inline-flex items-center gap-2">
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">
+        {field}
       </span>
+      <button
+        type="button"
+        onClick={onCopy}
+        aria-label={label}
+        title={label}
+        className={`inline-flex size-7 items-center justify-center rounded border transition-colors ${
+          copied
+            ? "border-emerald-500/40 text-emerald-600 dark:border-emerald-400/40 dark:text-emerald-400"
+            : "border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-200/50 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
+        }`}
+      >
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </button>
     </div>
   );
 }
@@ -465,14 +507,21 @@ function ProofFooter({
         </span>
         <span className={`text-[10px] font-bold ${bad ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>{status}</span>
       </div>
-      <div className="space-y-2">
-        <ProofRow field="SHA256"  value={(bundle as unknown as { hash: string }).hash} />
-        <ProofRow field="ED25519" value={(bundle as unknown as { signature: string }).signature} />
-        <ProofRow field="PUB_KEY" value={(bundle as unknown as { public_key: string }).public_key} copyable />
-        <ProofRow
-          field="ISSUED"
-          value={`${formatIsoZ(inner.created_at)} · devprofile ${inner.devprofile_version}`}
-        />
+
+      {/* SHA256 / ED25519 / PUB_KEY — labels + copy-only buttons, values
+          stay hidden but are copied to the clipboard on click. */}
+      <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <ProofChip field="SHA256"  value={(bundle as unknown as { hash: string }).hash} />
+        <ProofChip field="ED25519" value={(bundle as unknown as { signature: string }).signature} />
+        <ProofChip field="PUB_KEY" value={(bundle as unknown as { public_key: string }).public_key} />
+      </div>
+
+      {/* ISSUED — informational, value always visible. */}
+      <div className="flex gap-4 text-[11px] leading-relaxed">
+        <span className="w-16 shrink-0 text-slate-500">ISSUED</span>
+        <span className="break-all text-slate-700 dark:text-slate-300">
+          {formatIsoZ(inner.created_at)} · devprofile {inner.devprofile_version}
+        </span>
       </div>
     </footer>
   );

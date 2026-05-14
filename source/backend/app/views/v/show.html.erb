@@ -251,18 +251,36 @@
       <span class="lbl">Proof of Authenticity (v<%= @bundle.payload["version"] %>.0)</span>
       <span class="ok" id="sig-status">SIG_MATCH: VERIFYING…</span>
     </div>
-    <div class="proof-row">
-      <span class="field">SHA256</span>
-      <span class="val"><%= @bundle.bundle_hash %></span>
+
+    <%# SHA256 / ED25519 / PUB_KEY — labels + icon-only copy buttons.
+        Values are never rendered, only copied via the button. %>
+    <div class="proof-chips">
+      <% [
+        ["SHA256",  @bundle.bundle_hash,           "copy-hash"],
+        ["ED25519", @bundle.payload["signature"], "copy-sig"],
+        ["PUB_KEY", @bundle.public_key,            "copy-pubkey"],
+      ].each do |label, value, btn_id| %>
+        <div class="proof-chip">
+          <span class="proof-chip-label"><%= label %></span>
+          <button
+            type="button"
+            class="copy-icon-btn"
+            id="<%= btn_id %>"
+            data-clipboard="<%= value %>"
+            data-field="<%= label %>"
+            aria-label="Copiar <%= label %>"
+            title="Copiar <%= label %>"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+            </svg>
+          </button>
+        </div>
+      <% end %>
     </div>
-    <div class="proof-row">
-      <span class="field">ED25519</span>
-      <span class="val"><%= @bundle.payload["signature"] %></span>
-    </div>
-    <div class="proof-row">
-      <span class="field">PUB_KEY</span>
-      <span class="val"><%= @bundle.public_key %><button type="button" class="copy-btn" id="copy-pubkey" data-clipboard="<%= @bundle.public_key %>">copy</button></span>
-    </div>
+
+    <%# ISSUED — informational, value visible. %>
     <div class="proof-row">
       <span class="field">ISSUED</span>
       <span class="val"><%= format_iso_z(inner["created_at"]) %> · devprofile <%= inner["devprofile_version"] %></span>
@@ -280,18 +298,24 @@
     let bundle;
     try { bundle = JSON.parse(dataEl.textContent); } catch (_) { return; }
 
-    // ── copy-to-clipboard ────────────────────────────────────────────────
-    const copyBtn = document.getElementById('copy-pubkey');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', async () => {
+    // ── copy-to-clipboard (SHA256 / ED25519 / PUB_KEY buttons) ─────────────
+    // Each .copy-icon-btn carries the value in data-clipboard and flips its
+    // glyph to a check on success.
+    const CHECK_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    document.querySelectorAll('.copy-icon-btn').forEach((btn) => {
+      const originalHTML = btn.innerHTML;
+      btn.addEventListener('click', async () => {
         try {
-          await navigator.clipboard.writeText(copyBtn.dataset.clipboard);
-          const orig = copyBtn.textContent;
-          copyBtn.textContent = 'copied';
-          setTimeout(() => { copyBtn.textContent = orig; }, 1500);
+          await navigator.clipboard.writeText(btn.dataset.clipboard);
+          btn.innerHTML = CHECK_SVG;
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('copied');
+          }, 1500);
         } catch (_) { /* permission denied or insecure context */ }
       });
-    }
+    });
 
     const pill   = document.getElementById('verify-pill-text');
     const status = document.getElementById('sig-status');

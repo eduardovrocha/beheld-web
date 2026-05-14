@@ -103,6 +103,8 @@ const pt: Dict = {
   "profile.proof.title": "Proof of Authenticity (v{version}.0)",
   "profile.proof.copy": "copy",
   "profile.proof.copied": "copied",
+  "profile.proof.copy_aria": "Copiar {field}",
+  "profile.proof.copied_aria": "{field} copiado",
 
   // Common units / formatters
   "common.today": "hoje",
@@ -199,6 +201,8 @@ const en: Dict = {
   "profile.proof.title": "Proof of Authenticity (v{version}.0)",
   "profile.proof.copy": "copy",
   "profile.proof.copied": "copied",
+  "profile.proof.copy_aria": "Copy {field}",
+  "profile.proof.copied_aria": "{field} copied",
 
   "common.today": "today",
   "common.one_day_ago": "1d ago",
@@ -292,6 +296,8 @@ const es: Dict = {
   "profile.proof.title": "Proof of Authenticity (v{version}.0)",
   "profile.proof.copy": "copiar",
   "profile.proof.copied": "copiado",
+  "profile.proof.copy_aria": "Copiar {field}",
+  "profile.proof.copied_aria": "{field} copiado",
 
   "common.today": "hoy",
   "common.one_day_ago": "hace 1d",

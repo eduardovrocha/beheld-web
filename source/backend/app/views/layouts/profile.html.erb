@@ -360,14 +360,43 @@
     .proof-row .field { width: 64px; flex-shrink: 0; color: var(--muted-foreground); }
     .proof-row .val { word-break: break-all; color: var(--foreground); opacity: 0.85; }
 
-    .copy-btn {
-      background: transparent; border: 1px solid var(--border);
-      color: var(--muted-foreground);
-      padding: 2px 8px; border-radius: 4px;
-      font-family: var(--font-mono); font-size: 0.625rem;
-      cursor: pointer; margin-left: 8px;
+    /* SHA256 / ED25519 / PUB_KEY chips — labels + icon-only copy buttons
+       laid out horizontally. Values never render. */
+    .proof-chips {
+      display: flex; flex-wrap: wrap;
+      gap: 12px 24px;
+      margin-bottom: 16px;
     }
-    .copy-btn:hover { background: var(--surface-muted); color: var(--foreground); }
+    .proof-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .proof-chip-label {
+      font-family: var(--font-mono);
+      font-size: 0.625rem; font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted-foreground);
+    }
+    .copy-icon-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted-foreground);
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      padding: 0;
+    }
+    .copy-icon-btn:hover {
+      background: var(--surface-muted);
+      color: var(--foreground);
+      border-color: color-mix(in srgb, var(--foreground) 25%, var(--border));
+    }
+    .copy-icon-btn.copied {
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    }
 
     /* ── banners ───────────────────────────────────────────────────────────── */
     .banner {
