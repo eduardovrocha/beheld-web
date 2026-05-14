@@ -9,6 +9,8 @@
  */
 import { useEffect, useState } from "react";
 
+import { useT } from "@/i18n/I18nProvider";
+
 type Mode = "auto" | "light" | "dark";
 
 function readSaved(): Mode {
@@ -37,6 +39,7 @@ function applyMode(mode: Mode): void {
 }
 
 export function ThemeToggle() {
+  const t = useT();
   const [mode, setMode] = useState<Mode>(readSaved);
 
   // Keep the icon (which depends on system pref in auto mode) live-updating
@@ -67,14 +70,14 @@ export function ThemeToggle() {
   // Icon reflects the effectively-rendered theme.
   const effectiveDark = mode === "dark" || (mode === "auto" && systemDark);
   const icon = effectiveDark ? "☾" : "☀︎";
-  const label = mode === "auto" ? "auto" : mode === "light" ? "claro" : "escuro";
+  const label = t(`theme.${mode}`);
 
   return (
     <button
       type="button"
       onClick={cycle}
-      aria-label="Alternar tema (auto / claro / escuro)"
-      title="Alternar tema (auto / claro / escuro)"
+      aria-label={t("theme.aria")}
+      title={t("theme.aria")}
       className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2.5 py-1 font-mono text-[11px] text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200"
     >
       <span aria-hidden="true">{icon}</span>

@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 
+import { useT } from "@/i18n/I18nProvider";
+
+import { LocaleToggle } from "./LocaleToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
 function NavItem({ to, children }: { to: string; children: ReactNode }) {
@@ -21,6 +24,7 @@ function NavItem({ to, children }: { to: string; children: ReactNode }) {
 }
 
 export function Layout({ children }: { children: ReactNode }) {
+  const t = useT();
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200/80 bg-slate-50/80 backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/80">
@@ -31,16 +35,17 @@ export function Layout({ children }: { children: ReactNode }) {
               devprofile
             </span>
           </Link>
-          <nav className="flex items-center gap-6">
-            <NavItem to="/verify">Verificar bundle</NavItem>
+          <nav className="flex items-center gap-4">
+            <NavItem to="/verify">{t("nav.verify_bundle")}</NavItem>
             <a
               href="https://github.com/ioit-solutions/devprofile"
               target="_blank"
               rel="noreferrer"
               className="text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
             >
-              GitHub
+              {t("nav.github")}
             </a>
+            <LocaleToggle />
             <ThemeToggle />
           </nav>
         </div>
@@ -49,7 +54,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
 
       <footer className="mt-16 border-t border-slate-200/80 py-8 text-center text-xs text-slate-500 dark:border-slate-800/80">
-        devprofile · privacy-first developer profiling · signed snapshots
+        {t("footer.tagline")}
       </footer>
     </div>
   );

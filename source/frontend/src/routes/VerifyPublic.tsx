@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { ProfileCard } from "@/components/ProfileCard";
+import { useT } from "@/i18n/I18nProvider";
 import { fetchBundle } from "@/lib/api";
 import type { Bundle } from "@/lib/types";
 import { verifyBundle, type VerifyResult } from "@/lib/verify";
 
 export function VerifyPublic() {
+  const t = useT();
   const { id } = useParams<{ id: string }>();
 
   const [bundle, setBundle] = useState<Bundle | null>(null);
@@ -42,8 +44,8 @@ export function VerifyPublic() {
     };
   }, [id]);
 
-  if (!id) return <ErrorBox message="Bundle id ausente." />;
-  if (error) return <ErrorBox message={error} />;
+  if (!id) return <ErrorBox title={t("verify.public.error.title")} message={t("verify.public.error.id_missing")} />;
+  if (error) return <ErrorBox title={t("verify.public.error.title")} message={error} />;
   if (!bundle) {
     return (
       <div className="space-y-3">
@@ -57,10 +59,10 @@ export function VerifyPublic() {
   return <ProfileCard bundle={bundle} result={result} verifying={verifying} shortId={id} />;
 }
 
-function ErrorBox({ message }: { message: string }) {
+function ErrorBox({ title, message }: { title: string; message: string }) {
   return (
     <div className="rounded-2xl border border-rose-200 dark:border-rose-700/40 bg-rose-50 dark:bg-rose-950/30 p-6 text-rose-700 dark:text-rose-200">
-      <div className="font-semibold">Não foi possível carregar o bundle</div>
+      <div className="font-semibold">{title}</div>
       <div className="mt-1 text-sm text-rose-600/80 dark:text-rose-300/80">{message}</div>
     </div>
   );

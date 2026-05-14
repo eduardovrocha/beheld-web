@@ -15,6 +15,7 @@
  */
 import { useState } from "react";
 
+import { useT } from "@/i18n/I18nProvider";
 import type {
   Bundle,
   BundleL1Section,
@@ -22,6 +23,8 @@ import type {
   BundlePayloadV1,
 } from "@/lib/types";
 import type { VerifyResult } from "@/lib/verify";
+
+type TFunc = ReturnType<typeof useT>;
 
 interface Props {
   bundle: Bundle;
@@ -67,14 +70,14 @@ function activityWindow(l1: BundleL1Section): string {
   return `${a.getFullYear()} → ${b.getFullYear()}`;
 }
 
-function daysAgo(iso: string | null | undefined): string {
+function daysAgo(iso: string | null | undefined, t: TFunc): string {
   const d = parseIso(iso);
-  if (!d) return "—";
+  if (!d) return t("common.dash");
   const ms = Date.now() - d.getTime();
   const days = Math.max(0, Math.floor(ms / 86_400_000));
-  if (days === 0) return "today";
-  if (days === 1) return "1d ago";
-  return `${days}d ago`;
+  if (days === 0) return t("common.today");
+  if (days === 1) return t("common.one_day_ago");
+  return t("common.days_ago", { days });
 }
 
 const WORKFLOW_LABELS: Record<string, string> = {
@@ -160,20 +163,21 @@ function VerifyPill({
   result: VerifyResult | null;
   verifying: boolean;
 }) {
+  const t = useT();
   let text: string;
   let color: string;
   let pulse = false;
 
   if (verifying || !result) {
-    text = "ED25519 PROFILE";
+    text = t("profile.pill.idle");
     color = "text-slate-500 dark:text-slate-400";
     pulse = false;
   } else if (result.ok) {
-    text = "ED25519 VERIFIED PROFILE";
+    text = t("profile.pill.ok");
     color = "text-emerald-600 dark:text-emerald-400";
     pulse = true;
   } else {
-    text = "ED25519 — SIGNATURE FAILED";
+    text = t("profile.pill.fail");
     color = "text-rose-600 dark:text-rose-400";
   }
 
@@ -247,51 +251,53 @@ function ChipMuted({ children }: { children: React.ReactNode }) {
 }
 
 function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
+  const t = useT();
   const present = l1 !== null && l1.total_repos > 0;
   return (
     <section>
       <h3 className="mb-6 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
         <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-        <span>L1: <span className="text-slate-900 dark:text-slate-100">Git History Analysis</span></span>
+        <span>L1: <span className="text-slate-900 dark:text-slate-100">{t("profile.l1.title")}</span></span>
       </h3>
       {present && l1 ? (
         <div className="space-y-3">
-          <FactRow label="Total Repositories" value={l1.total_repos} />
-          <FactRow label="Total Commits" value={formatNumber(l1.total_commits)} />
-          <FactRow label="Activity Window" value={<span className="text-sm">{activityWindow(l1)}</span>} />
+          <FactRow label={t("profile.l1.repos")} value={l1.total_repos} />
+          <FactRow label={t("profile.l1.commits")} value={formatNumber(l1.total_commits)} />
+          <FactRow label={t("profile.l1.activity_window")} value={<span className="text-sm">{activityWindow(l1)}</span>} />
           <FactRow
-            label="Average Test Ratio"
+            label={t("profile.l1.avg_test_ratio")}
             value={l1.avg_test_ratio.toFixed(2)}
             accent
           />
-          <FactRow label="Last Commit" value={daysAgo(l1.latest_commit)} />
+          <FactRow label={t("profile.l1.last_commit")} value={daysAgo(l1.latest_commit, t)} />
 
           <div className="space-y-3 pt-2">
-            <div className="font-mono text-[10px] uppercase text-slate-500">Primary Ecosystems</div>
+            <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l1.primary_ecosystems")}</div>
             <div className="flex flex-wrap gap-2">
               {trueKeys(l1.ecosystems).slice(0, 8).map((k) => (
                 <Chip key={k}>{k}: true</Chip>
               ))}
-              {trueKeys(l1.ecosystems).length === 0 && <ChipMuted>—</ChipMuted>}
+              {trueKeys(l1.ecosystems).length === 0 && <ChipMuted>{t("common.dash")}</ChipMuted>}
             </div>
           </div>
 
           <div className="space-y-3 pt-2">
-            <div className="font-mono text-[10px] uppercase text-slate-500">Platforms</div>
+            <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l1.platforms")}</div>
             <div className="flex flex-wrap gap-2">
               {trueKeys(l1.platforms).slice(0, 8).map((k) => (
                 <ChipMuted key={k}>{k}</ChipMuted>
               ))}
-              {trueKeys(l1.platforms).length === 0 && <ChipMuted>—</ChipMuted>}
+              {trueKeys(l1.platforms).length === 0 && <ChipMuted>{t("common.dash")}</ChipMuted>}
             </div>
           </div>
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-800">
-          <div className="mb-2 font-mono text-xs uppercase text-slate-500">Bootstrap não realizado</div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Execute <code className="font-mono text-slate-700 dark:text-slate-300">devprofile import &lt;url&gt;</code> para popular a base histórica.
-          </p>
+          <div className="mb-2 font-mono text-xs uppercase text-slate-500">{t("profile.l1.empty.badge")}</div>
+          <p
+            className="text-sm text-slate-500 dark:text-slate-400 [&_code]:font-mono [&_code]:text-slate-700 dark:[&_code]:text-slate-300"
+            dangerouslySetInnerHTML={{ __html: t("profile.l1.empty.hint_html") }}
+          />
         </div>
       )}
     </section>
@@ -299,46 +305,47 @@ function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
 }
 
 function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
+  const t = useT();
   const present = l2 !== null && l2.sessions_analyzed > 0;
   return (
     <section>
       <h3 className="mb-6 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
         <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-        <span>L2: <span className="text-slate-900 dark:text-slate-100">Agentic Workflow Metrics</span></span>
+        <span>L2: <span className="text-slate-900 dark:text-slate-100">{t("profile.l2.title")}</span></span>
       </h3>
       {present && l2 ? (
         <div className="space-y-3">
-          <FactRow label="Sessions Analyzed" value={l2.sessions_analyzed} />
-          <FactRow label="Period" value={<span className="text-sm">{l2.period_days} days</span>} />
+          <FactRow label={t("profile.l2.sessions_analyzed")} value={l2.sessions_analyzed} />
+          <FactRow label={t("profile.l2.period")} value={<span className="text-sm">{t("common.period_days", { days: l2.period_days })}</span>} />
           {l2.workflow_metrics?.test_after_ratio !== undefined && (
             <FactRow
-              label="Test-after Ratio"
+              label={t("profile.l2.test_after_ratio")}
               value={l2.workflow_metrics.test_after_ratio.toFixed(2)}
               accent
             />
           )}
           {l2.workflow_metrics?.bash_to_read_ratio !== undefined && (
             <FactRow
-              label="Bash → Read"
+              label={t("profile.l2.bash_to_read")}
               value={`${l2.workflow_metrics.bash_to_read_ratio.toFixed(2)}×`}
             />
           )}
           {l2.workflow_metrics?.session_avg_duration_min !== undefined && (
             <FactRow
-              label="Avg Session Duration"
-              value={`${Math.round(l2.workflow_metrics.session_avg_duration_min)} min`}
+              label={t("profile.l2.avg_session_duration")}
+              value={t("common.duration_min", { min: Math.round(l2.workflow_metrics.session_avg_duration_min) })}
             />
           )}
           {l2.workflow_metrics?.tool_variety_avg !== undefined && (
             <FactRow
-              label="Tool Variety (avg)"
+              label={t("profile.l2.tool_variety")}
               value={l2.workflow_metrics.tool_variety_avg.toFixed(1)}
             />
           )}
 
           {l2.workflow_distribution && Object.keys(l2.workflow_distribution).length > 0 && (
             <div className="space-y-3 pt-2">
-              <div className="font-mono text-[10px] uppercase text-slate-500">Workflow Distribution</div>
+              <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l2.workflow_distribution")}</div>
               <div className="flex flex-wrap gap-2">
                 <Chip>{formatWorkflowDistribution(l2.workflow_distribution)}</Chip>
               </div>
@@ -347,7 +354,7 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
 
           {topKeys(l2.ecosystems).length > 0 && (
             <div className="space-y-3 pt-2">
-              <div className="font-mono text-[10px] uppercase text-slate-500">Ecosystems (top)</div>
+              <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l2.ecosystems_top")}</div>
               <div className="flex flex-wrap gap-2">
                 {topKeys(l2.ecosystems).map((k) => <ChipMuted key={k}>{k}</ChipMuted>)}
               </div>
@@ -356,7 +363,7 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
 
           {topKeys(l2.platforms).length > 0 && (
             <div className="space-y-3 pt-2">
-              <div className="font-mono text-[10px] uppercase text-slate-500">Platforms (top)</div>
+              <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l2.platforms_top")}</div>
               <div className="flex flex-wrap gap-2">
                 {topKeys(l2.platforms).map((k) => <ChipMuted key={k}>{k}</ChipMuted>)}
               </div>
@@ -365,9 +372,9 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
         </div>
       ) : (
         <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-800">
-          <div className="mb-2 font-mono text-xs uppercase text-slate-500">L1_ONLY Profile</div>
+          <div className="mb-2 font-mono text-xs uppercase text-slate-500">{t("profile.l2.empty.badge")}</div>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            No Claude Code session telemetry submitted. Workflow signals are limited to git history.
+            {t("profile.l2.empty.hint")}
           </p>
         </div>
       )}
@@ -376,6 +383,7 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
 }
 
 function ProofRow({ field, value, copyable = false }: { field: string; value: string; copyable?: boolean }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const onCopy = async () => {
     try {
@@ -395,7 +403,7 @@ function ProofRow({ field, value, copyable = false }: { field: string; value: st
             onClick={onCopy}
             className="ml-2 rounded border border-slate-300 px-2 py-0.5 font-mono text-[10px] text-slate-500 hover:bg-slate-200/50 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
           >
-            {copied ? "copied" : "copy"}
+            {copied ? t("profile.proof.copied") : t("profile.proof.copy")}
           </button>
         )}
       </span>
@@ -412,6 +420,7 @@ function ProofFooter({
   result: VerifyResult | null;
   verifying: boolean;
 }) {
+  const t = useT();
   let status: string;
   let bad = false;
   if (verifying || !result) {
@@ -434,7 +443,7 @@ function ProofFooter({
     <footer className="border-t border-slate-200 bg-slate-50/80 p-6 font-mono text-slate-900 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-100">
       <div className="mb-4 flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
-          Proof of Authenticity (v{(bundle as unknown as { version?: string }).version ?? "?"}.0)
+          {t("profile.proof.title", { version: (bundle as unknown as { version?: string }).version ?? "?" })}
         </span>
         <span className={`text-[10px] font-bold ${bad ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>{status}</span>
       </div>
@@ -454,6 +463,7 @@ function ProofFooter({
 // ── main component ───────────────────────────────────────────────────────────
 
 export function ProfileCard({ bundle, result, verifying, shortId, banner }: Props) {
+  const t = useT();
   const inner = bundle.payload;
   const { scores } = inner;
   const { l1, l2 } = readSections(bundle);
@@ -473,13 +483,13 @@ export function ProfileCard({ bundle, result, verifying, shortId, banner }: Prop
             <div className="flex items-center gap-6">
               <Avatar short={opaqueId} />
               <div>
-                <h1 className="mb-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">DevProfile</h1>
-                <p className="font-mono text-sm text-slate-500 dark:text-slate-400">ID: {formatShortId(opaqueId)}</p>
+                <h1 className="mb-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{t("profile.title")}</h1>
+                <p className="font-mono text-sm text-slate-500 dark:text-slate-400">{t("profile.id_prefix")} {formatShortId(opaqueId)}</p>
                 <VerifyPill result={result} verifying={verifying} />
               </div>
             </div>
             <div className="text-right">
-              <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">Overall Score</div>
+              <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">{t("profile.overall_score")}</div>
               <div className="font-mono text-6xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{scores.overall}</div>
             </div>
           </div>
@@ -487,25 +497,27 @@ export function ProfileCard({ bundle, result, verifying, shortId, banner }: Prop
 
         {/* ── stats grid ──────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-800 md:grid-cols-5">
-          <StatCell label="Prompt Q." value={scores.prompt_quality} />
-          <StatCell label="Test Mat." value={scores.test_maturity} />
-          <StatCell label="Breadth"   value={scores.tech_breadth} />
-          <StatCell label="Growth"    value={scores.growth_rate} accent />
-          <StatCell label="Sessions"  value={l2?.sessions_analyzed ?? 0} withBar={false} />
+          <StatCell label={t("profile.stats.prompt")}  value={scores.prompt_quality} />
+          <StatCell label={t("profile.stats.test")}    value={scores.test_maturity} />
+          <StatCell label={t("profile.stats.breadth")} value={scores.tech_breadth} />
+          <StatCell label={t("profile.stats.growth")}  value={scores.growth_rate} accent />
+          <StatCell label={t("profile.stats.sessions")} value={l2?.sessions_analyzed ?? 0} withBar={false} />
         </div>
 
         {/* ── trend placeholder (chain not available client-side) ─────────── */}
         <section className="border-b border-slate-200 p-8 dark:border-slate-800">
           <h3 className="mb-3 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
             <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-            <span>TREND: <span className="text-slate-900 dark:text-slate-100">12-Month Score Trajectory</span></span>
+            <span>TREND: <span className="text-slate-900 dark:text-slate-100">{t("profile.trend.title")}</span></span>
           </h3>
-          <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
-            Snapshots reconstructed from signed payload chain via <code className="font-mono">previous_hash</code>.
-          </p>
-          <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-            Trajetória requer múltiplos snapshots na cadeia — disponível em <code className="ml-2 font-mono">/v/:id</code> servido pelo Rails.
-          </div>
+          <p
+            className="mb-4 text-xs text-slate-500 dark:text-slate-400 [&_code]:font-mono"
+            dangerouslySetInnerHTML={{ __html: t("profile.trend.subtitle_html") }}
+          />
+          <div
+            className="flex h-32 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400 [&_code]:font-mono"
+            dangerouslySetInnerHTML={{ __html: t("profile.trend.unavailable_html") }}
+          />
         </section>
 
         {/* ── L1 + L2 ─────────────────────────────────────────────────────── */}
