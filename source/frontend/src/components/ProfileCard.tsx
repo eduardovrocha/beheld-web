@@ -218,6 +218,45 @@ function InfoIcon({ size = 12 }: { size?: number }) {
   );
 }
 
+/** Reusable info-tooltip — small ⓘ button with a hover/focus card that
+ *  carries `title` (accent header) and `description` (muted body).  Used
+ *  by every label that has an "what does this mean" affordance. */
+function InfoTooltip({ title, description }: { title: string; description: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span
+      className="relative inline-flex"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-label={`${title} — ${description}`}
+        className="inline-flex size-3.5 cursor-help items-center justify-center rounded-full text-slate-400 transition-colors hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
+      >
+        <InfoIcon size={12} />
+      </button>
+      {open && (
+        <span
+          role="tooltip"
+          className="absolute bottom-full left-0 z-20 mb-2 flex w-[18rem] max-w-[80vw] flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+        >
+          <span className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+            <InfoIcon size={14} />
+            <span>{title}</span>
+          </span>
+          <span className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+            {description}
+          </span>
+        </span>
+      )}
+    </span>
+  );
+}
+
 /** Stat label with an inline info button that reveals a description
  *  tooltip on hover/focus.  Same visual language as the proof footer
  *  tooltips — accent icon + full title header, muted description below.
@@ -235,44 +274,10 @@ function StatLabel({
   descKey: string;
 }) {
   const t = useT();
-  const [open, setOpen] = useState(false);
-  const fullTitle = t(titleKey);
-
   return (
     <div className="mb-4 flex items-center gap-1.5">
       <span className="font-mono text-[10px] uppercase text-slate-500">{label}</span>
-      <div
-        className="relative inline-flex"
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-      >
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-describedby={open ? `stat-tip-${descKey}` : undefined}
-          aria-label={`${fullTitle} — ${t(descKey)}`}
-          className="inline-flex size-3.5 cursor-help items-center justify-center rounded-full text-slate-400 transition-colors hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
-        >
-          <InfoIcon size={12} />
-        </button>
-        {open && (
-          <div
-            id={`stat-tip-${descKey}`}
-            role="tooltip"
-            className="absolute bottom-full left-0 z-20 mb-2 w-[18rem] max-w-[80vw] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
-          >
-            <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-              <InfoIcon size={14} />
-              <span>{fullTitle}</span>
-            </div>
-            <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-              {t(descKey)}
-            </p>
-          </div>
-        )}
-      </div>
+      <InfoTooltip title={t(titleKey)} description={t(descKey)} />
     </div>
   );
 }
@@ -310,10 +315,26 @@ function StatCell({
   );
 }
 
-function FactRow({ label, value, accent = false }: { label: string; value: React.ReactNode; accent?: boolean }) {
+function FactRow({
+  label,
+  value,
+  accent = false,
+  descKey,
+}: {
+  label: string;
+  value: React.ReactNode;
+  accent?: boolean;
+  /** When set, an ⓘ button is rendered next to the label whose tooltip
+   *  carries this description (resolved via i18n). */
+  descKey?: string;
+}) {
+  const t = useT();
   return (
     <div className="flex items-end justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
-      <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+        {label}
+        {descKey && <InfoTooltip title={label} description={t(descKey)} />}
+      </span>
       <span className={`font-mono font-bold ${accent ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-slate-100"}`}>{value}</span>
     </div>
   );
@@ -362,15 +383,16 @@ function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
       </h3>
       {present && l1 ? (
         <div className="space-y-3">
-          <FactRow label={t("profile.l1.repos")} value={l1.total_repos} />
-          <FactRow label={t("profile.l1.commits")} value={formatNumber(l1.total_commits)} />
-          <FactRow label={t("profile.l1.activity_window")} value={<span className="text-sm">{activityWindow(l1)}</span>} />
+          <FactRow label={t("profile.l1.repos")}            descKey="profile.l1.repos.desc"            value={l1.total_repos} />
+          <FactRow label={t("profile.l1.commits")}          descKey="profile.l1.commits.desc"          value={formatNumber(l1.total_commits)} />
+          <FactRow label={t("profile.l1.activity_window")}  descKey="profile.l1.activity_window.desc"  value={<span className="text-sm">{activityWindow(l1)}</span>} />
           <FactRow
             label={t("profile.l1.avg_test_ratio")}
+            descKey="profile.l1.avg_test_ratio.desc"
             value={l1.avg_test_ratio.toFixed(2)}
             accent
           />
-          <FactRow label={t("profile.l1.last_commit")} value={daysAgo(l1.latest_commit, t)} />
+          <FactRow label={t("profile.l1.last_commit")}      descKey="profile.l1.last_commit.desc"      value={daysAgo(l1.latest_commit, t)} />
 
           <div className="space-y-3 pt-2">
             <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l1.primary_ecosystems")}</div>
@@ -416,11 +438,20 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
       </h3>
       {present && l2 ? (
         <div className="space-y-3">
-          <FactRow label={t("profile.l2.sessions_analyzed")} value={l2.sessions_analyzed} />
-          <FactRow label={t("profile.l2.period")} value={<span className="text-sm">{t("common.period_days", { days: l2.period_days })}</span>} />
+          <FactRow
+            label={t("profile.l2.sessions_analyzed")}
+            descKey="profile.l2.sessions_analyzed.desc"
+            value={l2.sessions_analyzed}
+          />
+          <FactRow
+            label={t("profile.l2.period")}
+            descKey="profile.l2.period.desc"
+            value={<span className="text-sm">{t("common.period_days", { days: l2.period_days })}</span>}
+          />
           {l2.workflow_metrics?.test_after_ratio !== undefined && (
             <FactRow
               label={t("profile.l2.test_after_ratio")}
+              descKey="profile.l2.test_after_ratio.desc"
               value={l2.workflow_metrics.test_after_ratio.toFixed(2)}
               accent
             />
@@ -428,18 +459,21 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
           {l2.workflow_metrics?.bash_to_read_ratio !== undefined && (
             <FactRow
               label={t("profile.l2.bash_to_read")}
+              descKey="profile.l2.bash_to_read.desc"
               value={`${l2.workflow_metrics.bash_to_read_ratio.toFixed(2)}×`}
             />
           )}
           {l2.workflow_metrics?.session_avg_duration_min !== undefined && (
             <FactRow
               label={t("profile.l2.avg_session_duration")}
+              descKey="profile.l2.avg_session_duration.desc"
               value={t("common.duration_min", { min: Math.round(l2.workflow_metrics.session_avg_duration_min) })}
             />
           )}
           {l2.workflow_metrics?.tool_variety_avg !== undefined && (
             <FactRow
               label={t("profile.l2.tool_variety")}
+              descKey="profile.l2.tool_variety.desc"
               value={l2.workflow_metrics.tool_variety_avg.toFixed(1)}
             />
           )}

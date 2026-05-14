@@ -99,6 +99,16 @@ const pt: Dict = {
   "profile.l1.empty.badge": "Bootstrap não realizado",
   "profile.l1.empty.hint_html":
     "Execute <code>devprofile import &lt;url&gt;</code> para popular a base histórica.",
+  "profile.l1.repos.desc":
+    "Número de repositórios git importados via devprofile import. Cada repo contribui uma única vez para a baseline histórica.",
+  "profile.l1.commits.desc":
+    "Soma dos commits feitos por você (filtrados pelo seu email de git) entre os repositórios importados.",
+  "profile.l1.activity_window.desc":
+    "Janela temporal entre o seu primeiro e último commit nos repositórios importados — proxy de há quanto tempo você programa profissionalmente.",
+  "profile.l1.avg_test_ratio.desc":
+    "Proporção média de arquivos de teste vs arquivos de produção entre os repositórios. Mede disciplina histórica de testes.",
+  "profile.l1.last_commit.desc":
+    "Dias desde o seu commit mais recente entre os repositórios importados.",
 
   // ProfileCard — L2
   "profile.l2.title": "Agentic Workflow Metrics",
@@ -114,6 +124,18 @@ const pt: Dict = {
   "profile.l2.empty.badge": "L1_ONLY Profile",
   "profile.l2.empty.hint":
     "Sem telemetria de sessão do Claude Code submetida. Sinais de workflow limitados ao histórico git.",
+  "profile.l2.sessions_analyzed.desc":
+    "Sessões do Claude Code consideradas no cálculo dos scores L2.",
+  "profile.l2.period.desc":
+    "Janela temporal das sessões consideradas — tipicamente os últimos 30 dias.",
+  "profile.l2.test_after_ratio.desc":
+    "Fração de sessões em que comandos de teste foram executados DEPOIS de edições de código. Indica padrão test-after (vs TDD test-first).",
+  "profile.l2.bash_to_read.desc":
+    "Razão entre chamadas de Bash e Read nas sessões. Valores altos sugerem fluxo de descoberta/debug; baixos sugerem revisão guiada por leitura.",
+  "profile.l2.avg_session_duration.desc":
+    "Duração média de uma sessão de Claude Code, em minutos.",
+  "profile.l2.tool_variety.desc":
+    "Número médio de tools distintas usadas por sessão. Variedade alta sugere uso amplo das capacidades do agente.",
 
   // ProfileCard — proof footer
   "profile.proof.title": "Proof of Authenticity (v{version}.0)",
@@ -218,6 +240,16 @@ const en: Dict = {
   "profile.l1.empty.badge": "Bootstrap not performed",
   "profile.l1.empty.hint_html":
     "Run <code>devprofile import &lt;url&gt;</code> to populate the historical baseline.",
+  "profile.l1.repos.desc":
+    "Number of git repositories imported via devprofile import. Each repo contributes once to the historical baseline.",
+  "profile.l1.commits.desc":
+    "Sum of commits authored by you (filtered by your git email) across the imported repositories.",
+  "profile.l1.activity_window.desc":
+    "Time span between your earliest and latest commit across imported repositories — a proxy for how long you've been programming professionally.",
+  "profile.l1.avg_test_ratio.desc":
+    "Average ratio of test files to production files across the repositories. Measures historical testing discipline.",
+  "profile.l1.last_commit.desc":
+    "Days since your most recent commit across the imported repositories.",
 
   "profile.l2.title": "Agentic Workflow Metrics",
   "profile.l2.sessions_analyzed": "Sessions Analyzed",
@@ -232,6 +264,18 @@ const en: Dict = {
   "profile.l2.empty.badge": "L1_ONLY Profile",
   "profile.l2.empty.hint":
     "No Claude Code session telemetry submitted. Workflow signals are limited to git history.",
+  "profile.l2.sessions_analyzed.desc":
+    "Claude Code sessions considered when computing the L2 scores.",
+  "profile.l2.period.desc":
+    "Time window of sessions considered — typically the last 30 days.",
+  "profile.l2.test_after_ratio.desc":
+    "Fraction of sessions where test commands ran AFTER code edits. Signals a test-after pattern (vs TDD's test-first).",
+  "profile.l2.bash_to_read.desc":
+    "Ratio of Bash invocations to Read invocations in sessions. High values suggest discovery/debug flow; low values suggest reading-first review.",
+  "profile.l2.avg_session_duration.desc":
+    "Average duration of a Claude Code session, in minutes.",
+  "profile.l2.tool_variety.desc":
+    "Average number of distinct tools used per session. High variety suggests broad use of the agent's capabilities.",
 
   "profile.proof.title": "Proof of Authenticity (v{version}.0)",
   "profile.proof.copy": "copy",
@@ -332,6 +376,16 @@ const es: Dict = {
   "profile.l1.empty.badge": "Bootstrap no realizado",
   "profile.l1.empty.hint_html":
     "Ejecuta <code>devprofile import &lt;url&gt;</code> para poblar la base histórica.",
+  "profile.l1.repos.desc":
+    "Número de repositorios git importados vía devprofile import. Cada repo contribuye una vez a la baseline histórica.",
+  "profile.l1.commits.desc":
+    "Suma de los commits hechos por ti (filtrados por tu email de git) entre los repositorios importados.",
+  "profile.l1.activity_window.desc":
+    "Ventana temporal entre tu primer y último commit en los repositorios importados — proxy de hace cuánto programas profesionalmente.",
+  "profile.l1.avg_test_ratio.desc":
+    "Ratio promedio de archivos de test vs archivos de producción entre los repositorios. Mide disciplina histórica de tests.",
+  "profile.l1.last_commit.desc":
+    "Días desde tu commit más reciente entre los repositorios importados.",
 
   "profile.l2.title": "Agentic Workflow Metrics",
   "profile.l2.sessions_analyzed": "Sesiones analizadas",
@@ -346,6 +400,18 @@ const es: Dict = {
   "profile.l2.empty.badge": "L1_ONLY Profile",
   "profile.l2.empty.hint":
     "Sin telemetría de sesión de Claude Code enviada. Las señales de workflow se limitan al historial git.",
+  "profile.l2.sessions_analyzed.desc":
+    "Sesiones de Claude Code consideradas en el cálculo de los scores L2.",
+  "profile.l2.period.desc":
+    "Ventana temporal de las sesiones consideradas — típicamente los últimos 30 días.",
+  "profile.l2.test_after_ratio.desc":
+    "Fracción de sesiones donde los comandos de test corrieron DESPUÉS de las ediciones de código. Indica patrón test-after (vs TDD test-first).",
+  "profile.l2.bash_to_read.desc":
+    "Razón entre llamadas Bash y Read en las sesiones. Valores altos sugieren flujo de descubrimiento/debug; bajos, revisión guiada por lectura.",
+  "profile.l2.avg_session_duration.desc":
+    "Duración media de una sesión de Claude Code, en minutos.",
+  "profile.l2.tool_variety.desc":
+    "Número medio de tools distintas usadas por sesión. Variedad alta sugiere uso amplio de las capacidades del agente.",
 
   "profile.proof.title": "Proof of Authenticity (v{version}.0)",
   "profile.proof.copy": "copiar",

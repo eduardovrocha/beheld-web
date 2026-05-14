@@ -181,12 +181,33 @@
         <span class="dot"></span>
         <span>L1: <strong>Git History Analysis</strong></span>
       </h3>
+      <%
+        # Descriptions reused by the info tooltip on every L1 / L2 row.
+        fact_descs = {
+          "Total Repositories"   => "Número de repositórios git importados via devprofile import. Cada repo contribui uma única vez para a baseline histórica.",
+          "Total Commits"        => "Soma dos commits feitos por você (filtrados pelo seu email de git) entre os repositórios importados.",
+          "Activity Window"      => "Janela temporal entre o seu primeiro e último commit nos repositórios importados — proxy de há quanto tempo você programa profissionalmente.",
+          "Average Test Ratio"   => "Proporção média de arquivos de teste vs arquivos de produção entre os repositórios. Mede disciplina histórica de testes.",
+          "Last Commit"          => "Dias desde o seu commit mais recente entre os repositórios importados.",
+          "Sessions Analyzed"    => "Sessões do Claude Code consideradas no cálculo dos scores L2.",
+          "Period"               => "Janela temporal das sessões consideradas — tipicamente os últimos 30 dias.",
+          "Test-after Ratio"     => "Fração de sessões em que comandos de teste foram executados DEPOIS de edições de código. Indica padrão test-after (vs TDD test-first).",
+          "Bash → Read"          => "Razão entre chamadas de Bash e Read nas sessões. Valores altos sugerem fluxo de descoberta/debug; baixos sugerem revisão guiada por leitura.",
+          "Avg Session Duration" => "Duração média de uma sessão de Claude Code, em minutos.",
+          "Tool Variety (avg)"   => "Número médio de tools distintas usadas por sessão. Variedade alta sugere uso amplo das capacidades do agente.",
+        }
+        fact_info = ->(label) {
+          desc = fact_descs[label]
+          return "" unless desc
+          %(<span class="stat-info" tabindex="0" aria-label="#{label} — #{desc}">#{info_svg}<span class="stat-tip" role="tooltip"><span class="stat-tip-head">#{info_svg}#{label}</span><span class="stat-tip-desc">#{desc}</span></span></span>).html_safe
+        }
+      %>
       <% if l1_present?(l1) %>
-        <div class="fact-row"><span class="fact-label">Total Repositories</span><span class="fact-value"><%= l1["total_repos"].to_i %></span></div>
-        <div class="fact-row"><span class="fact-label">Total Commits</span><span class="fact-value"><%= l1["total_commits"].to_i.to_fs(:delimited, delimiter: ",") %></span></div>
-        <div class="fact-row"><span class="fact-label">Activity Window</span><span class="fact-value small"><%= format_l1_activity_window(l1) %></span></div>
-        <div class="fact-row"><span class="fact-label">Average Test Ratio</span><span class="fact-value text-accent"><%= sprintf("%.2f", l1["avg_test_ratio"].to_f) %></span></div>
-        <div class="fact-row"><span class="fact-label">Last Commit</span><span class="fact-value"><%= format_days_ago(l1["latest_commit"]) %></span></div>
+        <div class="fact-row"><span class="fact-label">Total Repositories<%= fact_info["Total Repositories"] %></span><span class="fact-value"><%= l1["total_repos"].to_i %></span></div>
+        <div class="fact-row"><span class="fact-label">Total Commits<%= fact_info["Total Commits"] %></span><span class="fact-value"><%= l1["total_commits"].to_i.to_fs(:delimited, delimiter: ",") %></span></div>
+        <div class="fact-row"><span class="fact-label">Activity Window<%= fact_info["Activity Window"] %></span><span class="fact-value small"><%= format_l1_activity_window(l1) %></span></div>
+        <div class="fact-row"><span class="fact-label">Average Test Ratio<%= fact_info["Average Test Ratio"] %></span><span class="fact-value text-accent"><%= sprintf("%.2f", l1["avg_test_ratio"].to_f) %></span></div>
+        <div class="fact-row"><span class="fact-label">Last Commit<%= fact_info["Last Commit"] %></span><span class="fact-value"><%= format_days_ago(l1["latest_commit"]) %></span></div>
 
         <div class="chip-block">
           <div class="chip-label">Primary Ecosystems</div>
@@ -226,20 +247,20 @@
         <span>L2: <strong>Agentic Workflow Metrics</strong></span>
       </h3>
       <% if l2_present?(l2) %>
-        <div class="fact-row"><span class="fact-label">Sessions Analyzed</span><span class="fact-value"><%= l2["sessions_analyzed"].to_i %></span></div>
-        <div class="fact-row"><span class="fact-label">Period</span><span class="fact-value small"><%= l2["period_days"].to_i %> days</span></div>
+        <div class="fact-row"><span class="fact-label">Sessions Analyzed<%= fact_info["Sessions Analyzed"] %></span><span class="fact-value"><%= l2["sessions_analyzed"].to_i %></span></div>
+        <div class="fact-row"><span class="fact-label">Period<%= fact_info["Period"] %></span><span class="fact-value small"><%= l2["period_days"].to_i %> days</span></div>
         <% wm = l2["workflow_metrics"] || {} %>
         <% if wm["test_after_ratio"] %>
-          <div class="fact-row"><span class="fact-label">Test-after Ratio</span><span class="fact-value text-accent"><%= sprintf("%.2f", wm["test_after_ratio"].to_f) %></span></div>
+          <div class="fact-row"><span class="fact-label">Test-after Ratio<%= fact_info["Test-after Ratio"] %></span><span class="fact-value text-accent"><%= sprintf("%.2f", wm["test_after_ratio"].to_f) %></span></div>
         <% end %>
         <% if wm["bash_to_read_ratio"] %>
-          <div class="fact-row"><span class="fact-label">Bash → Read</span><span class="fact-value"><%= sprintf("%.2f", wm["bash_to_read_ratio"].to_f) %>×</span></div>
+          <div class="fact-row"><span class="fact-label">Bash → Read<%= fact_info["Bash → Read"] %></span><span class="fact-value"><%= sprintf("%.2f", wm["bash_to_read_ratio"].to_f) %>×</span></div>
         <% end %>
         <% if wm["session_avg_duration_min"] %>
-          <div class="fact-row"><span class="fact-label">Avg Session Duration</span><span class="fact-value"><%= wm["session_avg_duration_min"].to_f.round %> min</span></div>
+          <div class="fact-row"><span class="fact-label">Avg Session Duration<%= fact_info["Avg Session Duration"] %></span><span class="fact-value"><%= wm["session_avg_duration_min"].to_f.round %> min</span></div>
         <% end %>
         <% if wm["tool_variety_avg"] %>
-          <div class="fact-row"><span class="fact-label">Tool Variety (avg)</span><span class="fact-value"><%= sprintf("%.1f", wm["tool_variety_avg"].to_f) %></span></div>
+          <div class="fact-row"><span class="fact-label">Tool Variety (avg)<%= fact_info["Tool Variety (avg)"] %></span><span class="fact-value"><%= sprintf("%.1f", wm["tool_variety_avg"].to_f) %></span></div>
         <% end %>
 
         <% if l2["workflow_distribution"].present? %>
