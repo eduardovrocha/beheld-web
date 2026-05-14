@@ -289,6 +289,35 @@
       line-height: 1.45;
       color: var(--muted-foreground);
     }
+
+    /* Optional scale legend appended to a tooltip (used by Average Test
+       Ratio).  Stacked rows of [coloured pill | range | label]. */
+    .tip-scale-title {
+      font-family: var(--font-mono);
+      font-size: 0.5625rem; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--muted-foreground);
+      margin-top: 4px;
+    }
+    .tip-scale-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.6875rem;
+    }
+    .tip-scale-bar {
+      display: inline-block;
+      width: 24px; height: 6px;
+      border-radius: 999px;
+    }
+    .tip-scale-range { font-family: var(--font-mono); color: var(--foreground); }
+    .tip-scale-label { text-transform: uppercase; letter-spacing: 0.05em; }
+    .tip-scale-row.low      .tip-scale-bar { background: var(--score-red);    }
+    .tip-scale-row.low      .tip-scale-label { color: var(--score-red);   }
+    .tip-scale-row.average  .tip-scale-bar { background: var(--score-yellow); }
+    .tip-scale-row.average  .tip-scale-label { color: var(--score-yellow); }
+    .tip-scale-row.good     .tip-scale-bar { background: var(--score-green);  }
+    .tip-scale-row.good     .tip-scale-label { color: var(--score-green); }
+    .tip-scale-row.excellent .tip-scale-bar { background: var(--accent); }
+    .tip-scale-row.excellent .tip-scale-label { color: var(--accent); }
     .stat-value { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
     .stat-bar { margin-top: 8px; height: 4px; width: 100%; background: var(--muted); border-radius: 999px; overflow: hidden; }
     .stat-bar > .fill { height: 100%; background: var(--primary); transition: width 0.4s ease; }

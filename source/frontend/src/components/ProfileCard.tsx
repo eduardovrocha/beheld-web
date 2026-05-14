@@ -219,9 +219,17 @@ function InfoIcon({ size = 12 }: { size?: number }) {
 }
 
 /** Reusable info-tooltip — small ⓘ button with a hover/focus card that
- *  carries `title` (accent header) and `description` (muted body).  Used
- *  by every label that has an "what does this mean" affordance. */
-function InfoTooltip({ title, description }: { title: string; description: string }) {
+ *  carries `title` (accent header), `description` (muted body), and an
+ *  optional `extra` slot for richer content (e.g. a colored scale legend). */
+function InfoTooltip({
+  title,
+  description,
+  extra,
+}: {
+  title: string;
+  description: string;
+  extra?: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <span
@@ -242,7 +250,7 @@ function InfoTooltip({ title, description }: { title: string; description: strin
       {open && (
         <span
           role="tooltip"
-          className="absolute bottom-full left-0 z-20 mb-2 flex w-[18rem] max-w-[80vw] flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+          className="absolute bottom-full left-0 z-20 mb-2 flex w-[20rem] max-w-[80vw] flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
         >
           <span className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
             <InfoIcon size={14} />
@@ -251,8 +259,38 @@ function InfoTooltip({ title, description }: { title: string; description: strin
           <span className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
             {description}
           </span>
+          {extra}
         </span>
       )}
+    </span>
+  );
+}
+
+/** Reference scale for the L1 Average Test Ratio — four colored bands
+ *  with the range and a localised quality label.  Helps the reader place
+ *  their own number within "low / average / good / excellent". */
+function TestRatioScale() {
+  const t = useT();
+  // Bands from the project's three-bucket palette: rose (low),
+  // amber (average), emerald-500 (good), emerald-600 (excellent).
+  const bands: { range: string; label: string; bar: string; text: string }[] = [
+    { range: "< 0.10",      label: t("common.scale.low"),       bar: "bg-rose-500 dark:bg-rose-400",       text: "text-rose-600 dark:text-rose-400" },
+    { range: "0.10 – 0.25", label: t("common.scale.average"),   bar: "bg-amber-500 dark:bg-amber-400",     text: "text-amber-600 dark:text-amber-400" },
+    { range: "0.25 – 0.50", label: t("common.scale.good"),      bar: "bg-emerald-500 dark:bg-emerald-400", text: "text-emerald-600 dark:text-emerald-400" },
+    { range: "> 0.50",      label: t("common.scale.excellent"), bar: "bg-emerald-600 dark:bg-emerald-300", text: "text-emerald-700 dark:text-emerald-300" },
+  ];
+  return (
+    <span className="mt-1 flex flex-col gap-1.5">
+      <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-500">
+        {t("profile.l1.avg_test_ratio.scale_title")}
+      </span>
+      {bands.map((b) => (
+        <span key={b.range} className="flex items-center gap-2 text-[11px]">
+          <span className={`inline-block h-1.5 w-6 rounded-full ${b.bar}`} aria-hidden="true" />
+          <span className="font-mono tabular-nums text-slate-600 dark:text-slate-300">{b.range}</span>
+          <span className={`uppercase tracking-wide ${b.text}`}>{b.label}</span>
+        </span>
+      ))}
     </span>
   );
 }
@@ -320,6 +358,7 @@ function FactRow({
   value,
   accent = false,
   descKey,
+  tooltipExtra,
 }: {
   label: string;
   value: React.ReactNode;
@@ -327,13 +366,16 @@ function FactRow({
   /** When set, an ⓘ button is rendered next to the label whose tooltip
    *  carries this description (resolved via i18n). */
   descKey?: string;
+  /** Optional rich content appended to the tooltip body (e.g. a scale
+   *  legend for Average Test Ratio). */
+  tooltipExtra?: React.ReactNode;
 }) {
   const t = useT();
   return (
     <div className="flex items-end justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
       <span className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
         {label}
-        {descKey && <InfoTooltip title={label} description={t(descKey)} />}
+        {descKey && <InfoTooltip title={label} description={t(descKey)} extra={tooltipExtra} />}
       </span>
       <span className={`font-mono font-bold ${accent ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-slate-100"}`}>{value}</span>
     </div>
@@ -389,6 +431,7 @@ function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
           <FactRow
             label={t("profile.l1.avg_test_ratio")}
             descKey="profile.l1.avg_test_ratio.desc"
+            tooltipExtra={<TestRatioScale />}
             value={l1.avg_test_ratio.toFixed(2)}
             accent
           />

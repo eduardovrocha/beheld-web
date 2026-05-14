@@ -107,6 +107,11 @@ const pt: Dict = {
     "Janela temporal entre o seu primeiro e último commit nos repositórios importados — proxy de há quanto tempo você programa profissionalmente.",
   "profile.l1.avg_test_ratio.desc":
     "Proporção média de arquivos de teste vs arquivos de produção entre os repositórios. Mede disciplina histórica de testes.",
+  "profile.l1.avg_test_ratio.scale_title": "Escala de referência",
+  "common.scale.low": "baixo",
+  "common.scale.average": "médio",
+  "common.scale.good": "bom",
+  "common.scale.excellent": "excelente",
   "profile.l1.last_commit.desc":
     "Dias desde o seu commit mais recente entre os repositórios importados.",
 
@@ -248,6 +253,11 @@ const en: Dict = {
     "Time span between your earliest and latest commit across imported repositories — a proxy for how long you've been programming professionally.",
   "profile.l1.avg_test_ratio.desc":
     "Average ratio of test files to production files across the repositories. Measures historical testing discipline.",
+  "profile.l1.avg_test_ratio.scale_title": "Reference scale",
+  "common.scale.low": "low",
+  "common.scale.average": "average",
+  "common.scale.good": "good",
+  "common.scale.excellent": "excellent",
   "profile.l1.last_commit.desc":
     "Days since your most recent commit across the imported repositories.",
 
@@ -384,6 +394,11 @@ const es: Dict = {
     "Ventana temporal entre tu primer y último commit en los repositorios importados — proxy de hace cuánto programas profesionalmente.",
   "profile.l1.avg_test_ratio.desc":
     "Ratio promedio de archivos de test vs archivos de producción entre los repositorios. Mide disciplina histórica de tests.",
+  "profile.l1.avg_test_ratio.scale_title": "Escala de referencia",
+  "common.scale.low": "bajo",
+  "common.scale.average": "medio",
+  "common.scale.good": "bueno",
+  "common.scale.excellent": "excelente",
   "profile.l1.last_commit.desc":
     "Días desde tu commit más reciente entre los repositorios importados.",
 

@@ -196,17 +196,27 @@
           "Avg Session Duration" => "Duração média de uma sessão de Claude Code, em minutos.",
           "Tool Variety (avg)"   => "Número médio de tools distintas usadas por sessão. Variedade alta sugere uso amplo das capacidades do agente.",
         }
-        fact_info = ->(label) {
+        # Test-ratio reference scale — only rendered when fact_info is
+        # called with `extra: :test_ratio_scale`.
+        scale_html = <<~HTML
+          <span class="tip-scale-title">Escala de referência</span>
+          <span class="tip-scale-row low"><span class="tip-scale-bar"></span><span class="tip-scale-range">&lt; 0.10</span><span class="tip-scale-label">baixo</span></span>
+          <span class="tip-scale-row average"><span class="tip-scale-bar"></span><span class="tip-scale-range">0.10 – 0.25</span><span class="tip-scale-label">médio</span></span>
+          <span class="tip-scale-row good"><span class="tip-scale-bar"></span><span class="tip-scale-range">0.25 – 0.50</span><span class="tip-scale-label">bom</span></span>
+          <span class="tip-scale-row excellent"><span class="tip-scale-bar"></span><span class="tip-scale-range">&gt; 0.50</span><span class="tip-scale-label">excelente</span></span>
+        HTML
+        fact_info = ->(label, extra: nil) {
           desc = fact_descs[label]
           return "" unless desc
-          %(<span class="stat-info" tabindex="0" aria-label="#{label} — #{desc}">#{info_svg}<span class="stat-tip" role="tooltip"><span class="stat-tip-head">#{info_svg}#{label}</span><span class="stat-tip-desc">#{desc}</span></span></span>).html_safe
+          extras_html = extra == :test_ratio_scale ? scale_html : ""
+          %(<span class="stat-info" tabindex="0" aria-label="#{label} — #{desc}">#{info_svg}<span class="stat-tip" role="tooltip"><span class="stat-tip-head">#{info_svg}#{label}</span><span class="stat-tip-desc">#{desc}</span>#{extras_html}</span></span>).html_safe
         }
       %>
       <% if l1_present?(l1) %>
         <div class="fact-row"><span class="fact-label">Total Repositories<%= fact_info["Total Repositories"] %></span><span class="fact-value"><%= l1["total_repos"].to_i %></span></div>
         <div class="fact-row"><span class="fact-label">Total Commits<%= fact_info["Total Commits"] %></span><span class="fact-value"><%= l1["total_commits"].to_i.to_fs(:delimited, delimiter: ",") %></span></div>
         <div class="fact-row"><span class="fact-label">Activity Window<%= fact_info["Activity Window"] %></span><span class="fact-value small"><%= format_l1_activity_window(l1) %></span></div>
-        <div class="fact-row"><span class="fact-label">Average Test Ratio<%= fact_info["Average Test Ratio"] %></span><span class="fact-value text-accent"><%= sprintf("%.2f", l1["avg_test_ratio"].to_f) %></span></div>
+        <div class="fact-row"><span class="fact-label">Average Test Ratio<%= fact_info.call("Average Test Ratio", extra: :test_ratio_scale) %></span><span class="fact-value text-accent"><%= sprintf("%.2f", l1["avg_test_ratio"].to_f) %></span></div>
         <div class="fact-row"><span class="fact-label">Last Commit<%= fact_info["Last Commit"] %></span><span class="fact-value"><%= format_days_ago(l1["latest_commit"]) %></span></div>
 
         <div class="chip-block">
