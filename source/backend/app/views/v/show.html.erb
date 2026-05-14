@@ -47,12 +47,16 @@
   <%# ── stats grid (4 dimensões + sessions) ───────────────────────────── %>
   <%
     info_svg = %(<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>)
-    stat_desc = {
-      "Prompt Q." => "Qualidade dos prompts: comprimento médio, contexto de código, variedade de tools usadas e duração das sessões produtivas.",
-      "Test Mat." => "Maturidade em testes: sessões com contexto de teste, padrões TDD e arquivos/comandos de teste — combinado com a baseline histórica do L1.",
-      "Breadth"   => "Amplitude técnica: diversidade de ecossistemas, plataformas e linguagens. Combina histórico git (L1, 60%) com sessões recentes (L2, 40%).",
-      "Growth"    => "Trajetória de evolução: novos ecossistemas adotados e mudança no ratio de testes contra a baseline L1 — fallback para 30 dias quando L1 não existe.",
-      "Sessions"  => "Sessões do Claude Code consideradas no cálculo dos scores. Janela típica: últimos 30 dias.",
+    # Each stat carries:
+    #   short label   — what's shown in the chip header (compact)
+    #   full title    — used inside the tooltip header (canonical name)
+    #   description   — body of the tooltip
+    stat_meta = {
+      "Prompt Q." => { title: "Prompt Quality",   desc: "Qualidade dos prompts: comprimento médio, contexto de código, variedade de tools usadas e duração das sessões produtivas." },
+      "Test Mat." => { title: "Test Maturity",    desc: "Maturidade em testes: sessões com contexto de teste, padrões TDD e arquivos/comandos de teste — combinado com a baseline histórica do L1." },
+      "Breadth"   => { title: "Tech Breadth",     desc: "Amplitude técnica: diversidade de ecossistemas, plataformas e linguagens. Combina histórico git (L1, 60%) com sessões recentes (L2, 40%)." },
+      "Growth"    => { title: "Growth Rate",      desc: "Trajetória de evolução: novos ecossistemas adotados e mudança no ratio de testes contra a baseline L1 — fallback para 30 dias quando L1 não existe." },
+      "Sessions"  => { title: "Sessions Analyzed", desc: "Sessões do Claude Code consideradas no cálculo dos scores. Janela típica: últimos 30 dias." },
     }
   %>
   <div class="stats">
@@ -62,14 +66,15 @@
       ["Breadth",   scores["tech_breadth"].to_i,   score_fill_class(scores["tech_breadth"].to_i)],
       ["Growth",    scores["growth_rate"].to_i,    "fill-accent"],
     ].each do |label, value, fill_class| %>
+      <% meta = stat_meta[label] %>
       <div class="stat">
         <div class="stat-label">
           <span><%= label %></span>
-          <span class="stat-info" tabindex="0" aria-label="<%= label %> — <%= stat_desc[label] %>">
+          <span class="stat-info" tabindex="0" aria-label="<%= meta[:title] %> — <%= meta[:desc] %>">
             <%= raw info_svg %>
             <span class="stat-tip" role="tooltip">
-              <span class="stat-tip-head"><%= raw info_svg %><%= label %></span>
-              <span class="stat-tip-desc"><%= stat_desc[label] %></span>
+              <span class="stat-tip-head"><%= raw info_svg %><%= meta[:title] %></span>
+              <span class="stat-tip-desc"><%= meta[:desc] %></span>
             </span>
           </span>
         </div>
@@ -79,14 +84,15 @@
         </div>
       </div>
     <% end %>
+    <% sessions_meta = stat_meta["Sessions"] %>
     <div class="stat">
       <div class="stat-label">
         <span>Sessions</span>
-        <span class="stat-info" tabindex="0" aria-label="Sessions — <%= stat_desc['Sessions'] %>">
+        <span class="stat-info" tabindex="0" aria-label="<%= sessions_meta[:title] %> — <%= sessions_meta[:desc] %>">
           <%= raw info_svg %>
           <span class="stat-tip" role="tooltip">
-            <span class="stat-tip-head"><%= raw info_svg %>Sessions</span>
-            <span class="stat-tip-desc"><%= stat_desc["Sessions"] %></span>
+            <span class="stat-tip-head"><%= raw info_svg %><%= sessions_meta[:title] %></span>
+            <span class="stat-tip-desc"><%= sessions_meta[:desc] %></span>
           </span>
         </span>
       </div>

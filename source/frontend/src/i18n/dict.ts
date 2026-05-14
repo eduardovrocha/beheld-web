@@ -64,6 +64,11 @@ const pt: Dict = {
   "profile.stats.growth": "Growth",
   "profile.stats.sessions": "Sessions",
 
+  "profile.stats.prompt.title":   "Prompt Quality",
+  "profile.stats.test.title":     "Test Maturity",
+  "profile.stats.breadth.title":  "Tech Breadth",
+  "profile.stats.growth.title":   "Growth Rate",
+  "profile.stats.sessions.title": "Sessions Analyzed",
   "profile.stats.prompt.desc":
     "Qualidade dos prompts: comprimento médio, contexto de código, variedade de tools usadas e duração das sessões produtivas.",
   "profile.stats.test.desc":
@@ -180,6 +185,11 @@ const en: Dict = {
   "profile.stats.growth": "Growth",
   "profile.stats.sessions": "Sessions",
 
+  "profile.stats.prompt.title":   "Prompt Quality",
+  "profile.stats.test.title":     "Test Maturity",
+  "profile.stats.breadth.title":  "Tech Breadth",
+  "profile.stats.growth.title":   "Growth Rate",
+  "profile.stats.sessions.title": "Sessions Analyzed",
   "profile.stats.prompt.desc":
     "Prompt quality: average length, code context, tool variety, and productive session duration.",
   "profile.stats.test.desc":
@@ -289,6 +299,11 @@ const es: Dict = {
   "profile.stats.growth": "Growth",
   "profile.stats.sessions": "Sessions",
 
+  "profile.stats.prompt.title":   "Prompt Quality",
+  "profile.stats.test.title":     "Test Maturity",
+  "profile.stats.breadth.title":  "Tech Breadth",
+  "profile.stats.growth.title":   "Growth Rate",
+  "profile.stats.sessions.title": "Sessions Analyzed",
   "profile.stats.prompt.desc":
     "Calidad de los prompts: longitud media, contexto de código, variedad de tools y duración de sesiones productivas.",
   "profile.stats.test.desc":
