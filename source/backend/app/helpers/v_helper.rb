@@ -1,9 +1,5 @@
 module VHelper
   # ── score colors (verde ≥75 / amarelo 50–74 / vermelho <50) ────────────────
-  #
-  # Three buckets, applied consistently in score bars + badge SVG. The badge
-  # controller uses score_hex (without "#") for SVG attributes; views use
-  # score_class for Tailwind/utility classes.
 
   def score_bucket(score)
     s = score.to_i
@@ -20,26 +16,20 @@ module VHelper
     end
   end
 
-  # Background + text class pairs used by score bars and the overall card.
-  def score_bg_class(score)
+  def score_text_class(score)
     case score_bucket(score)
-    when :green  then "bg-emerald-500"
-    when :yellow then "bg-amber-500"
-    else              "bg-rose-500"
+    when :green  then "text-green"
+    when :yellow then "text-yellow"
+    else              "text-red"
     end
   end
 
-  def score_text_class(score)
-    case score_bucket(score)
-    when :green  then "text-emerald-300"
-    when :yellow then "text-amber-300"
-    else              "text-rose-300"
-    end
+  def score_fill_class(score)
+    "fill-#{score_bucket(score)}"
   end
 
   # ── L1 helpers ─────────────────────────────────────────────────────────────
 
-  # "Mar 2019 → Nov 2025" — falls back to "—" when timestamps are absent.
   def format_l1_period(l1)
     earliest = parse_iso(l1["earliest_commit"])
     latest   = parse_iso(l1["latest_commit"])
@@ -47,20 +37,39 @@ module VHelper
     "#{l10n_month_year(earliest)} → #{l10n_month_year(latest)}"
   end
 
+  # "2015 → 2025" — apenas anos, para a coluna "Activity Window".
+  def format_l1_activity_window(l1)
+    earliest = parse_iso(l1["earliest_commit"])
+    latest   = parse_iso(l1["latest_commit"])
+    return "—" if earliest.nil? || latest.nil?
+    "#{earliest.year} → #{latest.year}"
+  end
+
+  def format_days_ago(iso)
+    return "—" if iso.blank?
+    dt = parse_iso(iso)
+    return "—" unless dt
+    days = ((Time.current - dt) / 86_400).floor
+    return "today" if days <= 0
+    return "1d ago" if days == 1
+    "#{days}d ago"
+  end
+
   def l1_present?(l1)
     l1.is_a?(Hash) && l1["total_repos"].to_i > 0
   end
 
-  # Boolean dict → " · "-joined list of keys where v == true.
   def join_true_keys(hash)
-    return "—" unless hash.is_a?(Hash)
-    keys = hash.select { |_, v| v }.keys
-    keys.empty? ? "—" : keys.join(" · ")
+    return [] unless hash.is_a?(Hash)
+    hash.select { |_, v| v }.keys
   end
 
   # ── L2 / signals helpers ───────────────────────────────────────────────────
 
-  # Workflow distribution top-3 formatted as "TDD 23% · Test-after 39% · ...".
+  def l2_present?(l2)
+    l2.is_a?(Hash) && l2["sessions_analyzed"].to_i > 0
+  end
+
   def format_workflow_distribution(dist, limit: 3)
     return "—" unless dist.is_a?(Hash) && dist.any?
     dist.sort_by { |_, v| -v.to_f }.first(limit).map do |label, value|
@@ -68,13 +77,12 @@ module VHelper
     end.join(" · ")
   end
 
-  # Numeric dict → "key1 · key2 · ..." sorted by value desc.
-  def join_top_keys_by_value(hash, limit: 6)
-    return "—" unless hash.is_a?(Hash) && hash.any?
-    hash.sort_by { |_, v| -v.to_f }.first(limit).map { |k, _| k }.join(" · ")
+  def top_keys_by_value(hash, limit: 6)
+    return [] unless hash.is_a?(Hash) && hash.any?
+    hash.sort_by { |_, v| -v.to_f }.first(limit).map { |k, _| k }
   end
 
-  # ── expiration banner ──────────────────────────────────────────────────────
+  # ── expiration ─────────────────────────────────────────────────────────────
 
   def bundle_expired?(bundle)
     bundle.expires_at.present? && bundle.expires_at < Time.current
@@ -85,12 +93,7 @@ module VHelper
     l10n_day_month_year(bundle.expires_at)
   end
 
-  # ── creation date ──────────────────────────────────────────────────────────
-
-  def format_created_at(iso)
-    dt = parse_iso(iso) || bundle.created_at
-    l10n_day_month_year(dt)
-  end
+  # ── dates ──────────────────────────────────────────────────────────────────
 
   def format_created_at_long(iso)
     dt = parse_iso(iso)
@@ -98,12 +101,134 @@ module VHelper
     "#{l10n_day_month_year(dt)} às #{dt.strftime('%H:%M')}"
   end
 
-  # ── public key truncation ──────────────────────────────────────────────────
+  def format_iso_z(iso)
+    dt = parse_iso(iso)
+    return "—" unless dt
+    dt.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
+  end
 
-  def truncate_pubkey(pk)
-    return "—" if pk.blank?
-    raw = pk.sub(/^ed25519:/, "")
-    raw.length > 16 ? "#{raw.first(16)}…" : raw
+  # ── identity surface (no real name available) ──────────────────────────────
+
+  # Two-char monogram derived from short_id. Deterministic + opaque — no PII.
+  def short_id_initials(short_id)
+    chars = short_id.to_s.gsub(/[^A-Za-z0-9]/, "").chars
+    pick = chars.first(2).map(&:upcase).join
+    pick.empty? ? "DP" : pick.ljust(2, "X")
+  end
+
+  # "m4Kk_1hPBN8" → "m4Kk-1hPB" — visually mimics the UUID style the mock used.
+  def format_short_id(short_id)
+    raw = short_id.to_s
+    return raw if raw.length <= 8
+    "#{raw[0, 4]}-#{raw[4, 4]}"
+  end
+
+  # ── public key + signature surface ────────────────────────────────────────
+
+  def short_signature(sig)
+    return "—" if sig.blank?
+    sig.to_s
+  end
+
+  # ── chain → trend data (server-rendered chart) ────────────────────────────
+
+  # Walks `bundle.payload['previous_hash']` recursively (capped at MAX_LINKS),
+  # newest first.  Returns an Array of { period:, scores:, created_at: } in
+  # chronological order so the chart paths read left-to-right.
+  def trend_points(bundle, max_links: 24)
+    chain = []
+    visited = Set.new
+    current = bundle
+    while current && !visited.include?(current.id) && chain.size < max_links
+      visited << current.id
+      inner = current.payload.is_a?(Hash) ? (current.payload["payload"] || {}) : {}
+      created_at = parse_iso(inner["created_at"]) || current.created_at
+      chain << {
+        created_at: created_at,
+        scores: inner["scores"] || {},
+      }
+      prev_hash = inner["previous_hash"]
+      break if prev_hash.blank?
+      current = Bundle.find_by(bundle_hash: prev_hash)
+    end
+    chain.reverse
+  end
+
+  TREND_LINES = [
+    { key: "overall",        label: "Overall",  stroke: "var(--primary)",          width: 2.5 },
+    { key: "prompt_quality", label: "Prompt",   stroke: "var(--accent)",           width: 1.5 },
+    { key: "test_maturity",  label: "Tests",    stroke: "var(--warning)",          width: 1.5 },
+    { key: "tech_breadth",   label: "Breadth",  stroke: "var(--muted-foreground)", width: 1.5 },
+    { key: "growth_rate",    label: "Growth",   stroke: "var(--foreground)",       width: 1.5 },
+  ].freeze
+
+  # ── trend stats (Net Δ, σ, consistency) ───────────────────────────────────
+
+  def trend_stats(points)
+    overall = points.map { |p| p[:scores]["overall"].to_i }
+    return { net_delta: 0, sigma: 0.0, consistency: "—" } if overall.size < 2
+    net_delta = overall.last - overall.first
+    mean = overall.sum.to_f / overall.size
+    variance = overall.sum { |x| (x - mean)**2 } / overall.size
+    sigma = Math.sqrt(variance)
+    {
+      net_delta: net_delta,
+      sigma: sigma.round(1),
+      consistency: consistency_label(sigma),
+    }
+  end
+
+  def consistency_label(sigma)
+    case sigma
+    when 0..2.5  then "Very High"
+    when 2.5..6  then "High"
+    when 6..12   then "Medium"
+    else              "Low"
+    end
+  end
+
+  def signed_delta(delta)
+    return "0" if delta.zero?
+    delta.positive? ? "+#{delta}" : delta.to_s
+  end
+
+  # ── SVG chart path generation ─────────────────────────────────────────────
+
+  CHART_WIDTH  = 624
+  CHART_HEIGHT = 218
+  CHART_TOP    = 8
+  CHART_BOTTOM = 226
+  CHART_LEFT   = 24
+  CHART_RIGHT  = 648
+
+  def chart_x_for(idx, total)
+    return CHART_LEFT if total <= 1
+    CHART_LEFT + (CHART_RIGHT - CHART_LEFT) * idx.to_f / (total - 1)
+  end
+
+  def chart_y_for(score)
+    s = [[score.to_i, 0].max, 100].min
+    CHART_BOTTOM - (CHART_BOTTOM - CHART_TOP) * (s / 100.0)
+  end
+
+  # Returns the SVG `d` attribute for a monotone-cubic-ish line — for our small
+  # point count a straight polyline is plenty and stays sharp at all densities.
+  def chart_path_d(points, score_key)
+    return "" if points.empty?
+    total = points.size
+    coords = points.each_with_index.map do |p, idx|
+      x = chart_x_for(idx, total).round(2)
+      y = chart_y_for(p[:scores][score_key].to_i).round(2)
+      [x, y]
+    end
+    coords.each_with_index.map do |(x, y), i|
+      "#{i.zero? ? 'M' : 'L'}#{x},#{y}"
+    end.join
+  end
+
+  # X-axis tick labels: month "06", "07" …
+  def chart_x_ticks(points)
+    points.map { |p| p[:created_at].strftime("%m") }
   end
 
   private
@@ -135,6 +260,7 @@ module VHelper
     "feature_work" => "Feature work",
     "refactor" => "Refactor",
     "exploration" => "Exploration",
+    "exploratory" => "Exploration",
   }.freeze
 
   def humanize_workflow(key)

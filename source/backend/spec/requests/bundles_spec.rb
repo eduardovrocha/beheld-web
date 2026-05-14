@@ -188,7 +188,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
       get "/v/#{b.short_id}"
       expect(response).to have_http_status(:ok)
       expect(response.content_type).to start_with("text/html")
-      expect(response.body).to include("BASE HISTÓRICA")
+      expect(response.body).to include("Git History Analysis")
     end
 
     it "rotula schema_version no /v/:id/summary para v1" do

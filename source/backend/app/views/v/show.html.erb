@@ -1,9 +1,10 @@
 <%#
-  Public profile page (Phase 5 / F5.5 + Phase 6 / Objetivo 2).
+  Public profile page (Phase 5 / F5.5 + Phase 6 / Obj 2 — refined UI).
 
-  Server-rendered HTML — scores, L1 and L2 sections are visible without
-  JavaScript. The verification status block is updated progressively by
-  inline JS that re-verifies the Ed25519 signature in the browser.
+  Server-rendered HTML — scores, L1 / L2 sections, trend chart, and proof
+  footer are all visible without JavaScript.  The Ed25519 verification runs
+  progressively via inline JS that flips the "SIG_MATCH" indicator in the
+  footer once the browser confirms the signature.
 
   Privacy: NEVER renders root_commit_hashes as a list, repo names, paths,
   branch names, or any free-text from the bundle.
@@ -13,6 +14,8 @@
 <% l1       = inner["l1"] || {} %>
 <% l2       = inner["l2"] || inner["signals"] || {} %>
 <% is_v2    = @bundle.schema_version == "v2" %>
+<% trend    = trend_points(@bundle) %>
+<% stats    = trend_stats(trend) %>
 
 <% if bundle_expired?(@bundle) %>
   <div class="banner banner-warn" role="alert">
@@ -21,112 +24,253 @@
   </div>
 <% end %>
 
-<h1>Perfil verificado · score
-  <span class="<%= score_text_class(scores["overall"].to_i) %>">
-    <%= scores["overall"].to_i %>/100
-  </span>
-</h1>
-<div class="subtitle">
-  Gerado em <%= format_created_at_long(inner["created_at"]) %> ·
-  devprofile v<%= inner["devprofile_version"] %>
-</div>
-
-<%# ── SCORE OVERALL — destaque visual ──────────────────────────────────── %>
-<section class="card overall" aria-labelledby="overall-label">
-  <div class="label" id="overall-label">SCORE GERAL</div>
-  <div>
-    <span class="value <%= score_text_class(scores["overall"].to_i) %>"><%= scores["overall"].to_i %></span>
-    <span class="of">/ 100</span>
-  </div>
-  <div class="bar" role="img" aria-label="score overall <%= scores["overall"].to_i %> de 100">
-    <div class="fill fill-<%= score_bucket(scores["overall"].to_i) %>" style="width: <%= scores["overall"].to_i %>%;"></div>
-  </div>
-</section>
-
-<%# ── 4 dimensões ──────────────────────────────────────────────────────── %>
-<section class="card" aria-labelledby="dim-label">
-  <h2 id="dim-label">Dimensões</h2>
-  <div class="scores-divider"></div>
-  <% [
-    ["Prompt Quality", scores["prompt_quality"].to_i],
-    ["Test Maturity",  scores["test_maturity"].to_i],
-    ["Tech Breadth",   scores["tech_breadth"].to_i],
-    ["Growth Rate",    scores["growth_rate"].to_i],
-  ].each do |label, value| %>
-    <div class="score-row">
-      <span class="name"><%= label %></span>
-      <div class="bar" role="img" aria-label="<%= label %> <%= value %> de 100">
-        <div class="fill fill-<%= score_bucket(value) %>" style="width: <%= value %>%;"></div>
+<article class="profile">
+  <%# ── header ─────────────────────────────────────────────────────────── %>
+  <header class="profile-head">
+    <div class="head-left">
+      <div class="avatar" aria-hidden="true"><%= short_id_initials(@bundle.short_id) %></div>
+      <div>
+        <h1 class="dev-name">DevProfile</h1>
+        <p class="dev-id">ID: <%= format_short_id(@bundle.short_id) %></p>
+        <div class="verify-pill" id="verify-pill">
+          <span class="pulse" aria-hidden="true"></span>
+          <span id="verify-pill-text">ED25519 PROFILE</span>
+        </div>
       </div>
-      <span class="num"><%= value %></span>
     </div>
-  <% end %>
-</section>
+    <div class="head-right">
+      <div class="overall-label">Overall Score</div>
+      <div class="overall-number"><%= scores["overall"].to_i %></div>
+    </div>
+  </header>
 
-<%# ── L1 — base histórica (apenas v2) ──────────────────────────────────── %>
-<% if is_v2 %>
-  <section class="card" aria-labelledby="l1-label">
-    <h2 id="l1-label">BASE HISTÓRICA <span style="text-transform: none; color: #475569;">· Git Bootstrap</span></h2>
-    <% if l1_present?(l1) %>
-      <p class="section-headline">
-        <strong><%= l1["total_repos"] %> repositórios</strong>
-        · <%= l1["total_commits"].to_i.to_fs(:delimited, delimiter: ".") %> commits
-        <span class="meta">· <%= format_l1_period(l1) %></span>
-      </p>
-      <dl class="facts">
-        <dt>Ecosystems</dt><dd><%= join_true_keys(l1["ecosystems"]) %></dd>
-        <dt>Plataformas</dt><dd><%= join_true_keys(l1["platforms"]) %></dd>
-        <dt>Maturidade</dt>
-        <dd><%= (l1["avg_test_ratio"].to_f * 100).round %>% arquivos de teste</dd>
-      </dl>
+  <%# ── stats grid (4 dimensões + sessions) ───────────────────────────── %>
+  <div class="stats">
+    <% [
+      ["Prompt Q.", scores["prompt_quality"].to_i, score_fill_class(scores["prompt_quality"].to_i)],
+      ["Test Mat.", scores["test_maturity"].to_i,  score_fill_class(scores["test_maturity"].to_i)],
+      ["Breadth",   scores["tech_breadth"].to_i,   score_fill_class(scores["tech_breadth"].to_i)],
+      ["Growth",    scores["growth_rate"].to_i,    "fill-accent"],
+    ].each do |label, value, fill_class| %>
+      <div class="stat">
+        <div class="stat-label"><%= label %></div>
+        <div class="stat-value tabular"><%= value %></div>
+        <div class="stat-bar" role="img" aria-label="<%= label %> <%= value %> de 100">
+          <div class="fill <%= fill_class %>" style="width: <%= value %>%;"></div>
+        </div>
+      </div>
+    <% end %>
+    <div class="stat">
+      <div class="stat-label">Sessions</div>
+      <div class="stat-value tabular"><%= l2["sessions_analyzed"].to_i %></div>
+    </div>
+  </div>
+
+  <%# ── trend chart ────────────────────────────────────────────────────── %>
+  <section class="profile-section">
+    <div class="trend-head">
+      <div>
+        <h3 class="section-title">
+          <span class="dot"></span>
+          <span>TREND: <strong>12-Month Score Trajectory</strong></span>
+        </h3>
+        <p class="section-sub">
+          Snapshots reconstructed from signed payload chain via
+          <code class="text-mono">previous_hash</code>.
+        </p>
+      </div>
+      <% if trend.size > 1 %>
+        <div class="trend-stats">
+          <div class="stat-card <%= stats[:net_delta].positive? ? 'delta-positive' : (stats[:net_delta].negative? ? 'delta-negative' : '') %>">
+            <div class="k">Net Δ</div>
+            <div class="v"><%= signed_delta(stats[:net_delta]) %></div>
+          </div>
+          <div class="stat-card">
+            <div class="k">σ</div>
+            <div class="v"><%= stats[:sigma] %></div>
+          </div>
+          <div class="stat-card">
+            <div class="k">Consistency</div>
+            <div class="v"><%= stats[:consistency] %></div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if trend.size <= 1 %>
+      <div class="chart-empty">
+        Apenas 1 snapshot na cadeia — a trajetória aparece após o segundo <code class="text-mono">devprofile snapshot</code>.
+      </div>
     <% else %>
-      <p class="empty-note">Não disponível — o dev ainda não realizou o Git Bootstrap.</p>
+      <div class="chart-wrap" role="img" aria-label="Score trajectory chart">
+        <svg viewBox="0 0 660 256" preserveAspectRatio="none">
+          <%# Gridlines (5 horizontal) %>
+          <% [226, 171.5, 117, 62.5, 8].each do |y| %>
+            <line stroke="var(--border)" stroke-dasharray="3 3" fill="none" x1="24" y1="<%= y %>" x2="648" y2="<%= y %>"/>
+          <% end %>
+          <%# X axis baseline %>
+          <line stroke="var(--border)" fill="none" x1="24" y1="226" x2="648" y2="226"/>
+
+          <%# Y axis labels %>
+          <% [[226, "0"], [171.5, "25"], [117, "50"], [62.5, "75"], [8, "100"]].each do |y, label| %>
+            <text x="16" y="<%= y %>" font-family="var(--font-mono)" font-size="10" text-anchor="end" fill="var(--muted-foreground)"><tspan dy="0.355em"><%= label %></tspan></text>
+          <% end %>
+
+          <%# X axis ticks (months) %>
+          <% chart_x_ticks(trend).each_with_index do |label, i| %>
+            <text x="<%= chart_x_for(i, trend.size).round(2) %>" y="234" font-family="var(--font-mono)" font-size="10" text-anchor="middle" fill="var(--muted-foreground)"><tspan dy="0.71em"><%= label %></tspan></text>
+          <% end %>
+
+          <%# Score lines (5 dimensions) %>
+          <% VHelper::TREND_LINES.each do |line| %>
+            <path d="<%= chart_path_d(trend, line[:key]) %>" stroke="<%= line[:stroke] %>" stroke-width="<%= line[:width] %>" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <% end %>
+        </svg>
+      </div>
     <% end %>
-  </section>
-<% end %>
 
-<%# ── L2 / signals — trajetória observada ──────────────────────────────── %>
-<section class="card" aria-labelledby="l2-label">
-  <h2 id="l2-label">
-    <% if is_v2 %>TRAJETÓRIA OBSERVADA <span style="text-transform: none; color: #475569;">· Claude Code</span>
-    <% else %>SINAIS DE SESSÃO<% end %>
-  </h2>
-  <p class="section-headline">
-    <strong><%= l2["sessions_analyzed"].to_i %> sessões</strong>
-    · <%= l2["period_days"].to_i %> dias
-  </p>
-  <dl class="facts">
-    <% if l2["workflow_distribution"].present? %>
-      <dt>Workflow</dt>
-      <dd><%= format_workflow_distribution(l2["workflow_distribution"]) %></dd>
-    <% end %>
-    <dt>Ecosystems</dt>
-    <dd><%= join_top_keys_by_value(l2["ecosystems"]) %></dd>
-    <dt>Plataformas</dt>
-    <dd><%= join_top_keys_by_value(l2["platforms"]) %></dd>
-  </dl>
-</section>
-
-<%# ── Verificação criptográfica (progressiva via JS) ───────────────────── %>
-<section class="card" id="verification" aria-labelledby="verif-label">
-  <h2 id="verif-label">🔐 Verificação de autenticidade</h2>
-
-  <%# Initial state — replaced by JS once verification finishes. %>
-  <div id="verif-rows" data-initial="true">
-    <div class="row pending" data-check="loading">
-      <span class="mark">⏳</span>
-      <span>Verificando autenticidade…</span>
+    <div class="chart-legend">
+      <% VHelper::TREND_LINES.each do |line| %>
+        <div class="item">
+          <span class="swatch" style="background: <%= line[:stroke] %>; height: <%= line[:width] %>px;"></span>
+          <span><%= line[:label] %></span>
+        </div>
+      <% end %>
     </div>
+  </section>
+
+  <%# ── L1 + L2 two-column ─────────────────────────────────────────────── %>
+  <div class="two-col">
+    <%# ── L1: Git History Analysis ────────────────────────────────────── %>
+    <section>
+      <h3 class="section-title">
+        <span class="dot"></span>
+        <span>L1: <strong>Git History Analysis</strong></span>
+      </h3>
+      <% if l1_present?(l1) %>
+        <div class="fact-row"><span class="fact-label">Total Repositories</span><span class="fact-value"><%= l1["total_repos"].to_i %></span></div>
+        <div class="fact-row"><span class="fact-label">Total Commits</span><span class="fact-value"><%= l1["total_commits"].to_i.to_fs(:delimited, delimiter: ",") %></span></div>
+        <div class="fact-row"><span class="fact-label">Activity Window</span><span class="fact-value small"><%= format_l1_activity_window(l1) %></span></div>
+        <div class="fact-row"><span class="fact-label">Average Test Ratio</span><span class="fact-value text-accent"><%= sprintf("%.2f", l1["avg_test_ratio"].to_f) %></span></div>
+        <div class="fact-row"><span class="fact-label">Last Commit</span><span class="fact-value"><%= format_days_ago(l1["latest_commit"]) %></span></div>
+
+        <div class="chip-block">
+          <div class="chip-label">Primary Ecosystems</div>
+          <div class="chip-row">
+            <% (join_true_keys(l1["ecosystems"])).first(8).each do |eco| %>
+              <span class="chip"><%= eco %>: true</span>
+            <% end %>
+            <% if join_true_keys(l1["ecosystems"]).empty? %>
+              <span class="chip-muted">—</span>
+            <% end %>
+          </div>
+        </div>
+
+        <div class="chip-block">
+          <div class="chip-label">Platforms</div>
+          <div class="chip-row">
+            <% (join_true_keys(l1["platforms"])).first(8).each do |plat| %>
+              <span class="chip-muted"><%= plat %></span>
+            <% end %>
+            <% if join_true_keys(l1["platforms"]).empty? %>
+              <span class="chip-muted">—</span>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div class="empty-card">
+          <div class="badge">Bootstrap não realizado</div>
+          <p>Execute <code class="text-mono">devprofile import &lt;url&gt;</code> para popular a base histórica.</p>
+        </div>
+      <% end %>
+    </section>
+
+    <%# ── L2: Agentic Workflow Metrics ────────────────────────────────── %>
+    <section>
+      <h3 class="section-title">
+        <span class="dot accent"></span>
+        <span>L2: <strong>Agentic Workflow Metrics</strong></span>
+      </h3>
+      <% if l2_present?(l2) %>
+        <div class="fact-row"><span class="fact-label">Sessions Analyzed</span><span class="fact-value"><%= l2["sessions_analyzed"].to_i %></span></div>
+        <div class="fact-row"><span class="fact-label">Period</span><span class="fact-value small"><%= l2["period_days"].to_i %> days</span></div>
+        <% wm = l2["workflow_metrics"] || {} %>
+        <% if wm["test_after_ratio"] %>
+          <div class="fact-row"><span class="fact-label">Test-after Ratio</span><span class="fact-value text-accent"><%= sprintf("%.2f", wm["test_after_ratio"].to_f) %></span></div>
+        <% end %>
+        <% if wm["bash_to_read_ratio"] %>
+          <div class="fact-row"><span class="fact-label">Bash → Read</span><span class="fact-value"><%= sprintf("%.2f", wm["bash_to_read_ratio"].to_f) %>×</span></div>
+        <% end %>
+        <% if wm["session_avg_duration_min"] %>
+          <div class="fact-row"><span class="fact-label">Avg Session Duration</span><span class="fact-value"><%= wm["session_avg_duration_min"].to_f.round %> min</span></div>
+        <% end %>
+        <% if wm["tool_variety_avg"] %>
+          <div class="fact-row"><span class="fact-label">Tool Variety (avg)</span><span class="fact-value"><%= sprintf("%.1f", wm["tool_variety_avg"].to_f) %></span></div>
+        <% end %>
+
+        <% if l2["workflow_distribution"].present? %>
+          <div class="chip-block">
+            <div class="chip-label">Workflow Distribution</div>
+            <div class="chip-row">
+              <span class="chip"><%= format_workflow_distribution(l2["workflow_distribution"]) %></span>
+            </div>
+          </div>
+        <% end %>
+
+        <% top_eco = top_keys_by_value(l2["ecosystems"]) %>
+        <% if top_eco.any? %>
+          <div class="chip-block">
+            <div class="chip-label">Ecosystems (top)</div>
+            <div class="chip-row">
+              <% top_eco.each do |k| %><span class="chip-muted"><%= k %></span><% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <% top_plat = top_keys_by_value(l2["platforms"]) %>
+        <% if top_plat.any? %>
+          <div class="chip-block">
+            <div class="chip-label">Platforms (top)</div>
+            <div class="chip-row">
+              <% top_plat.each do |k| %><span class="chip-muted"><%= k %></span><% end %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="empty-card">
+          <div class="badge">L1_ONLY Profile</div>
+          <p>No Claude Code session telemetry submitted. Workflow signals are limited to git history.</p>
+        </div>
+      <% end %>
+    </section>
   </div>
 
-  <div class="pubkey">
-    <span>Chave pública:</span>
-    <code id="pubkey-trunc"><%= truncate_pubkey(@bundle.public_key) %></code>
-    <button type="button" id="copy-pubkey" data-clipboard="<%= @bundle.public_key %>">copiar</button>
-  </div>
-</section>
+  <%# ── proof footer ──────────────────────────────────────────────────── %>
+  <footer class="proof">
+    <div class="proof-head">
+      <span class="lbl">Proof of Authenticity (v<%= @bundle.payload["version"] %>.0)</span>
+      <span class="ok" id="sig-status">SIG_MATCH: VERIFYING…</span>
+    </div>
+    <div class="proof-row">
+      <span class="field">SHA256</span>
+      <span class="val"><%= @bundle.bundle_hash %></span>
+    </div>
+    <div class="proof-row">
+      <span class="field">ED25519</span>
+      <span class="val"><%= @bundle.payload["signature"] %></span>
+    </div>
+    <div class="proof-row">
+      <span class="field">PUB_KEY</span>
+      <span class="val"><%= @bundle.public_key %><button type="button" class="copy-btn" id="copy-pubkey" data-clipboard="<%= @bundle.public_key %>">copy</button></span>
+    </div>
+    <div class="proof-row">
+      <span class="field">ISSUED</span>
+      <span class="val"><%= format_iso_z(inner["created_at"]) %> · devprofile <%= inner["devprofile_version"] %></span>
+    </div>
+  </footer>
+</article>
 
-<%# Bundle JSON inlined for the verification script — saves an extra HTTP round-trip. %>
+<%# Bundle JSON inlined for the in-browser verification — no extra HTTP round-trip. %>
 <script type="application/json" id="bundle-data"><%= raw @bundle.payload.to_json %></script>
 
 <%= javascript_tag nonce: true do %>
@@ -136,36 +280,35 @@
     let bundle;
     try { bundle = JSON.parse(dataEl.textContent); } catch (_) { return; }
 
-    const rows = document.getElementById('verif-rows');
-    const set = (states) => {
-      rows.dataset.initial = "false";
-      rows.innerHTML = states.map(s =>
-        `<div class="row ${s.kind}" data-check="${s.key}"><span class="mark">${s.mark}</span><span>${s.text}</span></div>`
-      ).join('');
-    };
-
-    // ── copy-to-clipboard (pubkey button) ──────────────────────────────────
+    // ── copy-to-clipboard ────────────────────────────────────────────────
     const copyBtn = document.getElementById('copy-pubkey');
     if (copyBtn) {
       copyBtn.addEventListener('click', async () => {
-        const value = copyBtn.dataset.clipboard;
         try {
-          await navigator.clipboard.writeText(value);
+          await navigator.clipboard.writeText(copyBtn.dataset.clipboard);
           const orig = copyBtn.textContent;
-          copyBtn.textContent = '✓ copiado';
+          copyBtn.textContent = 'copied';
           setTimeout(() => { copyBtn.textContent = orig; }, 1500);
-        } catch (_) {
-          /* permission denied or insecure context — leave button untouched */
-        }
+        } catch (_) { /* permission denied or insecure context */ }
       });
     }
 
+    const pill   = document.getElementById('verify-pill-text');
+    const status = document.getElementById('sig-status');
+
+    function setPill(text) { if (pill)   pill.textContent = text; }
+    function setStatus(text, bad) {
+      if (!status) return;
+      status.textContent = text;
+      status.classList.toggle('bad', !!bad);
+    }
+
     if (!window.isSecureContext || !window.crypto || !window.crypto.subtle) {
-      set([{ kind: 'warn', mark: '⚠', key: 'no-subtle', text: 'Verificação requer HTTPS' }]);
+      setPill('ED25519 — HTTPS REQUIRED');
+      setStatus('SIG_MATCH: HTTPS_REQUIRED', true);
       return;
     }
 
-    // ── canonical JSON (sort keys at every depth) ──────────────────────────
     function sortDeep(v) {
       if (v === null || typeof v !== 'object') return v;
       if (Array.isArray(v)) return v.map(sortDeep);
@@ -177,24 +320,20 @@
     const toHex = (buf) => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 
     async function verify() {
-      // 1. recompute hash
       const canonical = enc.encode(JSON.stringify(sortDeep(bundle.payload)));
       const digest = await crypto.subtle.digest('SHA-256', canonical);
       const hashOk = ('sha256:' + toHex(digest)) === bundle.hash;
-
       if (!hashOk) {
-        set([
-          { kind: 'bad', mark: '✗', key: 'hash', text: 'Hash do payload divergente — bundle adulterado' },
-        ]);
+        setPill('ED25519 — HASH MISMATCH');
+        setStatus('SIG_MATCH: HASH_FAIL', true);
         return;
       }
 
-      // 2. verify Ed25519 signature
       const x = bundle.public_key.replace(/^ed25519:/, '');
       const sigHex = bundle.signature.replace(/^ed25519:/, '');
       const sigBytes = Uint8Array.from((sigHex.match(/.{2}/g) || []).map(b => parseInt(b, 16)));
 
-      let sigOk = false;
+      let ok = false;
       try {
         const key = await crypto.subtle.importKey(
           'jwk',
@@ -203,30 +342,15 @@
           false,
           ['verify']
         );
-        sigOk = await crypto.subtle.verify({ name: 'Ed25519' }, key, sigBytes, canonical);
-      } catch (e) {
-        sigOk = false;
-      }
+        ok = await crypto.subtle.verify({ name: 'Ed25519' }, key, sigBytes, canonical);
+      } catch (e) { ok = false; }
 
-      const createdAt = (bundle.payload || {}).created_at;
-      let created = '—';
-      if (createdAt) {
-        const d = new Date(createdAt);
-        created = d.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' }) +
-                  ' às ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      }
-
-      if (sigOk) {
-        set([
-          { kind: 'ok', mark: '✓', key: 'signature', text: 'Assinatura Ed25519 válida' },
-          { kind: 'ok', mark: '✓', key: 'hash', text: 'Hash do payload íntegro' },
-          { kind: 'ok', mark: '✓', key: 'created', text: 'Gerado em ' + created },
-        ]);
+      if (ok) {
+        setPill('ED25519 VERIFIED PROFILE');
+        setStatus('SIG_MATCH: OK', false);
       } else {
-        set([
-          { kind: 'bad', mark: '✗', key: 'signature', text: 'Assinatura inválida' },
-          { kind: 'bad', mark: '✗', key: 'tampered', text: 'Este bundle pode ter sido adulterado' },
-        ]);
+        setPill('ED25519 — SIGNATURE INVALID');
+        setStatus('SIG_MATCH: FAIL', true);
       }
     }
 
