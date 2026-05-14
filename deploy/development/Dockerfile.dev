@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1
+# Development image for the devprofile-backend Rails API.
+# Source is bind-mounted at runtime — this image only carries system deps and
+# the entrypoint. Gems are installed on first container start and cached in
+# the `bundle-cache` volume declared by docker-compose.yml.
+
+FROM ruby:3.3-slim
+
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      build-essential \
+      git \
+      libpq-dev \
+      libyaml-dev \
+      libffi-dev \
+      pkg-config \
+      curl \
+      tzdata && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV BUNDLE_PATH=/usr/local/bundle \
+    LANG=C.UTF-8
+
+WORKDIR /app
+
+COPY entrypoint.dev.sh /usr/local/bin/entrypoint.dev.sh
+RUN chmod +x /usr/local/bin/entrypoint.dev.sh
+
+EXPOSE 3000
+ENTRYPOINT ["/usr/local/bin/entrypoint.dev.sh"]
+CMD ["bundle", "exec", "rails", "server", "-b", "0.0.0.0", "-p", "3000"]

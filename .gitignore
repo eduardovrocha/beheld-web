@@ -1,0 +1,30 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Environment overrides (subdirs may also gitignore their own .env files)
+.env
+.env.local
+.env.*.local
+
+# Node / Vite (frontend builds)
+node_modules/
+**/node_modules/
+**/dist/
+*.tsbuildinfo
+
+# Ruby / Rails (backend caches and locally generated state)
+**/log/*.log
+**/tmp/cache/
+**/tmp/pids/
+**/tmp/sockets/
+**/storage/*.sqlite*
+**/coverage/
+
+# Docker
+docker-compose.override.yml

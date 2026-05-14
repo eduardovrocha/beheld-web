@@ -1,0 +1,17 @@
+# syntax=docker/dockerfile:1
+# Development image for the devprofile-frontend React SPA.
+# Source is bind-mounted at runtime; node_modules live in a named volume so
+# the slow first install isn't repeated across restarts.
+
+FROM oven/bun:1-slim
+
+ENV LANG=C.UTF-8
+
+WORKDIR /app
+
+COPY entrypoint.frontend.sh /usr/local/bin/entrypoint.frontend.sh
+RUN chmod +x /usr/local/bin/entrypoint.frontend.sh
+
+EXPOSE 5173
+ENTRYPOINT ["/usr/local/bin/entrypoint.frontend.sh"]
+CMD ["bun", "run", "dev"]

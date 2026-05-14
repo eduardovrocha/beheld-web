@@ -1,0 +1,76 @@
+# Development orchestration for devprofile (Rails 7.2 API + React SPA).
+#
+# Postgres and Redis are expected to be running on the HOST (not in containers).
+# The `host.docker.internal:host-gateway` mapping makes that work on:
+#   - Docker Desktop (macOS / Windows)      — already resolves out of the box
+#   - Linux Docker 20.10+                    — needs the host-gateway alias below
+#
+# Override defaults via a local `.env` (copy from `.env.example`).
+
+# Explicit project name — without this, Compose derives the project name from
+# the parent directory ("development"), which collides with any other project
+# at <something>/deploy/development/.
+name: devprofile
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: devprofile-backend:dev
+    container_name: devprofile-backend-dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    volumes:
+      - ../../source/backend:/app
+      - bundle-cache:/usr/local/bundle
+      - rails-tmp:/app/tmp
+    environment:
+      RAILS_ENV: development
+      RAILS_LOG_TO_STDOUT: "true"
+      BINDING: "0.0.0.0"
+      # Postgres on the host
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-devprofile_backend_development}
+      DB_NAME_TEST: ${DB_NAME_TEST:-devprofile_backend_test}
+      # Redis on the host
+      REDIS_URL: ${REDIS_URL:-redis://host.docker.internal:6379/1}
+      # CORS — comma-separated list, "*" for dev
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend.dev
+    image: devprofile-frontend:dev
+    container_name: devprofile-frontend-dev
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ../../source/frontend:/app
+      - frontend-node-modules:/app/node_modules
+    environment:
+      # API base the SPA hits at runtime (from the BROWSER, hence localhost
+      # rather than the docker service name).
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:${BACKEND_PORT:-3000}}
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+volumes:
+  bundle-cache:
+    name: devprofile-backend-bundle-cache
+  rails-tmp:
+    name: devprofile-backend-rails-tmp
+  frontend-node-modules:
+    name: devprofile-frontend-node-modules
