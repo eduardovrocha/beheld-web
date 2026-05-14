@@ -360,15 +360,19 @@
     .proof-row .field { width: 64px; flex-shrink: 0; color: var(--muted-foreground); }
     .proof-row .val { word-break: break-all; color: var(--foreground); opacity: 0.85; }
 
-    /* SHA256 / ED25519 / PUB_KEY chips — labels + icon-only copy buttons
-       laid out horizontally. Values never render. */
+    /* SHA256 / ED25519 / PUB_KEY chips — hover (or focus) opens a tooltip
+       card with the field value and a short description.  Pure CSS so it
+       works without JavaScript. */
     .proof-chips {
       display: flex; flex-wrap: wrap;
-      gap: 12px 24px;
+      gap: 12px 32px;
       margin-bottom: 16px;
     }
     .proof-chip {
-      display: inline-flex; align-items: center; gap: 8px;
+      position: relative;
+      display: inline-flex; align-items: center;
+      cursor: help;
+      outline: none;
     }
     .proof-chip-label {
       font-family: var(--font-mono);
@@ -376,26 +380,53 @@
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--muted-foreground);
+      text-decoration: underline dotted;
+      text-underline-offset: 4px;
+      transition: color 0.15s ease;
     }
-    .copy-icon-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 28px; height: 28px;
-      background: transparent;
+    .proof-chip:hover .proof-chip-label,
+    .proof-chip:focus .proof-chip-label { color: var(--foreground); }
+
+    /* Tooltip card — same shape as the reference mock (icon + accent
+       label, value, muted description). */
+    .proof-tip {
+      position: absolute;
+      left: 0; top: calc(100% + 8px);
+      z-index: 20;
+      width: 20rem; max-width: 90vw;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--muted-foreground);
-      cursor: pointer;
-      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-      padding: 0;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      pointer-events: none;
     }
-    .copy-icon-btn:hover {
-      background: var(--surface-muted);
-      color: var(--foreground);
-      border-color: color-mix(in srgb, var(--foreground) 25%, var(--border));
-    }
-    .copy-icon-btn.copied {
+    .proof-chip:hover .proof-tip,
+    .proof-chip:focus .proof-tip,
+    .proof-chip:focus-within .proof-tip { display: flex; }
+
+    .proof-tip-head {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.6875rem; font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
       color: var(--accent);
-      border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    }
+    .proof-tip-value {
+      font-family: var(--font-mono);
+      font-size: 0.75rem; font-weight: 600;
+      word-break: break-all;
+      color: var(--foreground);
+      line-height: 1.5;
+    }
+    .proof-tip-desc {
+      font-size: 0.6875rem;
+      line-height: 1.4;
+      color: var(--muted-foreground);
     }
 
     /* ── banners ───────────────────────────────────────────────────────────── */

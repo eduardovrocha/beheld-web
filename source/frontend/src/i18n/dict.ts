@@ -105,6 +105,9 @@ const pt: Dict = {
   "profile.proof.copied": "copied",
   "profile.proof.copy_aria": "Copiar {field}",
   "profile.proof.copied_aria": "{field} copiado",
+  "profile.proof.sha256.desc": "Hash SHA-256 do payload canônico — identifica o snapshot de forma única.",
+  "profile.proof.ed25519.desc": "Assinatura Ed25519 sobre o hash, gerada pela chave privada do autor.",
+  "profile.proof.pubkey.desc": "Chave pública embutida no bundle, usada para verificar a assinatura no navegador.",
 
   // Common units / formatters
   "common.today": "hoje",
@@ -203,6 +206,9 @@ const en: Dict = {
   "profile.proof.copied": "copied",
   "profile.proof.copy_aria": "Copy {field}",
   "profile.proof.copied_aria": "{field} copied",
+  "profile.proof.sha256.desc": "SHA-256 hash of the canonical payload — uniquely identifies the snapshot.",
+  "profile.proof.ed25519.desc": "Ed25519 signature over the hash, produced by the author's private key.",
+  "profile.proof.pubkey.desc": "Public key embedded in the bundle, used to verify the signature in the browser.",
 
   "common.today": "today",
   "common.one_day_ago": "1d ago",
@@ -298,6 +304,9 @@ const es: Dict = {
   "profile.proof.copied": "copiado",
   "profile.proof.copy_aria": "Copiar {field}",
   "profile.proof.copied_aria": "{field} copiado",
+  "profile.proof.sha256.desc": "Hash SHA-256 del payload canónico — identifica el snapshot de forma única.",
+  "profile.proof.ed25519.desc": "Firma Ed25519 sobre el hash, generada por la clave privada del autor.",
+  "profile.proof.pubkey.desc": "Clave pública embebida en el bundle, usada para verificar la firma en el navegador.",
 
   "common.today": "hoy",
   "common.one_day_ago": "hace 1d",

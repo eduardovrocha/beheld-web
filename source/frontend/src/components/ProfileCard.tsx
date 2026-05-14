@@ -400,73 +400,95 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
   );
 }
 
-function CopyIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width={size}
-      height={size}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-    </svg>
-  );
-}
-
-function CheckIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width={size}
-      height={size}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
-/** Compact proof chip — label + icon-only copy button, no value shown. */
-function ProofChip({ field, value }: { field: string; value: string }) {
-  const t = useT();
-  const [copied, setCopied] = useState(false);
-  const onCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch (_) {}
+/** Glyph rendered in the tooltip header — one per proof field. */
+function ProofFieldIcon({ field, size = 14 }: { field: string; size?: number }) {
+  const common = {
+    viewBox: "0 0 24 24",
+    width: size,
+    height: size,
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true as const,
   };
-  const label = copied ? t("profile.proof.copied_aria", { field }) : t("profile.proof.copy_aria", { field });
+  if (field === "SHA256") {
+    // Hash glyph (#)
+    return (
+      <svg {...common}>
+        <path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18" />
+      </svg>
+    );
+  }
+  if (field === "ED25519") {
+    // Signature / quill glyph
+    return (
+      <svg {...common}>
+        <path d="M12 19H6a2 2 0 0 1-2-2v-1l9-9 3 3" />
+        <path d="m15 10 3-3a2 2 0 1 1 3 3l-3 3" />
+        <path d="M2 22h20" />
+      </svg>
+    );
+  }
+  // PUB_KEY — key glyph
   return (
-    <div className="inline-flex items-center gap-2">
-      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500">
-        {field}
-      </span>
+    <svg {...common}>
+      <circle cx="7.5" cy="15.5" r="3.5" />
+      <path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3" />
+    </svg>
+  );
+}
+
+/** Proof chip — hover (or focus) reveals a styled card with the field's
+ *  long value and a short description. Click-to-copy was removed per spec;
+ *  if the user wants to copy, they select the value inside the tooltip. */
+function ProofChip({
+  field,
+  value,
+  descKey,
+}: {
+  field: string;
+  value: string;
+  descKey: string;
+}) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div
+      className="relative inline-flex"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+    >
       <button
         type="button"
-        onClick={onCopy}
-        aria-label={label}
-        title={label}
-        className={`inline-flex size-7 items-center justify-center rounded border transition-colors ${
-          copied
-            ? "border-emerald-500/40 text-emerald-600 dark:border-emerald-400/40 dark:text-emerald-400"
-            : "border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-200/50 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
-        }`}
+        aria-expanded={open}
+        aria-describedby={open ? `proof-tip-${field}` : undefined}
+        className="cursor-help font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 underline decoration-dotted underline-offset-4 transition-colors hover:text-slate-800 dark:hover:text-slate-200"
       >
-        {copied ? <CheckIcon /> : <CopyIcon />}
+        {field}
       </button>
+      {open && (
+        <div
+          id={`proof-tip-${field}`}
+          role="tooltip"
+          className="absolute left-0 top-full z-20 mt-2 w-[20rem] max-w-[90vw] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+        >
+          <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+            <ProofFieldIcon field={field} />
+            <span>{field}</span>
+          </div>
+          <p className="mb-2 break-all font-mono text-xs font-semibold leading-relaxed text-slate-900 dark:text-slate-100">
+            {value}
+          </p>
+          <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+            {t(descKey)}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -508,12 +530,24 @@ function ProofFooter({
         <span className={`text-[10px] font-bold ${bad ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>{status}</span>
       </div>
 
-      {/* SHA256 / ED25519 / PUB_KEY — labels + copy-only buttons, values
-          stay hidden but are copied to the clipboard on click. */}
-      <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3">
-        <ProofChip field="SHA256"  value={(bundle as unknown as { hash: string }).hash} />
-        <ProofChip field="ED25519" value={(bundle as unknown as { signature: string }).signature} />
-        <ProofChip field="PUB_KEY" value={(bundle as unknown as { public_key: string }).public_key} />
+      {/* SHA256 / ED25519 / PUB_KEY — hover (or focus) opens a tooltip
+          card with the value and a short description. */}
+      <div className="mb-4 flex flex-wrap items-center gap-x-8 gap-y-3">
+        <ProofChip
+          field="SHA256"
+          value={(bundle as unknown as { hash: string }).hash}
+          descKey="profile.proof.sha256.desc"
+        />
+        <ProofChip
+          field="ED25519"
+          value={(bundle as unknown as { signature: string }).signature}
+          descKey="profile.proof.ed25519.desc"
+        />
+        <ProofChip
+          field="PUB_KEY"
+          value={(bundle as unknown as { public_key: string }).public_key}
+          descKey="profile.proof.pubkey.desc"
+        />
       </div>
 
       {/* ISSUED — informational, value always visible. */}
