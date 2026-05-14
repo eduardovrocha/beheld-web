@@ -1,13 +1,12 @@
 import { useCallback, useState } from "react";
 
-import { BundleSummary } from "@/components/BundleSummary";
-import { VerificationStatus } from "@/components/VerificationStatus";
+import { ProfileCard } from "@/components/ProfileCard";
 import type { Bundle } from "@/lib/types";
 import { verifyBundle, type VerifyResult } from "@/lib/verify";
 
 type State =
   | { kind: "idle" }
-  | { kind: "verifying"; filename: string }
+  | { kind: "verifying"; filename: string; bundle: Bundle }
   | { kind: "done"; filename: string; bundle: Bundle; result: VerifyResult }
   | { kind: "error"; message: string };
 
@@ -16,12 +15,14 @@ export function VerifyLocal() {
   const [drag, setDrag] = useState(false);
 
   const handleFile = useCallback(async (file: File) => {
-    setState({ kind: "verifying", filename: file.name });
     try {
       const text = await file.text();
-      const parsed = JSON.parse(text);
+      const parsed = JSON.parse(text) as Bundle;
+      // Show the bundle immediately with a "verifying" pill; the verification
+      // runs in the background and the pill / proof footer update once done.
+      setState({ kind: "verifying", filename: file.name, bundle: parsed });
       const result = await verifyBundle(parsed);
-      setState({ kind: "done", filename: file.name, bundle: parsed as Bundle, result });
+      setState({ kind: "done", filename: file.name, bundle: parsed, result });
     } catch (e) {
       setState({ kind: "error", message: (e as Error).message });
     }
@@ -54,8 +55,7 @@ export function VerifyLocal() {
         <p className="max-w-2xl text-slate-400">
           Arraste um arquivo aqui ou selecione. Toda a verificação roda{" "}
           <span className="text-slate-200">no seu navegador</span> via{" "}
-          <code className="text-slate-200">crypto.subtle</code> — nada sai da
-          máquina.
+          <code className="text-slate-200">crypto.subtle</code> — nada sai da máquina.
         </p>
       </header>
 
@@ -89,16 +89,6 @@ export function VerifyLocal() {
         />
       </label>
 
-      {state.kind === "verifying" && (
-        <div className="space-y-3">
-          <div className="text-sm text-slate-400">
-            Verificando{" "}
-            <code className="text-slate-200">{state.filename}</code>...
-          </div>
-          <VerificationStatus result={null} busy />
-        </div>
-      )}
-
       {state.kind === "error" && (
         <div className="rounded-2xl border border-rose-700/40 bg-rose-950/30 p-6 text-rose-200">
           <div className="font-semibold">Não foi possível parsear o arquivo</div>
@@ -106,13 +96,17 @@ export function VerifyLocal() {
         </div>
       )}
 
-      {state.kind === "done" && (
-        <div className="space-y-6">
+      {(state.kind === "verifying" || state.kind === "done") && (
+        <div className="space-y-3">
           <div className="text-sm text-slate-400">
             Arquivo: <code className="text-slate-200">{state.filename}</code>
           </div>
-          <VerificationStatus result={state.result} />
-          <BundleSummary bundle={state.bundle} />
+          <ProfileCard
+            bundle={state.bundle}
+            result={state.kind === "done" ? state.result : null}
+            verifying={state.kind === "verifying"}
+            shortId={null}
+          />
         </div>
       )}
     </div>
