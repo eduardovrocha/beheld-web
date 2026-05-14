@@ -279,6 +279,33 @@ RSpec.describe "Public profile page (/v/:id)", type: :system do
     expect(visible).not_to include("repo_name")
   end
 
+  # ── theme switcher ────────────────────────────────────────────────────────
+
+  it "expõe o botão de alternância de tema com os três rótulos (auto / claro / escuro)" do
+    b = create_bundle(v2_inner, hash_seed: "2")
+    visit "/v/#{b.short_id}"
+    expect(page).to have_css("button.theme-toggle")
+    expect(page).to have_css("button.theme-toggle .label-auto",  visible: :all, text: "auto")
+    expect(page).to have_css("button.theme-toggle .label-light", visible: :all, text: "claro")
+    expect(page).to have_css("button.theme-toggle .label-dark",  visible: :all, text: "escuro")
+  end
+
+  it "declara meta color-scheme=light dark para o navegador aplicar UA defaults" do
+    b = create_bundle(v2_inner, hash_seed: "3")
+    visit "/v/#{b.short_id}"
+    expect(page).to have_css('meta[name="color-scheme"][content="light dark"]', visible: :all)
+  end
+
+  it "inclui o bootstrap script de pre-paint que lê dp-theme do localStorage" do
+    b = create_bundle(v2_inner, hash_seed: "4")
+    visit "/v/#{b.short_id}"
+    # The pre-paint script runs before <style> so dark-mode users never see
+    # a flash of light. Asserting on the source ensures it stays inline at
+    # the top of <head>.
+    expect(page.body).to include("dp-theme")
+    expect(page.body).to include("setAttribute('data-theme'")
+  end
+
   it "não exibe root_commit_hashes como lista visível" do
     # Use unique-looking hashes that can't accidentally substring the signature
     # fixture. The signature is "b" * 128, so "a"/"b" 40-char hashes would

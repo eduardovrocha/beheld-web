@@ -3,9 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>DevProfile · perfil verificado</title>
   <meta name="description" content="Perfil técnico verificado criptograficamente — DevProfile.">
+
+  <%# Pre-paint theme bootstrap — runs before <style> renders so dark-mode
+      users never see a flash of light. Reads the persisted preference
+      (auto | light | dark) from localStorage. %>
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('dp-theme');
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', saved);
+        }
+      } catch (_) {}
+    })();
+  </script>
+
   <style>
+    /* ── Design tokens ───────────────────────────────────────────────────── */
+    /* Light defaults — auto-flipped via prefers-color-scheme OR data-theme. */
     :root {
       --background:        #fafafa;
       --foreground:        #0f172a;
@@ -20,9 +38,73 @@
       --success:           #16a34a;
       --warning:           #ca8a04;
       --danger:            #dc2626;
+      --score-green:       #22c55e;
+      --score-yellow:      #eab308;
+      --score-red:         #ef4444;
       --radius:            16px;
       --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+    }
+
+    /* Auto dark — applies when the user has no explicit choice. */
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --background:        #09090b;
+        --foreground:        #fafafa;
+        --card:              #18181b;
+        --surface-muted:     #27272a;
+        --border:            #27272a;
+        --muted:             #27272a;
+        --muted-foreground:  #a1a1aa;
+        --primary:           #fafafa;
+        --primary-foreground:#09090b;
+        --accent:            #4ade80;
+        --success:           #4ade80;
+        --warning:           #fbbf24;
+        --danger:            #f87171;
+        --score-green:       #22c55e;
+        --score-yellow:      #fbbf24;
+        --score-red:         #f87171;
+      }
+    }
+
+    /* Explicit dark — wins over OS preference. */
+    :root[data-theme="dark"] {
+      --background:        #09090b;
+      --foreground:        #fafafa;
+      --card:              #18181b;
+      --surface-muted:     #27272a;
+      --border:            #27272a;
+      --muted:             #27272a;
+      --muted-foreground:  #a1a1aa;
+      --primary:           #fafafa;
+      --primary-foreground:#09090b;
+      --accent:            #4ade80;
+      --success:           #4ade80;
+      --warning:           #fbbf24;
+      --danger:            #f87171;
+      --score-green:       #22c55e;
+      --score-yellow:      #fbbf24;
+      --score-red:         #f87171;
+    }
+    /* Explicit light — wins even when the OS is dark. */
+    :root[data-theme="light"] {
+      --background:        #fafafa;
+      --foreground:        #0f172a;
+      --card:              #ffffff;
+      --surface-muted:     #f4f4f5;
+      --border:            #e4e4e7;
+      --muted:             #f4f4f5;
+      --muted-foreground:  #71717a;
+      --primary:           #0f172a;
+      --primary-foreground:#ffffff;
+      --accent:            #16a34a;
+      --success:           #16a34a;
+      --warning:           #ca8a04;
+      --danger:            #dc2626;
+      --score-green:       #22c55e;
+      --score-yellow:      #eab308;
+      --score-red:         #ef4444;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -33,11 +115,12 @@
       font-family: var(--font-sans);
       line-height: 1.45;
       min-height: 100vh;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
     a { color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; }
     a:hover { color: var(--muted-foreground); }
 
-    .container { max-width: 880px; margin: 0 auto; padding: 32px 16px 80px; }
+    .container { max-width: 880px; margin: 0 auto; padding: 32px 16px 80px; position: relative; }
 
     .text-mono { font-family: var(--font-mono); }
     .tabular   { font-variant-numeric: tabular-nums; }
@@ -47,6 +130,33 @@
     .text-accent  { color: var(--accent); }
     .text-success { color: var(--success); }
     .text-warning { color: var(--warning); }
+
+    /* ── Theme toggle ──────────────────────────────────────────────────────── */
+    .topbar {
+      display: flex; justify-content: flex-end; align-items: center; gap: 8px;
+      margin-bottom: 16px;
+    }
+    .theme-toggle {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--muted-foreground);
+      font-family: var(--font-mono); font-size: 0.6875rem;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .theme-toggle:hover { color: var(--foreground); border-color: color-mix(in srgb, var(--foreground) 25%, var(--border)); }
+    .theme-toggle .icon { font-size: 0.875rem; line-height: 1; }
+    /* Visibility per active theme — JS sets data-mode; we also show the
+       fallback (system/auto) label when nothing is forced. */
+    .theme-toggle .label-light,
+    .theme-toggle .label-dark,
+    .theme-toggle .label-auto { display: none; }
+    :root[data-theme="light"] .theme-toggle .label-light { display: inline; }
+    :root[data-theme="dark"]  .theme-toggle .label-dark  { display: inline; }
+    :root:not([data-theme])   .theme-toggle .label-auto  { display: inline; }
 
     /* ── article shell ─────────────────────────────────────────────────────── */
     article.profile {
@@ -130,9 +240,9 @@
     .stat-value { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
     .stat-bar { margin-top: 8px; height: 4px; width: 100%; background: var(--muted); border-radius: 999px; overflow: hidden; }
     .stat-bar > .fill { height: 100%; background: var(--primary); transition: width 0.4s ease; }
-    .stat-bar > .fill.fill-green  { background: #22c55e; }
-    .stat-bar > .fill.fill-yellow { background: #eab308; }
-    .stat-bar > .fill.fill-red    { background: #ef4444; }
+    .stat-bar > .fill.fill-green  { background: var(--score-green); }
+    .stat-bar > .fill.fill-yellow { background: var(--score-yellow); }
+    .stat-bar > .fill.fill-red    { background: var(--score-red); }
     .stat-bar > .fill.fill-accent { background: var(--accent); }
 
     /* ── section base ──────────────────────────────────────────────────────── */
@@ -198,6 +308,7 @@
       border: 1px solid color-mix(in srgb, var(--primary) 15%, var(--border));
       background: color-mix(in srgb, var(--primary) 5%, transparent);
       font-family: var(--font-mono); font-size: 0.75rem;
+      color: var(--foreground);
     }
     .chip-muted {
       border: 1px solid var(--border);
@@ -223,6 +334,8 @@
     .empty-card p { color: var(--muted-foreground); font-size: 0.875rem; margin: 0; }
 
     /* ── proof footer ──────────────────────────────────────────────────────── */
+    /* Always uses --foreground as bg so the contrast stays inverted in both
+       themes — light bg → dark footer, dark bg → light footer. */
     .proof {
       background: var(--foreground);
       color: color-mix(in srgb, var(--primary-foreground) 90%, transparent);
@@ -232,7 +345,7 @@
     .proof-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .proof-head .lbl { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.5; }
     .proof-head .ok  { font-size: 0.625rem; font-weight: 700; color: var(--accent); }
-    .proof-head .ok.bad { color: #f87171; }
+    .proof-head .ok.bad { color: var(--danger); }
     .proof-row { display: flex; gap: 16px; font-size: 0.6875rem; line-height: 1.5; }
     .proof-row + .proof-row { margin-top: 8px; }
     .proof-row .field { width: 64px; flex-shrink: 0; opacity: 0.4; }
@@ -264,10 +377,63 @@
 </head>
 <body>
   <div class="container">
+    <div class="topbar">
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Alternar tema" title="Alternar tema (auto / claro / escuro)">
+        <span class="icon" aria-hidden="true">☀︎</span>
+        <span class="label-auto">auto</span>
+        <span class="label-light">claro</span>
+        <span class="label-dark">escuro</span>
+      </button>
+    </div>
     <%= yield %>
     <p class="meta-strip">
       Verificação 100% no seu navegador via Web Crypto API · nenhum dado sai daqui.
     </p>
   </div>
+
+  <script>
+    (function() {
+      const btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+      const root = document.documentElement;
+      const icon = btn.querySelector('.icon');
+
+      function applyIcon() {
+        const t = root.getAttribute('data-theme');
+        // auto → ☀︎/☾ based on system; explicit → matching glyph
+        if (t === 'dark') { icon.textContent = '☾'; return; }
+        if (t === 'light') { icon.textContent = '☀︎'; return; }
+        // auto: reflect what the system would render right now
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        icon.textContent = prefersDark ? '☾' : '☀︎';
+      }
+
+      function cycle() {
+        const current = root.getAttribute('data-theme'); // null | "light" | "dark"
+        let next;
+        if (current === null)        next = 'light';
+        else if (current === 'light') next = 'dark';
+        else                          next = null; // back to auto
+
+        if (next === null) {
+          root.removeAttribute('data-theme');
+          try { localStorage.removeItem('dp-theme'); } catch (_) {}
+        } else {
+          root.setAttribute('data-theme', next);
+          try { localStorage.setItem('dp-theme', next); } catch (_) {}
+        }
+        applyIcon();
+      }
+
+      btn.addEventListener('click', cycle);
+
+      // Live-update the icon when the OS theme changes in auto mode.
+      if (window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        if (mq.addEventListener) mq.addEventListener('change', applyIcon);
+      }
+      applyIcon();
+    })();
+  </script>
 </body>
 </html>
