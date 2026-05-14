@@ -49,13 +49,13 @@ export function VerifyLocal() {
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-100">
-          Verificar um <code className="text-emerald-400">.dpbundle</code> offline
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          Verificar um <code className="text-emerald-600 dark:text-emerald-400">.dpbundle</code> offline
         </h1>
-        <p className="max-w-2xl text-slate-400">
+        <p className="max-w-2xl text-slate-600 dark:text-slate-400">
           Arraste um arquivo aqui ou selecione. Toda a verificação roda{" "}
-          <span className="text-slate-200">no seu navegador</span> via{" "}
-          <code className="text-slate-200">crypto.subtle</code> — nada sai da máquina.
+          <span className="text-slate-800 dark:text-slate-200">no seu navegador</span> via{" "}
+          <code className="text-slate-800 dark:text-slate-200">crypto.subtle</code> — nada sai da máquina.
         </p>
       </header>
 
@@ -69,14 +69,14 @@ export function VerifyLocal() {
         onDrop={onDrop}
         className={`block cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-colors ${
           drag
-            ? "border-emerald-500 bg-emerald-500/5"
-            : "border-slate-700 bg-slate-900/40 hover:border-slate-500"
+            ? "border-emerald-600 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-500/5"
+            : "border-slate-300 bg-white hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900/40 dark:hover:border-slate-500"
         }`}
       >
-        <div className="text-slate-300">
+        <div className="text-slate-700 dark:text-slate-300">
           {drag ? "Solte para verificar" : "Arraste o .dpbundle ou clique para selecionar"}
         </div>
-        <div className="mt-2 text-xs text-slate-500">
+        <div className="mt-2 text-xs text-slate-500 dark:text-slate-500">
           Esperando JSON com campos <code>version</code>, <code>payload</code>,{" "}
           <code>hash</code>, <code>signature</code>, <code>public_key</code>.
         </div>
@@ -90,16 +90,16 @@ export function VerifyLocal() {
       </label>
 
       {state.kind === "error" && (
-        <div className="rounded-2xl border border-rose-700/40 bg-rose-950/30 p-6 text-rose-200">
+        <div className="rounded-2xl border border-rose-200 dark:border-rose-700/40 bg-rose-50 dark:bg-rose-950/30 p-6 text-rose-700 dark:text-rose-200">
           <div className="font-semibold">Não foi possível parsear o arquivo</div>
-          <div className="mt-1 text-sm text-rose-300/80">{state.message}</div>
+          <div className="mt-1 text-sm text-rose-600/80 dark:text-rose-300/80">{state.message}</div>
         </div>
       )}
 
       {(state.kind === "verifying" || state.kind === "done") && (
         <div className="space-y-3">
-          <div className="text-sm text-slate-400">
-            Arquivo: <code className="text-slate-200">{state.filename}</code>
+          <div className="text-sm text-slate-600 dark:text-slate-400">
+            Arquivo: <code className="text-slate-800 dark:text-slate-200">{state.filename}</code>
           </div>
           <ProfileCard
             bundle={state.bundle}

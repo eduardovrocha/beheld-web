@@ -10,12 +10,12 @@ function Tile({
   body: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-6">
-      <div className="font-mono text-xs uppercase tracking-wider text-slate-500">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-6">
+      <div className="font-mono text-xs uppercase tracking-wider text-slate-500 dark:text-slate-500">
         {step}
       </div>
-      <h3 className="mt-2 text-base font-semibold text-slate-100">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-slate-400">{body}</p>
+      <h3 className="mt-2 text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{body}</p>
     </div>
   );
 }
@@ -24,21 +24,21 @@ export function Home() {
   return (
     <div className="space-y-16">
       <section className="space-y-6">
-        <h1 className="text-4xl font-bold tracking-tight text-slate-100 md:text-5xl">
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 md:text-5xl">
           Perfis de desenvolvedor{" "}
-          <span className="text-emerald-400">verificáveis</span>,<br />
+          <span className="text-emerald-600 dark:text-emerald-400">verificáveis</span>,<br />
           construídos pelo uso real.
         </h1>
-        <p className="max-w-2xl text-lg text-slate-400">
+        <p className="max-w-2xl text-lg text-slate-600 dark:text-slate-400">
           O devprofile captura sinais técnicos (sequências de tools, ecossistemas,
           padrões de teste) localmente, sem nunca tocar conteúdo de conversas.
-          Gera <span className="text-slate-200">snapshots assinados</span>{" "}
+          Gera <span className="text-slate-800 dark:text-slate-200">snapshots assinados</span>{" "}
           (Ed25519) que qualquer pessoa pode verificar no navegador.
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
             to="/verify"
-            className="rounded-lg bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition-colors hover:bg-emerald-400"
+            className="rounded-lg bg-emerald-600 dark:bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white dark:text-slate-950 transition-colors hover:bg-emerald-700 dark:hover:bg-emerald-400"
           >
             Verificar um .dpbundle
           </Link>
@@ -46,7 +46,7 @@ export function Home() {
             href="https://github.com/ioit-solutions/devprofile"
             target="_blank"
             rel="noreferrer"
-            className="rounded-lg border border-slate-700 px-5 py-2.5 text-sm font-semibold text-slate-200 transition-colors hover:border-slate-500"
+            className="rounded-lg border border-slate-300 dark:border-slate-700 px-5 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors hover:border-slate-400 dark:hover:border-slate-500"
           >
             Ver no GitHub
           </a>
@@ -54,7 +54,7 @@ export function Home() {
       </section>
 
       <section>
-        <h2 className="mb-6 text-sm font-semibold uppercase tracking-wider text-slate-500">
+        <h2 className="mb-6 text-sm font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500">
           Como funciona
         </h2>
         <div className="grid gap-4 md:grid-cols-3">
@@ -76,15 +76,15 @@ export function Home() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 font-mono text-sm leading-relaxed text-slate-300">
-        <div className="text-slate-500"># gere e compartilhe</div>
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-8 font-mono text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+        <div className="text-slate-500 dark:text-slate-500"># gere e compartilhe</div>
         <div>$ devprofile snapshot --share</div>
-        <div className="mt-2 text-slate-500"># verifique offline qualquer .dpbundle</div>
+        <div className="mt-2 text-slate-500 dark:text-slate-500"># verifique offline qualquer .dpbundle</div>
         <div>$ devprofile verify ~/Downloads/foo.dpbundle</div>
-        <div className="mt-2 text-slate-500"># ou aqui no navegador</div>
+        <div className="mt-2 text-slate-500 dark:text-slate-500"># ou aqui no navegador</div>
         <div>
           $ open{" "}
-          <Link to="/verify" className="text-emerald-400 hover:underline">
+          <Link to="/verify" className="text-emerald-600 dark:text-emerald-400 hover:underline">
             /verify
           </Link>
         </div>

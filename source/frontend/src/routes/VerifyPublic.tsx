@@ -47,9 +47,9 @@ export function VerifyPublic() {
   if (!bundle) {
     return (
       <div className="space-y-3">
-        <div className="h-8 w-72 animate-pulse rounded bg-slate-800/60" />
-        <div className="h-44 w-full animate-pulse rounded-2xl bg-slate-800/40" />
-        <div className="h-44 w-full animate-pulse rounded-2xl bg-slate-800/40" />
+        <div className="h-8 w-72 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800/60" />
+        <div className="h-44 w-full animate-pulse rounded-2xl bg-slate-200/60 dark:bg-slate-800/40" />
+        <div className="h-44 w-full animate-pulse rounded-2xl bg-slate-200/60 dark:bg-slate-800/40" />
       </div>
     );
   }
@@ -59,9 +59,9 @@ export function VerifyPublic() {
 
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-rose-700/40 bg-rose-950/30 p-6 text-rose-200">
+    <div className="rounded-2xl border border-rose-200 dark:border-rose-700/40 bg-rose-50 dark:bg-rose-950/30 p-6 text-rose-700 dark:text-rose-200">
       <div className="font-semibold">Não foi possível carregar o bundle</div>
-      <div className="mt-1 text-sm text-rose-300/80">{message}</div>
+      <div className="mt-1 text-sm text-rose-600/80 dark:text-rose-300/80">{message}</div>
     </div>
   );
 }

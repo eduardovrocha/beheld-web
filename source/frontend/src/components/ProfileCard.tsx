@@ -44,11 +44,11 @@ function scoreBucket(score: number): "green" | "yellow" | "red" {
 }
 
 const FILL_CLASSES: Record<ReturnType<typeof scoreBucket>, string> = {
-  green:  "bg-emerald-400",
-  yellow: "bg-amber-400",
-  red:    "bg-rose-400",
+  green:  "bg-emerald-500 dark:bg-emerald-400",
+  yellow: "bg-amber-500 dark:bg-amber-400",
+  red:    "bg-rose-500 dark:bg-rose-400",
 };
-const FILL_ACCENT = "bg-emerald-400";
+const FILL_ACCENT = "bg-emerald-500 dark:bg-emerald-400";
 
 function formatNumber(n: number): string {
   return new Intl.NumberFormat("pt-BR").format(n);
@@ -147,7 +147,7 @@ function formatIsoZ(iso: string | undefined | null): string {
 
 function Avatar({ short }: { short: string }) {
   return (
-    <div className="flex size-20 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 font-mono text-xs font-bold tracking-widest text-slate-400 shadow-sm">
+    <div className="flex size-20 items-center justify-center rounded-2xl border border-slate-200 bg-white font-mono text-xs font-bold tracking-widest text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
       {deriveInitials(short)}
     </div>
   );
@@ -166,26 +166,26 @@ function VerifyPill({
 
   if (verifying || !result) {
     text = "ED25519 PROFILE";
-    color = "text-slate-400";
+    color = "text-slate-500 dark:text-slate-400";
     pulse = false;
   } else if (result.ok) {
     text = "ED25519 VERIFIED PROFILE";
-    color = "text-emerald-400";
+    color = "text-emerald-600 dark:text-emerald-400";
     pulse = true;
   } else {
     text = "ED25519 — SIGNATURE FAILED";
-    color = "text-rose-400";
+    color = "text-rose-600 dark:text-rose-400";
   }
 
   return (
     <div className={`mt-3 flex items-center gap-2 font-mono text-[11px] font-bold ${color}`}>
       {pulse ? (
         <span className="relative inline-flex size-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50"></span>
-          <span className="relative inline-flex size-2 rounded-full bg-emerald-400"></span>
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-50 dark:bg-emerald-400"></span>
+          <span className="relative inline-flex size-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
         </span>
       ) : (
-        <span className="inline-flex size-2 rounded-full bg-slate-600"></span>
+        <span className="inline-flex size-2 rounded-full bg-slate-400 dark:bg-slate-600"></span>
       )}
       <span>{text}</span>
     </div>
@@ -205,12 +205,12 @@ function StatCell({
 }) {
   const fill = accent ? FILL_ACCENT : FILL_CLASSES[scoreBucket(value)];
   return (
-    <div className="border-b border-slate-800 p-6 last:border-r-0 md:border-b-0 md:border-r">
-      <div className="mb-4 font-mono text-[10px] uppercase text-slate-500">{label}</div>
-      <div className="font-mono text-xl font-bold tabular-nums text-slate-100">{value}</div>
+    <div className="border-b border-slate-200 p-6 last:border-r-0 dark:border-slate-800 md:border-b-0 md:border-r">
+      <div className="mb-4 font-mono text-[10px] uppercase text-slate-500 dark:text-slate-500">{label}</div>
+      <div className="font-mono text-xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{value}</div>
       {withBar && (
         <div
-          className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-800"
+          className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
           role="img"
           aria-label={`${label} ${value} de 100`}
         >
@@ -223,16 +223,16 @@ function StatCell({
 
 function FactRow({ label, value, accent = false }: { label: string; value: React.ReactNode; accent?: boolean }) {
   return (
-    <div className="flex items-end justify-between border-b border-slate-800 pb-2">
-      <span className="text-sm text-slate-400">{label}</span>
-      <span className={`font-mono font-bold ${accent ? "text-emerald-400" : "text-slate-100"}`}>{value}</span>
+    <div className="flex items-end justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
+      <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
+      <span className={`font-mono font-bold ${accent ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-slate-100"}`}>{value}</span>
     </div>
   );
 }
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded border border-emerald-500/15 bg-emerald-500/5 px-2 py-1 font-mono text-xs text-slate-200">
+    <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 font-mono text-xs text-slate-800 dark:border-emerald-500/15 dark:bg-emerald-500/5 dark:text-slate-200">
       {children}
     </span>
   );
@@ -240,7 +240,7 @@ function Chip({ children }: { children: React.ReactNode }) {
 
 function ChipMuted({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded border border-slate-800 px-2 py-0.5 font-mono text-[11px] text-slate-400">
+    <span className="rounded border border-slate-200 px-2 py-0.5 font-mono text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
       {children}
     </span>
   );
@@ -251,8 +251,8 @@ function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
   return (
     <section>
       <h3 className="mb-6 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
-        <span className="size-1.5 rounded-full bg-emerald-400"></span>
-        <span>L1: <span className="text-slate-100">Git History Analysis</span></span>
+        <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+        <span>L1: <span className="text-slate-900 dark:text-slate-100">Git History Analysis</span></span>
       </h3>
       {present && l1 ? (
         <div className="space-y-3">
@@ -287,10 +287,10 @@ function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
           </div>
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-800 p-8 text-center">
+        <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-800">
           <div className="mb-2 font-mono text-xs uppercase text-slate-500">Bootstrap não realizado</div>
-          <p className="text-sm text-slate-400">
-            Execute <code className="font-mono text-slate-300">devprofile import &lt;url&gt;</code> para popular a base histórica.
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Execute <code className="font-mono text-slate-700 dark:text-slate-300">devprofile import &lt;url&gt;</code> para popular a base histórica.
           </p>
         </div>
       )}
@@ -303,8 +303,8 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
   return (
     <section>
       <h3 className="mb-6 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
-        <span className="size-1.5 rounded-full bg-emerald-400"></span>
-        <span>L2: <span className="text-slate-100">Agentic Workflow Metrics</span></span>
+        <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+        <span>L2: <span className="text-slate-900 dark:text-slate-100">Agentic Workflow Metrics</span></span>
       </h3>
       {present && l2 ? (
         <div className="space-y-3">
@@ -364,9 +364,9 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
           )}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-slate-800 p-8 text-center">
+        <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-800">
           <div className="mb-2 font-mono text-xs uppercase text-slate-500">L1_ONLY Profile</div>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             No Claude Code session telemetry submitted. Workflow signals are limited to git history.
           </p>
         </div>
@@ -387,13 +387,18 @@ function ProofRow({ field, value, copyable = false }: { field: string; value: st
   return (
     <div className="flex gap-4 text-[11px] leading-relaxed">
       <span className="w-16 shrink-0 opacity-40">{field}</span>
-      <span className="break-all text-slate-950/70">
+      {/*
+        The footer text color uses the *current* foreground (slate-100 light /
+        slate-950 dark via the .proof wrapper); these spans inherit but we
+        soften them with opacity to mimic the mock's hierarchy.
+      */}
+      <span className="break-all opacity-70">
         {value}
         {copyable && (
           <button
             type="button"
             onClick={onCopy}
-            className="ml-2 rounded border border-slate-950/25 px-2 py-0.5 font-mono text-[10px] text-slate-950/70 hover:bg-slate-950/10"
+            className="ml-2 rounded border border-current/25 px-2 py-0.5 font-mono text-[10px] opacity-70 hover:bg-current/10"
           >
             {copied ? "copied" : "copy"}
           </button>
@@ -428,13 +433,16 @@ function ProofFooter({
 
   const inner = bundle.payload as Bundle["payload"];
 
+  // Footer is always *inverted* relative to the page surface — same contrast
+  // cue as the Rails portal in both themes (dark footer on light page; light
+  // footer on dark page).
   return (
-    <footer className="bg-slate-100 p-6 font-mono text-slate-950/90">
+    <footer className="bg-slate-900 p-6 font-mono text-slate-100 dark:bg-slate-100 dark:text-slate-900">
       <div className="mb-4 flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-[0.2em] opacity-50">
           Proof of Authenticity (v{(bundle as unknown as { version?: string }).version ?? "?"}.0)
         </span>
-        <span className={`text-[10px] font-bold ${bad ? "text-rose-600" : "text-emerald-600"}`}>{status}</span>
+        <span className={`text-[10px] font-bold ${bad ? "text-rose-400 dark:text-rose-600" : "text-emerald-400 dark:text-emerald-600"}`}>{status}</span>
       </div>
       <div className="space-y-2">
         <ProofRow field="SHA256"  value={(bundle as unknown as { hash: string }).hash} />
@@ -464,27 +472,27 @@ export function ProfileCard({ bundle, result, verifying, shortId, banner }: Prop
   return (
     <>
       {banner}
-      <article className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 shadow-sm">
+      <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
         {/* ── header ──────────────────────────────────────────────────────── */}
-        <header className="border-b border-slate-800 bg-slate-900/60 p-8">
+        <header className="border-b border-slate-200 bg-slate-50/80 p-8 dark:border-slate-800 dark:bg-slate-900/60">
           <div className="flex items-start justify-between gap-6">
             <div className="flex items-center gap-6">
               <Avatar short={opaqueId} />
               <div>
-                <h1 className="mb-1 text-3xl font-bold tracking-tight text-slate-100">DevProfile</h1>
-                <p className="font-mono text-sm text-slate-400">ID: {formatShortId(opaqueId)}</p>
+                <h1 className="mb-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">DevProfile</h1>
+                <p className="font-mono text-sm text-slate-500 dark:text-slate-400">ID: {formatShortId(opaqueId)}</p>
                 <VerifyPill result={result} verifying={verifying} />
               </div>
             </div>
             <div className="text-right">
               <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">Overall Score</div>
-              <div className="font-mono text-6xl font-bold tabular-nums text-slate-100">{scores.overall}</div>
+              <div className="font-mono text-6xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{scores.overall}</div>
             </div>
           </div>
         </header>
 
         {/* ── stats grid ──────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 border-b border-slate-800 md:grid-cols-5">
+        <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-800 md:grid-cols-5">
           <StatCell label="Prompt Q." value={scores.prompt_quality} />
           <StatCell label="Test Mat." value={scores.test_maturity} />
           <StatCell label="Breadth"   value={scores.tech_breadth} />
@@ -493,15 +501,15 @@ export function ProfileCard({ bundle, result, verifying, shortId, banner }: Prop
         </div>
 
         {/* ── trend placeholder (chain not available client-side) ─────────── */}
-        <section className="border-b border-slate-800 p-8">
+        <section className="border-b border-slate-200 p-8 dark:border-slate-800">
           <h3 className="mb-3 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
-            <span className="size-1.5 rounded-full bg-emerald-400"></span>
-            <span>TREND: <span className="text-slate-100">12-Month Score Trajectory</span></span>
+            <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+            <span>TREND: <span className="text-slate-900 dark:text-slate-100">12-Month Score Trajectory</span></span>
           </h3>
-          <p className="mb-4 text-xs text-slate-400">
+          <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
             Snapshots reconstructed from signed payload chain via <code className="font-mono">previous_hash</code>.
           </p>
-          <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-slate-800 text-sm text-slate-400">
+          <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
             Trajetória requer múltiplos snapshots na cadeia — disponível em <code className="ml-2 font-mono">/v/:id</code> servido pelo Rails.
           </div>
         </section>

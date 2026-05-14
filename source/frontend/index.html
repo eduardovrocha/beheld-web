@@ -3,10 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="color-scheme" content="light dark" />
     <title>DevProfile — verified developer snapshots</title>
     <meta name="description" content="Privacy-first developer profiles with cryptographically signed snapshots verifiable in the browser." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!--
+      Pre-paint theme bootstrap.  Runs BEFORE the bundle loads so dark-mode
+      users never see a flash of light page.  Resolves the active theme by:
+        1. localStorage["dp-theme"] (auto | light | dark)
+        2. prefers-color-scheme when no explicit choice persisted
+      Adds `class="dark"` on <html> to flip every `dark:` Tailwind utility.
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("dp-theme");
+          var resolved =
+            saved === "dark" ? "dark"
+            : saved === "light" ? "light"
+            : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
+                ? "dark"
+                : "light";
+          if (resolved === "dark") document.documentElement.classList.add("dark");
+          if (saved === "dark" || saved === "light") {
+            document.documentElement.setAttribute("data-theme", saved);
+          }
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
