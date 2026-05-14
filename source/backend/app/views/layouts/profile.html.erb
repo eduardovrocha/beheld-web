@@ -22,89 +22,96 @@
   </script>
 
   <style>
-    /* ── Design tokens ───────────────────────────────────────────────────── */
-    /* Light defaults — auto-flipped via prefers-color-scheme OR data-theme. */
+    /* ── Design tokens — aligned with the SPA palette (slate + emerald) ──── */
+    /*
+       The Vite SPA at :5173 is dark-only (html bg-slate-950 text-slate-100,
+       emerald-400 accent).  Portal mirrors that token set in dark mode and
+       derives a complementary light theme using lighter slate steps.
+       Tokens are flipped via prefers-color-scheme + data-theme.
+    */
     :root {
-      --background:        #fafafa;
-      --foreground:        #0f172a;
-      --card:              #ffffff;
-      --surface-muted:     #f4f4f5;
-      --border:            #e4e4e7;
-      --muted:             #f4f4f5;
-      --muted-foreground:  #71717a;
-      --primary:           #0f172a;
-      --primary-foreground:#ffffff;
-      --accent:            #16a34a;
-      --success:           #16a34a;
-      --warning:           #ca8a04;
-      --danger:            #dc2626;
-      --score-green:       #22c55e;
-      --score-yellow:      #eab308;
-      --score-red:         #ef4444;
-      --radius:            16px;
-      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      /* Light theme — inverted slate stack with emerald accent. */
+      --background:         #f8fafc; /* slate-50  */
+      --foreground:         #0f172a; /* slate-900 */
+      --card:               #ffffff;
+      --surface-muted:      #f1f5f9; /* slate-100 */
+      --border:             #e2e8f0; /* slate-200 */
+      --muted:              #f1f5f9;
+      --muted-foreground:   #64748b; /* slate-500 */
+      --primary:            #0f172a;
+      --primary-foreground: #f8fafc;
+      --accent:             #059669; /* emerald-600 */
+      --success:            #10b981; /* emerald-500 */
+      --warning:            #d97706; /* amber-600   */
+      --danger:             #e11d48; /* rose-600    */
+      --score-green:        #10b981; /* emerald-500 */
+      --score-yellow:       #d97706; /* amber-600   */
+      --score-red:          #e11d48; /* rose-600    */
+      --radius:             16px;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Auto dark — applies when the user has no explicit choice. */
+    /* Auto dark — when the user has no explicit choice and the OS prefers dark. */
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
-        --background:        #09090b;
-        --foreground:        #fafafa;
-        --card:              #18181b;
-        --surface-muted:     #27272a;
-        --border:            #27272a;
-        --muted:             #27272a;
-        --muted-foreground:  #a1a1aa;
-        --primary:           #fafafa;
-        --primary-foreground:#09090b;
-        --accent:            #4ade80;
-        --success:           #4ade80;
-        --warning:           #fbbf24;
-        --danger:            #f87171;
-        --score-green:       #22c55e;
-        --score-yellow:      #fbbf24;
-        --score-red:         #f87171;
+        --background:         #020617; /* slate-950 — same as SPA html bg */
+        --foreground:         #f1f5f9; /* slate-100 — same as SPA text   */
+        --card:               #0f172a; /* slate-900 — card surface       */
+        --surface-muted:      #1e293b; /* slate-800 — subtle muted       */
+        --border:             #1e293b; /* slate-800 — same as SPA border */
+        --muted:              #1e293b;
+        --muted-foreground:   #94a3b8; /* slate-400 — secondary text     */
+        --primary:            #f1f5f9;
+        --primary-foreground: #020617;
+        --accent:             #34d399; /* emerald-400 — primary accent   */
+        --success:            #34d399;
+        --warning:            #fbbf24; /* amber-400 */
+        --danger:             #fb7185; /* rose-400  */
+        --score-green:        #34d399;
+        --score-yellow:       #fbbf24;
+        --score-red:          #fb7185;
       }
     }
 
     /* Explicit dark — wins over OS preference. */
     :root[data-theme="dark"] {
-      --background:        #09090b;
-      --foreground:        #fafafa;
-      --card:              #18181b;
-      --surface-muted:     #27272a;
-      --border:            #27272a;
-      --muted:             #27272a;
-      --muted-foreground:  #a1a1aa;
-      --primary:           #fafafa;
-      --primary-foreground:#09090b;
-      --accent:            #4ade80;
-      --success:           #4ade80;
-      --warning:           #fbbf24;
-      --danger:            #f87171;
-      --score-green:       #22c55e;
-      --score-yellow:      #fbbf24;
-      --score-red:         #f87171;
+      --background:         #020617;
+      --foreground:         #f1f5f9;
+      --card:               #0f172a;
+      --surface-muted:      #1e293b;
+      --border:             #1e293b;
+      --muted:              #1e293b;
+      --muted-foreground:   #94a3b8;
+      --primary:            #f1f5f9;
+      --primary-foreground: #020617;
+      --accent:             #34d399;
+      --success:            #34d399;
+      --warning:            #fbbf24;
+      --danger:             #fb7185;
+      --score-green:        #34d399;
+      --score-yellow:       #fbbf24;
+      --score-red:          #fb7185;
     }
-    /* Explicit light — wins even when the OS is dark. */
+
+    /* Explicit light — wins even when the OS prefers dark. */
     :root[data-theme="light"] {
-      --background:        #fafafa;
-      --foreground:        #0f172a;
-      --card:              #ffffff;
-      --surface-muted:     #f4f4f5;
-      --border:            #e4e4e7;
-      --muted:             #f4f4f5;
-      --muted-foreground:  #71717a;
-      --primary:           #0f172a;
-      --primary-foreground:#ffffff;
-      --accent:            #16a34a;
-      --success:           #16a34a;
-      --warning:           #ca8a04;
-      --danger:            #dc2626;
-      --score-green:       #22c55e;
-      --score-yellow:      #eab308;
-      --score-red:         #ef4444;
+      --background:         #f8fafc;
+      --foreground:         #0f172a;
+      --card:               #ffffff;
+      --surface-muted:      #f1f5f9;
+      --border:             #e2e8f0;
+      --muted:              #f1f5f9;
+      --muted-foreground:   #64748b;
+      --primary:            #0f172a;
+      --primary-foreground: #f8fafc;
+      --accent:             #059669;
+      --success:            #10b981;
+      --warning:            #d97706;
+      --danger:             #e11d48;
+      --score-green:        #10b981;
+      --score-yellow:       #d97706;
+      --score-red:          #e11d48;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
