@@ -341,31 +341,33 @@
     .empty-card p { color: var(--muted-foreground); font-size: 0.875rem; margin: 0; }
 
     /* ── proof footer ──────────────────────────────────────────────────────── */
-    /* Always uses --foreground as bg so the contrast stays inverted in both
-       themes — light bg → dark footer, dark bg → light footer. */
+    /* Shares the card surface palette — same family as the header / L1 / L2
+       panels, just a separator and a touch of surface-muted to mark the
+       section break. */
     .proof {
-      background: var(--foreground);
-      color: color-mix(in srgb, var(--primary-foreground) 90%, transparent);
+      background: color-mix(in srgb, var(--surface-muted) 60%, transparent);
+      color: var(--foreground);
+      border-top: 1px solid var(--border);
       padding: 24px;
       font-family: var(--font-mono);
     }
     .proof-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .proof-head .lbl { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.5; }
+    .proof-head .lbl { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted-foreground); }
     .proof-head .ok  { font-size: 0.625rem; font-weight: 700; color: var(--accent); }
     .proof-head .ok.bad { color: var(--danger); }
     .proof-row { display: flex; gap: 16px; font-size: 0.6875rem; line-height: 1.5; }
     .proof-row + .proof-row { margin-top: 8px; }
-    .proof-row .field { width: 64px; flex-shrink: 0; opacity: 0.4; }
-    .proof-row .val { word-break: break-all; color: color-mix(in srgb, var(--primary-foreground) 70%, transparent); }
+    .proof-row .field { width: 64px; flex-shrink: 0; color: var(--muted-foreground); }
+    .proof-row .val { word-break: break-all; color: var(--foreground); opacity: 0.85; }
 
     .copy-btn {
-      background: transparent; border: 1px solid color-mix(in srgb, var(--primary-foreground) 25%, transparent);
-      color: color-mix(in srgb, var(--primary-foreground) 70%, transparent);
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted-foreground);
       padding: 2px 8px; border-radius: 4px;
       font-family: var(--font-mono); font-size: 0.625rem;
       cursor: pointer; margin-left: 8px;
     }
-    .copy-btn:hover { background: color-mix(in srgb, var(--primary-foreground) 10%, transparent); }
+    .copy-btn:hover { background: var(--surface-muted); color: var(--foreground); }
 
     /* ── banners ───────────────────────────────────────────────────────────── */
     .banner {

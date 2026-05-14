@@ -386,19 +386,14 @@ function ProofRow({ field, value, copyable = false }: { field: string; value: st
   };
   return (
     <div className="flex gap-4 text-[11px] leading-relaxed">
-      <span className="w-16 shrink-0 opacity-40">{field}</span>
-      {/*
-        The footer text color uses the *current* foreground (slate-100 light /
-        slate-950 dark via the .proof wrapper); these spans inherit but we
-        soften them with opacity to mimic the mock's hierarchy.
-      */}
-      <span className="break-all opacity-70">
+      <span className="w-16 shrink-0 text-slate-500">{field}</span>
+      <span className="break-all text-slate-700 dark:text-slate-300">
         {value}
         {copyable && (
           <button
             type="button"
             onClick={onCopy}
-            className="ml-2 rounded border border-current/25 px-2 py-0.5 font-mono text-[10px] opacity-70 hover:bg-current/10"
+            className="ml-2 rounded border border-slate-300 px-2 py-0.5 font-mono text-[10px] text-slate-500 hover:bg-slate-200/50 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
           >
             {copied ? "copied" : "copy"}
           </button>
@@ -433,16 +428,15 @@ function ProofFooter({
 
   const inner = bundle.payload as Bundle["payload"];
 
-  // Footer is always *inverted* relative to the page surface — same contrast
-  // cue as the Rails portal in both themes (dark footer on light page; light
-  // footer on dark page).
+  // Footer shares the card's surface palette — same hierarchy as the header
+  // and the L1 / L2 panels, just one tone darker to mark a section break.
   return (
-    <footer className="bg-slate-900 p-6 font-mono text-slate-100 dark:bg-slate-100 dark:text-slate-900">
+    <footer className="border-t border-slate-200 bg-slate-50/80 p-6 font-mono text-slate-900 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-100">
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.2em] opacity-50">
+        <span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
           Proof of Authenticity (v{(bundle as unknown as { version?: string }).version ?? "?"}.0)
         </span>
-        <span className={`text-[10px] font-bold ${bad ? "text-rose-400 dark:text-rose-600" : "text-emerald-400 dark:text-emerald-600"}`}>{status}</span>
+        <span className={`text-[10px] font-bold ${bad ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>{status}</span>
       </div>
       <div className="space-y-2">
         <ProofRow field="SHA256"  value={(bundle as unknown as { hash: string }).hash} />
