@@ -5,16 +5,30 @@ interface Props {
   busy?: boolean;
 }
 
-function Check({ label, ok, reason }: { label: string; ok: boolean; reason?: string }) {
+function Row({
+  label,
+  ok,
+  warn,
+  reason,
+}: {
+  label: string;
+  ok: boolean;
+  warn?: boolean;
+  reason?: string;
+}) {
+  const icon = warn ? "⚠" : ok ? "✓" : "✗";
+  const cls = warn
+    ? "bg-amber-500/20 text-amber-300"
+    : ok
+      ? "bg-emerald-500/20 text-emerald-300"
+      : "bg-rose-500/20 text-rose-300";
   return (
     <div className="flex items-start gap-3">
       <span
-        className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-          ok ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"
-        }`}
-        aria-label={ok ? "ok" : "failed"}
+        className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${cls}`}
+        aria-label={warn ? "warning" : ok ? "ok" : "failed"}
       >
-        {ok ? "✓" : "✗"}
+        {icon}
       </span>
       <div className="min-w-0">
         <div className="text-sm font-medium text-slate-200">{label}</div>
@@ -39,18 +53,32 @@ export function VerificationStatus({ result, busy }: Props) {
   const borderClass = result.ok ? "border-emerald-700/50" : "border-rose-700/50";
   const headerClass = result.ok ? "text-emerald-300" : "text-rose-300";
 
+  const l1 = result.checks.l1_section;
+  const l2 = result.checks.l2_section;
+
   return (
     <div className={`space-y-3 rounded-lg border ${borderClass} bg-slate-900/50 p-4`}>
       <div className={`text-sm font-medium ${headerClass}`}>
         {result.ok ? "✓ Bundle verificado localmente" : "✗ Verificação falhou"}
       </div>
       <div className="space-y-2">
-        <Check label="schema" ok={result.checks.schema.ok} reason={result.checks.schema.reason} />
-        <Check label="hash" ok={result.checks.hash.ok} reason={result.checks.hash.reason} />
-        <Check
+        <Row label="schema" ok={result.checks.schema.ok} reason={result.checks.schema.reason} />
+        <Row label="hash" ok={result.checks.hash.ok} reason={result.checks.hash.reason} />
+        <Row
           label="signature (Ed25519)"
           ok={result.checks.signature.ok}
           reason={result.checks.signature.reason}
+        />
+        <Row
+          label={l1.ok ? `L1 (${l1.repo_count ?? 0} repositórios)` : "L1"}
+          ok={l1.ok}
+          warn={!l1.ok}  // L1 absent is a warning, not a failure
+          reason={l1.reason}
+        />
+        <Row
+          label={l2.ok ? `L2 (${l2.session_count ?? 0} sessões)` : "L2"}
+          ok={l2.ok}
+          reason={l2.reason}
         />
       </div>
       <div className="border-t border-slate-800 pt-2 text-xs text-slate-500">
