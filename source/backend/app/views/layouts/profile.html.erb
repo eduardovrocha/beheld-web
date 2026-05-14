@@ -241,7 +241,52 @@
     }
     .stat-label {
       margin-bottom: 16px;
+      display: inline-flex; align-items: center; gap: 6px;
       font-family: var(--font-mono); font-size: 0.625rem; text-transform: uppercase;
+      color: var(--muted-foreground);
+    }
+    /* Info hint — reveals stat-tip on hover/focus (CSS-only). */
+    .stat-info {
+      position: relative;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 14px; height: 14px;
+      cursor: help;
+      color: color-mix(in srgb, var(--muted-foreground) 80%, transparent);
+      outline: none;
+      transition: color 0.15s ease;
+    }
+    .stat-info:hover, .stat-info:focus { color: var(--foreground); }
+    .stat-tip {
+      position: absolute;
+      left: 0; bottom: calc(100% + 8px);
+      z-index: 20;
+      width: 18rem; max-width: 80vw;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.08);
+      text-transform: none;
+      letter-spacing: normal;
+      pointer-events: none;
+    }
+    .stat-info:hover .stat-tip,
+    .stat-info:focus .stat-tip,
+    .stat-info:focus-within .stat-tip { display: flex; }
+    .stat-tip-head {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.6875rem; font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .stat-tip-desc {
+      font-size: 0.6875rem;
+      line-height: 1.45;
       color: var(--muted-foreground);
     }
     .stat-value { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }

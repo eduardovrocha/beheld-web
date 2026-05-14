@@ -64,6 +64,17 @@ const pt: Dict = {
   "profile.stats.growth": "Growth",
   "profile.stats.sessions": "Sessions",
 
+  "profile.stats.prompt.desc":
+    "Qualidade dos prompts: comprimento médio, contexto de código, variedade de tools usadas e duração das sessões produtivas.",
+  "profile.stats.test.desc":
+    "Maturidade em testes: sessões com contexto de teste, padrões TDD e arquivos/comandos de teste — combinado com a baseline histórica do L1.",
+  "profile.stats.breadth.desc":
+    "Amplitude técnica: diversidade de ecossistemas, plataformas e linguagens. Combina histórico git (L1, 60%) com sessões recentes (L2, 40%).",
+  "profile.stats.growth.desc":
+    "Trajetória de evolução: novos ecossistemas adotados e mudança no ratio de testes contra a baseline L1 — fallback para 30 dias quando L1 não existe.",
+  "profile.stats.sessions.desc":
+    "Sessões do Claude Code consideradas no cálculo dos scores. Janela típica: últimos 30 dias.",
+
   // ProfileCard — trend
   "profile.trend.title": "12-Month Score Trajectory",
   "profile.trend.subtitle_html":
@@ -169,6 +180,17 @@ const en: Dict = {
   "profile.stats.growth": "Growth",
   "profile.stats.sessions": "Sessions",
 
+  "profile.stats.prompt.desc":
+    "Prompt quality: average length, code context, tool variety, and productive session duration.",
+  "profile.stats.test.desc":
+    "Test maturity: sessions with test context, TDD patterns, and test files/commands — combined with the L1 historical baseline.",
+  "profile.stats.breadth.desc":
+    "Tech breadth: diversity of ecosystems, platforms, and languages. Combines git history (L1, 60%) with recent sessions (L2, 40%).",
+  "profile.stats.growth.desc":
+    "Growth trajectory: new ecosystems adopted and test-ratio change vs the L1 baseline — falls back to 30 days when L1 is absent.",
+  "profile.stats.sessions.desc":
+    "Claude Code sessions considered in the score computation. Typical window: last 30 days.",
+
   "profile.trend.title": "12-Month Score Trajectory",
   "profile.trend.subtitle_html":
     "Snapshots reconstructed from the signed payload chain via <code>previous_hash</code>.",
@@ -266,6 +288,17 @@ const es: Dict = {
   "profile.stats.breadth": "Breadth",
   "profile.stats.growth": "Growth",
   "profile.stats.sessions": "Sessions",
+
+  "profile.stats.prompt.desc":
+    "Calidad de los prompts: longitud media, contexto de código, variedad de tools y duración de sesiones productivas.",
+  "profile.stats.test.desc":
+    "Madurez en tests: sesiones con contexto de test, patrones TDD y archivos/comandos de test — combinado con la baseline histórica del L1.",
+  "profile.stats.breadth.desc":
+    "Amplitud técnica: diversidad de ecosistemas, plataformas y lenguajes. Combina historial git (L1, 60%) con sesiones recientes (L2, 40%).",
+  "profile.stats.growth.desc":
+    "Trayectoria de evolución: nuevos ecosistemas adoptados y cambio en la ratio de tests contra la baseline L1 — fallback a 30 días sin L1.",
+  "profile.stats.sessions.desc":
+    "Sesiones de Claude Code consideradas en el cálculo de los scores. Ventana típica: últimos 30 días.",
 
   "profile.trend.title": "Trayectoria de Score (12 meses)",
   "profile.trend.subtitle_html":

@@ -45,6 +45,16 @@
   </header>
 
   <%# ── stats grid (4 dimensões + sessions) ───────────────────────────── %>
+  <%
+    info_svg = %(<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>)
+    stat_desc = {
+      "Prompt Q." => "Qualidade dos prompts: comprimento médio, contexto de código, variedade de tools usadas e duração das sessões produtivas.",
+      "Test Mat." => "Maturidade em testes: sessões com contexto de teste, padrões TDD e arquivos/comandos de teste — combinado com a baseline histórica do L1.",
+      "Breadth"   => "Amplitude técnica: diversidade de ecossistemas, plataformas e linguagens. Combina histórico git (L1, 60%) com sessões recentes (L2, 40%).",
+      "Growth"    => "Trajetória de evolução: novos ecossistemas adotados e mudança no ratio de testes contra a baseline L1 — fallback para 30 dias quando L1 não existe.",
+      "Sessions"  => "Sessões do Claude Code consideradas no cálculo dos scores. Janela típica: últimos 30 dias.",
+    }
+  %>
   <div class="stats">
     <% [
       ["Prompt Q.", scores["prompt_quality"].to_i, score_fill_class(scores["prompt_quality"].to_i)],
@@ -53,7 +63,16 @@
       ["Growth",    scores["growth_rate"].to_i,    "fill-accent"],
     ].each do |label, value, fill_class| %>
       <div class="stat">
-        <div class="stat-label"><%= label %></div>
+        <div class="stat-label">
+          <span><%= label %></span>
+          <span class="stat-info" tabindex="0" aria-label="<%= label %> — <%= stat_desc[label] %>">
+            <%= raw info_svg %>
+            <span class="stat-tip" role="tooltip">
+              <span class="stat-tip-head"><%= raw info_svg %><%= label %></span>
+              <span class="stat-tip-desc"><%= stat_desc[label] %></span>
+            </span>
+          </span>
+        </div>
         <div class="stat-value tabular"><%= value %></div>
         <div class="stat-bar" role="img" aria-label="<%= label %> <%= value %> de 100">
           <div class="fill <%= fill_class %>" style="width: <%= value %>%;"></div>
@@ -61,7 +80,16 @@
       </div>
     <% end %>
     <div class="stat">
-      <div class="stat-label">Sessions</div>
+      <div class="stat-label">
+        <span>Sessions</span>
+        <span class="stat-info" tabindex="0" aria-label="Sessions — <%= stat_desc['Sessions'] %>">
+          <%= raw info_svg %>
+          <span class="stat-tip" role="tooltip">
+            <span class="stat-tip-head"><%= raw info_svg %>Sessions</span>
+            <span class="stat-tip-desc"><%= stat_desc["Sessions"] %></span>
+          </span>
+        </span>
+      </div>
       <div class="stat-value tabular"><%= l2["sessions_analyzed"].to_i %></div>
     </div>
   </div>

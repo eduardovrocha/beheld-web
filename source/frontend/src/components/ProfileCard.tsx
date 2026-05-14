@@ -198,13 +198,81 @@ function VerifyPill({
   );
 }
 
+function InfoIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
+}
+
+/** Stat label with an inline info button that reveals a description
+ *  tooltip on hover/focus.  Same visual language as the proof footer
+ *  tooltips — accent icon + label header, muted description below. */
+function StatLabel({ label, descKey }: { label: string; descKey: string }) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mb-4 flex items-center gap-1.5">
+      <span className="font-mono text-[10px] uppercase text-slate-500">{label}</span>
+      <div
+        className="relative inline-flex"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+      >
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-describedby={open ? `stat-tip-${descKey}` : undefined}
+          aria-label={`${label} — ${t(descKey)}`}
+          className="inline-flex size-3.5 cursor-help items-center justify-center rounded-full text-slate-400 transition-colors hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
+        >
+          <InfoIcon size={12} />
+        </button>
+        {open && (
+          <div
+            id={`stat-tip-${descKey}`}
+            role="tooltip"
+            className="absolute bottom-full left-0 z-20 mb-2 w-[18rem] max-w-[80vw] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+          >
+            <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+              <InfoIcon size={14} />
+              <span>{label}</span>
+            </div>
+            <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+              {t(descKey)}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function StatCell({
   label,
+  descKey,
   value,
   withBar = true,
   accent = false,
 }: {
   label: string;
+  descKey: string;
   value: number;
   withBar?: boolean;
   accent?: boolean;
@@ -212,7 +280,7 @@ function StatCell({
   const fill = accent ? FILL_ACCENT : FILL_CLASSES[scoreBucket(value)];
   return (
     <div className="border-b border-slate-200 p-6 last:border-r-0 dark:border-slate-800 md:border-b-0 md:border-r">
-      <div className="mb-4 font-mono text-[10px] uppercase text-slate-500 dark:text-slate-500">{label}</div>
+      <StatLabel label={label} descKey={descKey} />
       <div className="font-mono text-xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{value}</div>
       {withBar && (
         <div
@@ -598,11 +666,11 @@ export function ProfileCard({ bundle, result, verifying, shortId, banner }: Prop
 
         {/* ── stats grid ──────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-800 md:grid-cols-5">
-          <StatCell label={t("profile.stats.prompt")}  value={scores.prompt_quality} />
-          <StatCell label={t("profile.stats.test")}    value={scores.test_maturity} />
-          <StatCell label={t("profile.stats.breadth")} value={scores.tech_breadth} />
-          <StatCell label={t("profile.stats.growth")}  value={scores.growth_rate} accent />
-          <StatCell label={t("profile.stats.sessions")} value={l2?.sessions_analyzed ?? 0} withBar={false} />
+          <StatCell label={t("profile.stats.prompt")}   descKey="profile.stats.prompt.desc"   value={scores.prompt_quality} />
+          <StatCell label={t("profile.stats.test")}     descKey="profile.stats.test.desc"     value={scores.test_maturity} />
+          <StatCell label={t("profile.stats.breadth")}  descKey="profile.stats.breadth.desc"  value={scores.tech_breadth} />
+          <StatCell label={t("profile.stats.growth")}   descKey="profile.stats.growth.desc"   value={scores.growth_rate} accent />
+          <StatCell label={t("profile.stats.sessions")} descKey="profile.stats.sessions.desc" value={l2?.sessions_analyzed ?? 0} withBar={false} />
         </div>
 
         {/* ── trend placeholder (chain not available client-side) ─────────── */}
