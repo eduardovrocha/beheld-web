@@ -24,6 +24,8 @@ import type {
 } from "@/lib/types";
 import type { VerifyResult } from "@/lib/verify";
 
+import { TechIcon } from "./TechIcon";
+
 type TFunc = ReturnType<typeof useT>;
 
 interface Props {
@@ -250,6 +252,22 @@ function ChipMuted({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Chip with a leading brand glyph — for ecosystems / platforms detected
+ *  on the bundle. Falls back to a neutral dot when the icon set doesn't
+ *  cover the key. */
+function TechChip({ name, accented = false }: { name: string; accented?: boolean }) {
+  const base = "inline-flex items-center gap-1.5 rounded px-2 py-1 font-mono text-xs";
+  const tone = accented
+    ? "border border-emerald-500/20 bg-emerald-500/10 text-slate-800 dark:border-emerald-500/15 dark:bg-emerald-500/5 dark:text-slate-200"
+    : "border border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400";
+  return (
+    <span className={`${base} ${tone}`}>
+      <TechIcon name={name} size={14} />
+      <span>{name}</span>
+    </span>
+  );
+}
+
 function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
   const t = useT();
   const present = l1 !== null && l1.total_repos > 0;
@@ -275,7 +293,7 @@ function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
             <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l1.primary_ecosystems")}</div>
             <div className="flex flex-wrap gap-2">
               {trueKeys(l1.ecosystems).slice(0, 8).map((k) => (
-                <Chip key={k}>{k}: true</Chip>
+                <TechChip key={k} name={k} accented />
               ))}
               {trueKeys(l1.ecosystems).length === 0 && <ChipMuted>{t("common.dash")}</ChipMuted>}
             </div>
@@ -285,7 +303,7 @@ function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
             <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l1.platforms")}</div>
             <div className="flex flex-wrap gap-2">
               {trueKeys(l1.platforms).slice(0, 8).map((k) => (
-                <ChipMuted key={k}>{k}</ChipMuted>
+                <TechChip key={k} name={k} />
               ))}
               {trueKeys(l1.platforms).length === 0 && <ChipMuted>{t("common.dash")}</ChipMuted>}
             </div>
@@ -356,7 +374,7 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
             <div className="space-y-3 pt-2">
               <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l2.ecosystems_top")}</div>
               <div className="flex flex-wrap gap-2">
-                {topKeys(l2.ecosystems).map((k) => <ChipMuted key={k}>{k}</ChipMuted>)}
+                {topKeys(l2.ecosystems).map((k) => <TechChip key={k} name={k} accented />)}
               </div>
             </div>
           )}
@@ -365,7 +383,7 @@ function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
             <div className="space-y-3 pt-2">
               <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l2.platforms_top")}</div>
               <div className="flex flex-wrap gap-2">
-                {topKeys(l2.platforms).map((k) => <ChipMuted key={k}>{k}</ChipMuted>)}
+                {topKeys(l2.platforms).map((k) => <TechChip key={k} name={k} />)}
               </div>
             </div>
           )}
