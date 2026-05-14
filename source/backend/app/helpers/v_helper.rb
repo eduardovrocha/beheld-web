@@ -45,6 +45,17 @@ module VHelper
     "#{earliest.year} → #{latest.year}"
   end
 
+  # Color class for the L1 Average Test Ratio value — same bands as the
+  # tooltip's reference scale.  Returns a class hook backed by the
+  # `--score-*` CSS variables defined in the layout.
+  def test_ratio_color_class(value)
+    v = value.to_f
+    return "text-score-red"    if v < 0.10
+    return "text-score-yellow" if v < 0.25
+    return "text-score-green"  if v < 0.50
+    "text-accent"
+  end
+
   def format_days_ago(iso)
     return "—" if iso.blank?
     dt = parse_iso(iso)

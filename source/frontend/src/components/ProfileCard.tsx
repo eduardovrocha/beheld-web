@@ -353,16 +353,30 @@ function StatCell({
   );
 }
 
+/** Maps a 0.0–1.0 test ratio to the same color bands used by the scale
+ *  legend.  Keep aligned with <TestRatioScale> bands and the Rails
+ *  `test_ratio_color_class` helper. */
+function testRatioColorClass(v: number): string {
+  if (v < 0.10)  return "text-rose-600 dark:text-rose-400";
+  if (v < 0.25)  return "text-amber-600 dark:text-amber-400";
+  if (v < 0.50)  return "text-emerald-600 dark:text-emerald-400";
+  return "text-emerald-700 dark:text-emerald-300";
+}
+
 function FactRow({
   label,
   value,
   accent = false,
+  valueClassName,
   descKey,
   tooltipExtra,
 }: {
   label: string;
   value: React.ReactNode;
+  /** Shorthand for the emerald-accent value color. */
   accent?: boolean;
+  /** Explicit color class for the value; wins over `accent` when set. */
+  valueClassName?: string;
   /** When set, an ⓘ button is rendered next to the label whose tooltip
    *  carries this description (resolved via i18n). */
   descKey?: string;
@@ -371,13 +385,15 @@ function FactRow({
   tooltipExtra?: React.ReactNode;
 }) {
   const t = useT();
+  const colorClass = valueClassName
+    ?? (accent ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-slate-100");
   return (
     <div className="flex items-end justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
       <span className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
         {label}
         {descKey && <InfoTooltip title={label} description={t(descKey)} extra={tooltipExtra} />}
       </span>
-      <span className={`font-mono font-bold ${accent ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-slate-100"}`}>{value}</span>
+      <span className={`font-mono font-bold ${colorClass}`}>{value}</span>
     </div>
   );
 }
@@ -433,7 +449,7 @@ function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
             descKey="profile.l1.avg_test_ratio.desc"
             tooltipExtra={<TestRatioScale />}
             value={l1.avg_test_ratio.toFixed(2)}
-            accent
+            valueClassName={testRatioColorClass(l1.avg_test_ratio)}
           />
           <FactRow label={t("profile.l1.last_commit")}      descKey="profile.l1.last_commit.desc"      value={daysAgo(l1.latest_commit, t)} />
 
