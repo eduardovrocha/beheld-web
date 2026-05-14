@@ -62,13 +62,14 @@ class VController < ApplicationController
     SVG
   end
 
+  # 3-bucket thresholds per F6 portal spec.
+  # Returned as the bare hex (no leading "#") since `build_badge_svg`
+  # already prepends "#" when emitting the SVG.
   def score_color(score)
     case score
-    when 80..100 then "4c1"   # green
-    when 60..79  then "97ca00" # yellow-green
-    when 40..59  then "dfb317" # yellow
-    when 20..39  then "fe7d37" # orange
-    else "e05d44"             # red
+    when 75..  then "22c55e" # green   — score ≥ 75
+    when 50..74 then "eab308" # yellow  — score 50–74
+    else            "ef4444" # red     — score < 50
     end
   end
 end

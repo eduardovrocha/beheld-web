@@ -64,4 +64,8 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Rails 7.2 host authorization defaults block Rack::Test's "www.example.com" —
+  # request specs would otherwise fail with 403 Blocked Host. Allow it in test.
+  config.hosts << "www.example.com"
 end

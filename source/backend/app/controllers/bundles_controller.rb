@@ -1,11 +1,17 @@
-# Upload endpoint for signed .dpbundle snapshots (Phase 5 / F5.4-5).
+# Upload endpoint for signed .dpbundle snapshots (Phase 5 / F5.4-5;
+# Phase 6 / F6.8 retrocompat).
 #
 # POST /bundles
 #   Body: the full .dpbundle JSON as produced by `devprofile snapshot`
 #   201: { id, url, ttl_days, created_at }
 #   200: same shape + deduplicated: true  (when re-uploading by bundle_hash)
 #   400: malformed JSON
-#   422: validation errors (bad hash/pubkey format, missing fields)
+#   422: validation errors (bad hash/pubkey format, missing fields,
+#        unrecognized schema)
+#
+# The controller accepts both v1 (signals) and v2 (l1+l2) inner payloads.
+# Identification is delegated to `Bundle.schema_version`; the persisted
+# `schema_version` column lets renderers pick the right layout.
 
 class BundlesController < ApplicationController
   REQUIRED_TOP_LEVEL_FIELDS = %w[version payload hash signature public_key].freeze
@@ -18,6 +24,18 @@ class BundlesController < ApplicationController
     if missing.any?
       return render(
         json: { error: "missing required fields", missing: missing },
+        status: :unprocessable_entity,
+      )
+    end
+
+    inner_payload = bundle_json["payload"]
+    unless Bundle.valid_payload?(inner_payload)
+      return render(
+        json: {
+          error: "invalid payload",
+          detail: "payload must contain scores + (l1 & l2) or (signals)",
+          schema_version: Bundle.schema_version(inner_payload).to_s,
+        },
         status: :unprocessable_entity,
       )
     end
@@ -52,6 +70,7 @@ class BundlesController < ApplicationController
       url: "#{request.protocol}#{request.host_with_port}/v/#{bundle.short_id}",
       ttl_days: ttl,
       created_at: bundle.created_at.iso8601,
+      schema_version: bundle.schema_version,
     }
     body[:deduplicated] = true if deduplicated
     render json: body, status: status
