@@ -49,6 +49,55 @@ const pt: Dict = {
   "home.features_label": "Recursos",
   "home.code.title": "Como verificar",
 
+  // ── New landing copy ────────────────────────────────────────────────────
+  "land.hero.headline": "Seu perfil criado enquanto trabalha.",
+  "land.hero.headline_prefix": "Seu perfil enquanto ",
+  "land.hero.headline_verbs":
+    "trabalha,pesquisa,testa,refatora,descobre,evolui,codifica,programa,constrói,prototipa,arquiteta,modela,entrega,embarca,explora,aprende,analisa,experimenta,investiga,mede,depura,corrige,revisa,valida,otimiza,documenta,migra,itera,comita,integra,automatiza,escala,planeja,cria,quebra,conserta",
+  "land.hero.sub":
+    "O devprofile roda em background enquanto você usa o Claude Code, Cursor* ou WindSurf*. Identifica padrões de teste, ferramentas, consistência, plataformas ou linguagens e gera um perfil verificável que ninguém consegue forjar.",
+  "land.hero.install_label": "Instale em uma linha",
+  "land.hero.install_sub": "Funciona em macOS e Linux. Zero dependências.",
+  "land.hero.cta_github": "Ver no GitHub",
+  "land.hero.cta_hirer": "Sou recrutador →",
+  "land.hero.terminal_caption": "Output de devprofile view",
+
+  "land.how.title": "Como funciona",
+  "land.how.step1.title": "Você não precisa fazer nada diferente",
+  "land.how.step1.body":
+    "Instale em um comando. Os hooks se registram automaticamente. Cada sessão de trabalho alimenta o perfil. Nenhum formulário, nenhum CV para atualizar, nenhuma ação necessária.",
+  "land.how.step2.title": "Seu perfil cresce enquanto trabalha",
+  "land.how.step2.body":
+    "Test ratio real. Ecossistemas que é utilizado de fato. Como você evolui de debug-driven para TDD. Consistência ao longo de meses e não performance numa tarde de entrevista.",
+  "land.how.step3.title": "Quando quiser ser encontrável, é um comando",
+  "land.how.step3.body":
+    "Gera um .dpbundle assinado, uma URL curta e um QR code. Qualquer pessoa pode verificar a autenticidade no navegador — sem confiar em nenhum servidor.",
+
+  "land.hire.eyebrow": "Para quem contrata",
+  "land.hire.title": "Entenda como o profissional trabalha.",
+  "land.hire.subtitle": "Não o que ele declara — o que ele demonstra.",
+  "land.hire.bullet1": "Test ratio real ao longo de meses.",
+  "land.hire.bullet2": "Ritmo e consistência de trabalho.",
+  "land.hire.bullet3":
+    "Evolução de padrões — para onde o dev está indo, não só onde está.",
+  "land.hire.closer":
+    "Tudo derivado de uso real. Tudo verificável criptograficamente. Ninguém consegue forjar um histórico de seis meses de trabalho consistente.",
+  "land.hire.cta": "Acesso antecipado para empresas →",
+
+  "land.priv.title": "O que nunca é coletado",
+  "land.priv.never":
+    "Nenhuma mensagem de conversa, nenhum prompt, nenhum código que você escreveu, nenhum caminho absoluto de arquivo, nenhuma variável de ambiente.",
+  "land.priv.what":
+    "O DevProfile coleta apenas metadados derivados: nomes de tools, extensões de arquivo, timestamps, sequências de ação.",
+  "land.priv.closer_html":
+    "Tudo fica em <code>~/.devprofile/</code> — no seu disco, sob seu controle.",
+
+  "land.crypto.title": "Como a verificação funciona",
+  "land.crypto.body_html":
+    "O <code>.dpbundle</code> é um JSON com payload, hash <code>SHA-256</code> e assinatura <code>Ed25519</code>. A public key vai embutida — o bundle é autoverificável sem nenhuma chamada ao servidor.",
+  "land.crypto.cta_verify": "Verificar um .dpbundle agora",
+  "land.crypto.cta_spec": "Ver a spec no GitHub",
+
   // ProfileCard — header
   "profile.title": "DevProfile",
   "profile.id_prefix": "ID:",
@@ -199,6 +248,54 @@ const en: Dict = {
   "home.features_label": "Features",
   "home.code.title": "How to verify",
 
+  "land.hero.headline": "Your profile, built while you work.",
+  "land.hero.headline_prefix": "Your profile while you ",
+  "land.hero.headline_verbs":
+    "work,research,test,refactor,discover,evolve,code,program,build,prototype,architect,model,ship,deploy,explore,learn,analyze,experiment,investigate,measure,debug,fix,review,validate,optimize,document,migrate,iterate,commit,integrate,automate,scale,plan,create,break,repair",
+  "land.hero.sub":
+    "devprofile runs in the background while you use Claude Code, Cursor* or WindSurf*. It identifies test patterns, tools, consistency, platforms and languages and produces a verifiable profile nobody can fake.",
+  "land.hero.install_label": "Install in one line",
+  "land.hero.install_sub": "Works on macOS and Linux. Zero dependencies.",
+  "land.hero.cta_github": "View on GitHub",
+  "land.hero.cta_hirer": "I'm a recruiter →",
+  "land.hero.terminal_caption": "Output of devprofile view",
+
+  "land.how.title": "How it works",
+  "land.how.step1.title": "You don't need to do anything different",
+  "land.how.step1.body":
+    "Install with one command. The hooks register automatically. Every work session feeds the profile. No forms, no CV to update, no action required.",
+  "land.how.step2.title": "Your profile grows while you work",
+  "land.how.step2.body":
+    "Real test ratio. The ecosystems actually used. How you evolve from debug-driven to TDD. Consistency over months and not performance in an interview afternoon.",
+  "land.how.step3.title": "When you want to be findable, it's one command",
+  "land.how.step3.body":
+    "Generates a signed .dpbundle, a short URL and a QR code. Anyone can verify authenticity in the browser — no server to trust.",
+
+  "land.hire.eyebrow": "For hiring teams",
+  "land.hire.title": "Understand how the professional works.",
+  "land.hire.subtitle": "Not what they declare — what they demonstrate.",
+  "land.hire.bullet1": "Real test ratio over months.",
+  "land.hire.bullet2": "Work rhythm and consistency.",
+  "land.hire.bullet3":
+    "Pattern evolution — where the dev is heading, not just where they are.",
+  "land.hire.closer":
+    "All derived from real usage. All cryptographically verifiable. Nobody can fake six months of consistent work history.",
+  "land.hire.cta": "Early access for companies →",
+
+  "land.priv.title": "What's never collected",
+  "land.priv.never":
+    "No conversation messages, no prompts, no code you wrote, no absolute file paths, no environment variables.",
+  "land.priv.what":
+    "DevProfile only collects derived metadata: tool names, file extensions, timestamps, action sequences.",
+  "land.priv.closer_html":
+    "Everything stays in <code>~/.devprofile/</code> — on your disk, under your control.",
+
+  "land.crypto.title": "How verification works",
+  "land.crypto.body_html":
+    "The <code>.dpbundle</code> is a JSON with payload, <code>SHA-256</code> hash, and <code>Ed25519</code> signature. The public key is embedded — the bundle is self-verifying without any call to a server.",
+  "land.crypto.cta_verify": "Verify a .dpbundle now",
+  "land.crypto.cta_spec": "View the spec on GitHub",
+
   "profile.title": "DevProfile",
   "profile.id_prefix": "ID:",
   "profile.pill.idle": "ED25519 PROFILE",
@@ -339,6 +436,54 @@ const es: Dict = {
   "home.cta_verify": "Verificar bundle",
   "home.features_label": "Características",
   "home.code.title": "Cómo verificar",
+
+  "land.hero.headline": "Tu perfil creado mientras trabajas.",
+  "land.hero.headline_prefix": "Tu perfil mientras ",
+  "land.hero.headline_verbs":
+    "trabajas,investigas,pruebas,refactorizas,descubres,evolucionas,codificas,programas,construyes,prototipas,diseñas,modelas,entregas,despliegas,exploras,aprendes,analizas,experimentas,indagas,mides,depuras,arreglas,revisas,validas,optimizas,documentas,migras,iteras,commiteas,integras,automatizas,escalas,planificas,creas,rompes,reparas",
+  "land.hero.sub":
+    "devprofile corre en segundo plano mientras usas Claude Code, Cursor* o WindSurf*. Identifica patrones de test, herramientas, consistencia, plataformas y lenguajes y genera un perfil verificable que nadie puede falsificar.",
+  "land.hero.install_label": "Instala en una línea",
+  "land.hero.install_sub": "Funciona en macOS y Linux. Cero dependencias.",
+  "land.hero.cta_github": "Ver en GitHub",
+  "land.hero.cta_hirer": "Soy reclutador →",
+  "land.hero.terminal_caption": "Salida de devprofile view",
+
+  "land.how.title": "Cómo funciona",
+  "land.how.step1.title": "No necesitas hacer nada diferente",
+  "land.how.step1.body":
+    "Instala con un comando. Los hooks se registran automáticamente. Cada sesión de trabajo alimenta el perfil. Sin formularios, sin CV que actualizar, sin acción requerida.",
+  "land.how.step2.title": "Tu perfil crece mientras trabajas",
+  "land.how.step2.body":
+    "Test ratio real. Ecosistemas que se usan de verdad. Cómo evolucionas de debug-driven a TDD. Consistencia a lo largo de meses y no rendimiento en una tarde de entrevista.",
+  "land.how.step3.title": "Cuando quieras ser encontrable, es un comando",
+  "land.how.step3.body":
+    "Genera un .dpbundle firmado, una URL corta y un QR. Cualquiera puede verificar la autenticidad en el navegador — sin confiar en ningún servidor.",
+
+  "land.hire.eyebrow": "Para quien contrata",
+  "land.hire.title": "Entiende cómo trabaja el profesional.",
+  "land.hire.subtitle": "No lo que declara — lo que demuestra.",
+  "land.hire.bullet1": "Test ratio real durante meses.",
+  "land.hire.bullet2": "Ritmo y consistencia de trabajo.",
+  "land.hire.bullet3":
+    "Evolución de patrones — hacia dónde va el dev, no solo dónde está.",
+  "land.hire.closer":
+    "Todo derivado de uso real. Todo verificable criptográficamente. Nadie puede falsificar seis meses de historial de trabajo consistente.",
+  "land.hire.cta": "Acceso temprano para empresas →",
+
+  "land.priv.title": "Lo que nunca se recoge",
+  "land.priv.never":
+    "Ningún mensaje de conversación, ningún prompt, ningún código que escribiste, ninguna ruta absoluta, ninguna variable de entorno.",
+  "land.priv.what":
+    "DevProfile solo recoge metadatos derivados: nombres de tools, extensiones de archivo, timestamps, secuencias de acción.",
+  "land.priv.closer_html":
+    "Todo queda en <code>~/.devprofile/</code> — en tu disco, bajo tu control.",
+
+  "land.crypto.title": "Cómo funciona la verificación",
+  "land.crypto.body_html":
+    "El <code>.dpbundle</code> es un JSON con payload, hash <code>SHA-256</code> y firma <code>Ed25519</code>. La clave pública va embebida — el bundle es autoverificable sin ninguna llamada a servidor.",
+  "land.crypto.cta_verify": "Verificar un .dpbundle ahora",
+  "land.crypto.cta_spec": "Ver la spec en GitHub",
 
   "profile.title": "DevProfile",
   "profile.id_prefix": "ID:",
