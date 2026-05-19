@@ -1,0 +1,6 @@
+# Block all private key material — never commit any of these.
+# Public keys (.pub) and metadata (.info.json) are committed; everything else is blocked.
+*.priv
+*.priv.*
+*.key
+*.pem
