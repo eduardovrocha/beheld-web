@@ -1,0 +1,6 @@
+# Block ALL files in this directory from git — only the .gitignore itself
+# (and the optional README) is tracked. SSH keys + any other deploy
+# credentials live here on the operator's machine, never in the repo.
+*
+!.gitignore
+!README.md
