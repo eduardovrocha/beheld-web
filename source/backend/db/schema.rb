@@ -10,9 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_14_150000) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_19_185847) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "attestations", force: :cascade do |t|
+    t.string "dev_pubkey_b64", null: false
+    t.string "dev_pubkey_fingerprint", null: false
+    t.bigint "github_user_id", null: false
+    t.string "github_login", null: false
+    t.string "platform_key_id", null: false
+    t.text "signed_payload_json", null: false
+    t.string "signature_b64", null: false
+    t.datetime "attested_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["dev_pubkey_fingerprint"], name: "index_attestations_on_dev_pubkey_fingerprint"
+    t.index ["github_user_id"], name: "index_attestations_on_github_user_id"
+    t.index ["platform_key_id"], name: "index_attestations_on_platform_key_id"
+  end
 
   create_table "bundles", force: :cascade do |t|
     t.string "short_id", null: false

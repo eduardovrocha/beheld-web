@@ -48,6 +48,9 @@ group :development, :test do
   # System-level specs for the public profile page (Phase 6 / Objetivo 2).
   # Uses the :rack_test driver — pure HTML assertions, no real browser needed.
   gem "capybara", "~> 3.40"
+
+  # HTTP stubbing for the GitHub OAuth API in attestation specs (Phase 5 / F5.6.1).
+  gem "webmock", "~> 3.24"
 end
 
 
