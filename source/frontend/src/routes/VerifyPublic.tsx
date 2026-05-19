@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import { IdentityTag } from "@/components/IdentityTag";
 import { ProfileCard } from "@/components/ProfileCard";
 import { useT } from "@/i18n/I18nProvider";
 import { fetchBundle } from "@/lib/api";
+import { verifyAttestation, type AttestationCheck } from "@/lib/attestationVerify";
+import { fetchPlatformKeys } from "@/lib/platformKeys";
 import type { Bundle } from "@/lib/types";
 import { verifyBundle, type VerifyResult } from "@/lib/verify";
 
@@ -14,6 +17,7 @@ export function VerifyPublic() {
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VerifyResult | null>(null);
+  const [attestation, setAttestation] = useState<AttestationCheck | null>(null);
   const [verifying, setVerifying] = useState(true);
 
   useEffect(() => {
@@ -22,6 +26,7 @@ export function VerifyPublic() {
     setBundle(null);
     setError(null);
     setResult(null);
+    setAttestation(null);
     setVerifying(true);
 
     (async () => {
@@ -29,9 +34,12 @@ export function VerifyPublic() {
         const b = await fetchBundle(id);
         if (cancelled) return;
         setBundle(b);
-        const r = await verifyBundle(b);
+        const [r, keys] = await Promise.all([verifyBundle(b), fetchPlatformKeys()]);
         if (cancelled) return;
         setResult(r);
+        const att = await verifyAttestation(b, keys);
+        if (cancelled) return;
+        setAttestation(att);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
       } finally {
@@ -56,7 +64,12 @@ export function VerifyPublic() {
     );
   }
 
-  return <ProfileCard bundle={bundle} result={result} verifying={verifying} shortId={id} />;
+  return (
+    <div className="space-y-4">
+      <IdentityTag attestation={attestation} loading={verifying && attestation === null} />
+      <ProfileCard bundle={bundle} result={result} verifying={verifying} shortId={id} />
+    </div>
+  );
 }
 
 function ErrorBox({ title, message }: { title: string; message: string }) {

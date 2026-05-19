@@ -7,7 +7,7 @@
  * Contract is enforced by test_bundle.py + bundle.test.ts (cross-language hash).
  */
 
-export const BUNDLE_VERSION = "2";
+export const BUNDLE_VERSION = "3";
 
 export interface BundleScores {
   date: string;
@@ -79,10 +79,34 @@ export interface BundlePayloadV1 {
   signals: BundleL2Section;
 }
 
+/** Identity attestation issued by the DevProfile platform key (Phase 5 / F5.6).
+ *  Lives at the WRAPPER level — sibling of hash + signature — so adding it
+ *  to a bundle does not change the bundle hash. Bundles without one are still
+ *  valid; the verifier reports them as `identity_unverified`. */
+export interface AttestationGithub {
+  user_id: number;
+  login: string;
+  verified_at: string;
+}
+
+export interface AttestationPayload {
+  type: string;
+  platform_key_id: string;
+  dev_pubkey: string;
+  github: AttestationGithub;
+  attested_at: string;
+}
+
+export interface BundleAttestation {
+  payload: AttestationPayload;
+  signature: string;
+}
+
 export interface Bundle {
   version: string;
   payload: BundlePayload;
   hash: string;
   signature: string;
   public_key: string;
+  attestation?: BundleAttestation | null;
 }

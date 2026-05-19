@@ -135,6 +135,20 @@ const pt: Dict = {
     "Snapshots reconstruídos a partir da cadeia assinada via <code>previous_hash</code>.",
   "profile.trend.unavailable_html":
     "Trajetória requer múltiplos snapshots na cadeia — disponível em <code>/v/:id</code> servido pelo Rails.",
+  "profile.trend.projection_note":
+    "Projeção determinística a partir do snapshot atual. Cadeia completa disponível via <code>/v/:id</code>.",
+  "profile.trend.kpi.netdelta": "Net Δ 12mo",
+  "profile.trend.kpi.peak": "Pico",
+  "profile.trend.kpi.consistency": "Consistência",
+  "profile.trend.kpi.consistency.very_high": "Muito alta",
+  "profile.trend.kpi.consistency.high": "Alta",
+  "profile.trend.kpi.consistency.moderate": "Moderada",
+  "profile.trend.kpi.consistency.volatile": "Volátil",
+  "profile.trend.legend.overall": "Overall",
+  "profile.trend.legend.prompt": "Prompt Quality",
+  "profile.trend.legend.test": "Test Maturity",
+  "profile.trend.legend.breadth": "Tech Breadth",
+  "profile.trend.legend.growth": "Growth Rate",
 
   // ProfileCard — L1
   "profile.l1.title": "Git History Analysis",
@@ -226,6 +240,18 @@ const pt: Dict = {
   // VerifyPublic
   "verify.public.error.title": "Não foi possível carregar o bundle",
   "verify.public.error.id_missing": "Bundle id ausente.",
+
+  // IdentityTag (Phase 5 / F5.6.1.f)
+  "identity.label": "Identidade",
+  "identity.absent": "Bundle sem attestation — identity_unverified",
+  "identity.payload_invalid": "Attestation com payload inválido",
+  "identity.sub.signature": "assinatura da plataforma",
+  "identity.sub.bind": "dev pubkey corresponde ao bundle",
+  "identity.sub.key_status": "status da chave da plataforma",
+  "identity.key_status.active": "ativa",
+  "identity.key_status.rotated": "rotacionada (válida)",
+  "identity.key_status.revoked": "revogada — pedir reissuance",
+  "identity.key_status.unknown": "desconhecida (chave não está no registro)",
 };
 
 const en: Dict = {
@@ -330,6 +356,20 @@ const en: Dict = {
     "Snapshots reconstructed from the signed payload chain via <code>previous_hash</code>.",
   "profile.trend.unavailable_html":
     "Trajectory requires multiple snapshots in the chain — available at <code>/v/:id</code> served by Rails.",
+  "profile.trend.projection_note":
+    "Deterministic projection from the current snapshot. Full chain available via <code>/v/:id</code>.",
+  "profile.trend.kpi.netdelta": "Net Δ 12mo",
+  "profile.trend.kpi.peak": "Peak",
+  "profile.trend.kpi.consistency": "Consistency",
+  "profile.trend.kpi.consistency.very_high": "Very high",
+  "profile.trend.kpi.consistency.high": "High",
+  "profile.trend.kpi.consistency.moderate": "Moderate",
+  "profile.trend.kpi.consistency.volatile": "Volatile",
+  "profile.trend.legend.overall": "Overall",
+  "profile.trend.legend.prompt": "Prompt Quality",
+  "profile.trend.legend.test": "Test Maturity",
+  "profile.trend.legend.breadth": "Tech Breadth",
+  "profile.trend.legend.growth": "Growth Rate",
 
   "profile.l1.title": "Git History Analysis",
   "profile.l1.repos": "Total Repositories",
@@ -415,6 +455,18 @@ const en: Dict = {
 
   "verify.public.error.title": "Could not load the bundle",
   "verify.public.error.id_missing": "Bundle id missing.",
+
+  // IdentityTag (Phase 5 / F5.6.1.f)
+  "identity.label": "Identity",
+  "identity.absent": "Bundle has no attestation — identity_unverified",
+  "identity.payload_invalid": "Attestation payload is invalid",
+  "identity.sub.signature": "platform signature",
+  "identity.sub.bind": "dev pubkey matches the bundle",
+  "identity.sub.key_status": "platform key status",
+  "identity.key_status.active": "active",
+  "identity.key_status.rotated": "rotated (still valid)",
+  "identity.key_status.revoked": "revoked — request reissuance",
+  "identity.key_status.unknown": "unknown (key not in registry)",
 };
 
 const es: Dict = {
@@ -519,6 +571,20 @@ const es: Dict = {
     "Snapshots reconstruidos desde la cadena firmada via <code>previous_hash</code>.",
   "profile.trend.unavailable_html":
     "La trayectoria requiere múltiples snapshots en la cadena — disponible en <code>/v/:id</code> servido por Rails.",
+  "profile.trend.projection_note":
+    "Proyección determinista desde el snapshot actual. Cadena completa disponible vía <code>/v/:id</code>.",
+  "profile.trend.kpi.netdelta": "Net Δ 12mo",
+  "profile.trend.kpi.peak": "Pico",
+  "profile.trend.kpi.consistency": "Consistencia",
+  "profile.trend.kpi.consistency.very_high": "Muy alta",
+  "profile.trend.kpi.consistency.high": "Alta",
+  "profile.trend.kpi.consistency.moderate": "Moderada",
+  "profile.trend.kpi.consistency.volatile": "Volátil",
+  "profile.trend.legend.overall": "Overall",
+  "profile.trend.legend.prompt": "Prompt Quality",
+  "profile.trend.legend.test": "Test Maturity",
+  "profile.trend.legend.breadth": "Tech Breadth",
+  "profile.trend.legend.growth": "Growth Rate",
 
   "profile.l1.title": "Git History Analysis",
   "profile.l1.repos": "Repositorios totales",
@@ -604,6 +670,18 @@ const es: Dict = {
 
   "verify.public.error.title": "No se pudo cargar el bundle",
   "verify.public.error.id_missing": "Falta el id del bundle.",
+
+  // IdentityTag (Phase 5 / F5.6.1.f)
+  "identity.label": "Identidad",
+  "identity.absent": "Bundle sin attestation — identity_unverified",
+  "identity.payload_invalid": "Payload de attestation inválido",
+  "identity.sub.signature": "firma de la plataforma",
+  "identity.sub.bind": "dev pubkey coincide con el bundle",
+  "identity.sub.key_status": "estado de la clave de plataforma",
+  "identity.key_status.active": "activa",
+  "identity.key_status.rotated": "rotada (válida)",
+  "identity.key_status.revoked": "revocada — solicitar reissuance",
+  "identity.key_status.unknown": "desconocida (clave no está en el registro)",
 };
 
 export const DICTIONARIES: Record<Locale, Dict> = { pt, en, es };

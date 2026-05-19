@@ -1,14 +1,17 @@
 import { useCallback, useState } from "react";
 
+import { IdentityTag } from "@/components/IdentityTag";
 import { ProfileCard } from "@/components/ProfileCard";
 import { useT } from "@/i18n/I18nProvider";
+import { verifyAttestation, type AttestationCheck } from "@/lib/attestationVerify";
+import { fetchPlatformKeys } from "@/lib/platformKeys";
 import type { Bundle } from "@/lib/types";
 import { verifyBundle, type VerifyResult } from "@/lib/verify";
 
 type State =
   | { kind: "idle" }
   | { kind: "verifying"; filename: string; bundle: Bundle }
-  | { kind: "done"; filename: string; bundle: Bundle; result: VerifyResult }
+  | { kind: "done"; filename: string; bundle: Bundle; result: VerifyResult; attestation: AttestationCheck }
   | { kind: "error"; message: string };
 
 export function VerifyLocal() {
@@ -23,8 +26,9 @@ export function VerifyLocal() {
       // Show the bundle immediately with a "verifying" pill; the verification
       // runs in the background and the pill / proof footer update once done.
       setState({ kind: "verifying", filename: file.name, bundle: parsed });
-      const result = await verifyBundle(parsed);
-      setState({ kind: "done", filename: file.name, bundle: parsed, result });
+      const [result, keys] = await Promise.all([verifyBundle(parsed), fetchPlatformKeys()]);
+      const attestation = await verifyAttestation(parsed, keys);
+      setState({ kind: "done", filename: file.name, bundle: parsed, result, attestation });
     } catch (e) {
       setState({ kind: "error", message: (e as Error).message });
     }
@@ -104,6 +108,10 @@ export function VerifyLocal() {
           <div className="text-sm text-slate-600 dark:text-slate-400">
             {t("verify.local.file_label")} <code className="text-slate-800 dark:text-slate-200">{state.filename}</code>
           </div>
+          <IdentityTag
+            attestation={state.kind === "done" ? state.attestation : null}
+            loading={state.kind === "verifying"}
+          />
           <ProfileCard
             bundle={state.bundle}
             result={state.kind === "done" ? state.result : null}
