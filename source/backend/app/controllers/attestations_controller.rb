@@ -13,4 +13,23 @@ class AttestationsController < ApplicationController
 
     render json: data
   end
+
+  def verify
+    body = begin
+      JSON.parse(request.raw_post)
+    rescue JSON::ParserError => e
+      return render(json: { error: "invalid JSON: #{e.message}" }, status: :bad_request)
+    end
+
+    result = AttestationVerifier.verify(body)
+    render json: {
+      payload_valid:   result.payload_valid || false,
+      signature_valid: result.signature_valid || false,
+      key_status:      result.key_status,
+      revoked_reason:  result.revoked_reason,
+      platform_key_id: result.platform_key_id,
+      github:          result.github,
+      error:           result.error,
+    }
+  end
 end

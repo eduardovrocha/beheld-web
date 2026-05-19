@@ -21,4 +21,7 @@ Rails.application.routes.draw do
   # Attestation claim — one-shot exchange of `claim_code` for the signed
   # attestation produced inside the OAuth callback.
   post "api/attestation/claim"    => "attestations#claim",   as: :api_attestation_claim
+
+  # Attestation verify — pure crypto + revocation-status check. No DB write.
+  post "api/attestation/verify"   => "attestations#verify",  as: :api_attestation_verify
 end
