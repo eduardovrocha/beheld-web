@@ -141,6 +141,8 @@ GEM
     matrix (0.4.3)
     mini_mime (1.1.5)
     minitest (5.27.0)
+    mock_redis (0.54.0)
+      redis (~> 5)
     msgpack (1.8.0)
     net-imap (0.6.4)
       date
@@ -332,6 +334,7 @@ DEPENDENCIES
   capybara (~> 3.40)
   debug
   dotenv-rails
+  mock_redis (~> 0.45)
   pg (~> 1.1)
   puma (>= 5.0)
   rack-cors

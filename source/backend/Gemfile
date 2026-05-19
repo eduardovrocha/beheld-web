@@ -51,6 +51,9 @@ group :development, :test do
 
   # HTTP stubbing for the GitHub OAuth API in attestation specs (Phase 5 / F5.6.1).
   gem "webmock", "~> 3.24"
+
+  # In-memory Redis double for unit testing OauthStateStore (Phase 5 / F5.6.1).
+  gem "mock_redis", "~> 0.45"
 end
 
 

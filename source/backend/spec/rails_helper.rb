@@ -10,6 +10,12 @@ abort("The Rails environment is running in production mode!") if Rails.env.produ
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
 
+# Block real HTTP in specs — GitHub OAuth API calls are stubbed via WebMock
+# in the attestation flow specs (Phase 5 / F5.6.1). Localhost is allowed so
+# Capybara / system specs that bind a local server keep working.
+require "webmock/rspec"
+WebMock.disable_net_connect!(allow_localhost: true)
+
 # Requires supporting ruby files with custom matchers and macros, etc, in
 # spec/support/ and its subdirectories. Files matching `spec/**/*_spec.rb` are
 # run as spec files by default. This means that files in spec/support that end

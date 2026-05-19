@@ -13,4 +13,12 @@ Rails.application.routes.draw do
   # Platform key registry (Phase 5 / F5.6) — public list of signing keys used
   # for identity attestations. See documents/platform-key-ops.md.
   get "api/platform-keys" => "platform_keys#index", as: :api_platform_keys
+
+  # GitHub OAuth flow for identity attestation (Phase 5 / F5.6.1).
+  get  "api/auth/github/start"    => "auth#github_start",    as: :api_auth_github_start
+  get  "api/auth/github/callback" => "auth#github_callback", as: :api_auth_github_callback
+
+  # Attestation claim — one-shot exchange of `claim_code` for the signed
+  # attestation produced inside the OAuth callback.
+  post "api/attestation/claim"    => "attestations#claim",   as: :api_attestation_claim
 end
