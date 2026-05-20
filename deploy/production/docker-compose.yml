@@ -1,0 +1,55 @@
+# Production orchestration for devprofile (Rails 7.2 API + React SPA + Caddy).
+#
+# Postgres and Redis run NATIVELY on the host (no containers). Rails reaches
+# them via 127.0.0.1 thanks to `network_mode: host`. The frontend is built
+# once into ../../source/frontend/dist and served by Caddy as static files.
+#
+# Secrets live outside the repo, in /etc/devprofile/ (perms 600), and are
+# loaded via env_file. See README.md for the exact files + populated values.
+
+name: devprofile
+
+services:
+  backend:
+    build:
+      context: ../../source/backend
+      dockerfile: Dockerfile
+    image: devprofile-backend:prod
+    container_name: devprofile-backend
+    network_mode: host
+    environment:
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+      RAILS_SERVE_STATIC_FILES: "false"
+      BINDING: "127.0.0.1"
+      PORT: "3000"
+    env_file:
+      - /etc/devprofile/app.env
+      - /etc/devprofile/postgres.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/up || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: devprofile-caddy
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../source/frontend/dist:/srv/frontend:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+    name: devprofile-caddy-data
+  caddy_config:
+    name: devprofile-caddy-config
