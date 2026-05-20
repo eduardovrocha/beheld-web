@@ -46,6 +46,11 @@ echo "→ docker compose up -d"
 docker compose up -d
 
 echo
+echo "→ restart caddy (picks up Caddyfile changes — bind-mounted, not detected by compose)"
+docker compose restart caddy
+sleep 2
+
+echo
 echo "→ wait 10s for healthcheck to settle"
 sleep 10
 
@@ -54,9 +59,16 @@ echo "→ status"
 docker compose ps
 
 echo
-echo "→ sanity: GET /api/platform-keys via Caddy (port 80)"
-curl -fsS http://127.0.0.1/api/platform-keys | head -c 400
+echo "→ sanity: GET /api/platform-keys via Caddy"
+response="$(curl -fsS http://127.0.0.1/api/platform-keys)"
+echo "$response" | head -c 300
 echo
+if echo "$response" | grep -q '"key_id":"devprofile-platform-'; then
+  echo "  ✓ JSON contains expected key_id"
+else
+  echo "  ✗ unexpected response — Caddy may be routing to SPA instead of Rails"
+  exit 1
+fi
 
 echo
 echo "✓ deploy complete"
