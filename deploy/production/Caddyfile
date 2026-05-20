@@ -7,41 +7,50 @@
 {
   # Disable auto-HTTPS while we're on a raw IP (no domain yet).
   auto_https off
-  servers {
-    metrics
-  }
 }
 
 :80 {
   encode gzip zstd
 
-  # ── Rails endpoints (explicit prefixes) ───────────────────────────────────
-  @rails_api path /api/* /up /bundles
-  reverse_proxy @rails_api 127.0.0.1:3000
-
-  # ── Bundle metadata + badge — always to Rails ─────────────────────────────
-  @rails_bundle_meta path_regexp ^/v/[A-Za-z0-9_\-]+/(summary|badge\.svg)$
-  reverse_proxy @rails_bundle_meta 127.0.0.1:3000
-
-  # ── Bundle JSON fetch — content-negotiated to Rails ───────────────────────
-  # The SPA's VerifyPublic component fetches `/v/:id` with
-  # `Accept: application/json` — that path goes to Rails for the JSON view.
-  # Browser direct-nav (Accept: text/html) falls through to the SPA below.
-  @rails_bundle_json {
-    path_regexp ^/v/[A-Za-z0-9_\-]+$
-    header_regexp Accept application/json
-  }
-  reverse_proxy @rails_bundle_json 127.0.0.1:3000
-
-  # ── Static SPA ────────────────────────────────────────────────────────────
-  root * /srv/frontend
-  try_files {path} /index.html
-  file_server
-
-  # ── Logs ──────────────────────────────────────────────────────────────────
   log {
     output stdout
     format console
     level INFO
+  }
+
+  # ── Rails: API + health + bundle upload ───────────────────────────────────
+  handle /api/* {
+    reverse_proxy 127.0.0.1:3000
+  }
+  handle /up {
+    reverse_proxy 127.0.0.1:3000
+  }
+  handle /bundles {
+    reverse_proxy 127.0.0.1:3000
+  }
+
+  # ── Rails: bundle metadata + badge (path-specific) ────────────────────────
+  @rails_bundle_meta path_regexp ^/v/[A-Za-z0-9_\-]+/(summary|badge\.svg)$
+  handle @rails_bundle_meta {
+    reverse_proxy 127.0.0.1:3000
+  }
+
+  # ── Rails: bundle JSON fetch — content-negotiated ─────────────────────────
+  # The SPA's VerifyPublic component fetches `/v/:id` with
+  # `Accept: application/json`. Browser direct-nav (Accept: text/html)
+  # falls through to the SPA handler below for client-side rendering.
+  @rails_bundle_json {
+    path_regexp ^/v/[A-Za-z0-9_\-]+$
+    header_regexp Accept application/json
+  }
+  handle @rails_bundle_json {
+    reverse_proxy 127.0.0.1:3000
+  }
+
+  # ── Static SPA (default fallback for everything else) ─────────────────────
+  handle {
+    root * /srv/frontend
+    try_files {path} /index.html
+    file_server
   }
 }
