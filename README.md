@@ -1,6 +1,6 @@
 # devprofile / web
 
-Portal companion repo for the [devprofile](https://github.com/eduardovrocha/beheld) CLI/engine. Hosts the public profile pages and signed-snapshot upload endpoint behind `devprofile.app`.
+Portal companion repo for the [beheld](https://github.com/eduardovrocha/beheld) CLI/engine. Hosts the public profile pages and signed-snapshot upload endpoint behind `beheld.dev`.
 
 | Path | What |
 |---|---|

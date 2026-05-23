@@ -82,17 +82,17 @@ networks + a docker-internal Postgres only when scaling to multi-node.
 
 ## TLS (post-DNS)
 
-Once `devprofile.info` resolves to this VPS, edit `Caddyfile`:
+Once `beheld.dev` resolves to this VPS, edit `Caddyfile`:
 
 ```diff
 - :80 {
 -   ...
 - }
-+ devprofile.info {
++ beheld.dev {
 +   ...
 + }
 ```
 
 Remove the `auto_https off` block at the top. Caddy will provision a
 Let's Encrypt cert on the first hit to port 443. Update the GitHub
-OAuth App's callback URL to `https://devprofile.info/...`.
+OAuth App's callback URL to `https://beheld.dev/...`.

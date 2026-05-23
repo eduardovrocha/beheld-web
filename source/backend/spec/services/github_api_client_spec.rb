@@ -5,12 +5,12 @@ RSpec.describe GithubApiClient do
     it "constrói URL com client_id, redirect_uri, state e scope encoded" do
       url = described_class.authorize_url(
         client_id:    "cid",
-        redirect_uri: "https://devprofile.info/api/auth/github/callback",
+        redirect_uri: "https://beheld.dev/api/auth/github/callback",
         state:        "abc123",
       )
       expect(url).to start_with("https://github.com/login/oauth/authorize?")
       expect(url).to include("client_id=cid")
-      expect(url).to include("redirect_uri=https%3A%2F%2Fdevprofile.info%2Fapi%2Fauth%2Fgithub%2Fcallback")
+      expect(url).to include("redirect_uri=https%3A%2F%2Fbeheld.dev%2Fapi%2Fauth%2Fgithub%2Fcallback")
       expect(url).to include("state=abc123")
       expect(url).to include("scope=read%3Auser")
     end
@@ -28,7 +28,7 @@ RSpec.describe GithubApiClient do
 
       token = described_class.exchange_code_for_token(
         code: "good-code", client_id: "cid", client_secret: "csec",
-        redirect_uri: "https://devprofile.info/api/auth/github/callback",
+        redirect_uri: "https://beheld.dev/api/auth/github/callback",
       )
       expect(token).to eq("gho_xxxxxxxxx")
     end

@@ -1,7 +1,7 @@
-# Production Caddyfile for devprofile.
+# Production Caddyfile for beheld.
 #
-# Until DNS for devprofile.info resolves to this VPS, we serve HTTP on :80
-# only. After DNS is in place, swap the `:80` site address for `devprofile.info`
+# Until DNS for beheld.dev resolves to this VPS, we serve HTTP on :80
+# only. After DNS is in place, swap the `:80` site address for `beheld.dev`
 # and Caddy will auto-provision a TLS cert via Let's Encrypt.
 
 {

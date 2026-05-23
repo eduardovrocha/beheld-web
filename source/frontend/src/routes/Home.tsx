@@ -83,10 +83,10 @@ function TypewriterCycle({
   );
 }
 
-const INSTALL_CMD = "curl -fsSL install.devprofile.info | sh";
+const INSTALL_CMD = "curl -fsSL install.beheld.dev | sh";
 const GITHUB_URL = "https://github.com/eduardovrocha/beheld";
 const HIRER_EARLY_ACCESS_URL =
-  "mailto:contato@devprofile.app?subject=Acesso%20antecipado%20%E2%80%94%20empresa";
+  "mailto:contato@beheld.dev?subject=Acesso%20antecipado%20%E2%80%94%20empresa";
 
 type Bar = { label: string; score: number; tone: "emerald" | "amber" | "red" };
 
