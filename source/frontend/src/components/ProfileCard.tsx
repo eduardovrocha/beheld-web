@@ -22,9 +22,17 @@ import type {
   BundleL2Section,
   BundlePayloadV1,
 } from "@/lib/types";
+import {
+  buildHistory,
+  consistency,
+  consistencyLabel,
+  netGrowth,
+  peakSnapshot,
+} from "@/lib/trendHistory";
 import type { VerifyResult } from "@/lib/verify";
 
 import { TechIcon } from "./TechIcon";
+import { TrendChart } from "./TrendChart";
 
 type TFunc = ReturnType<typeof useT>;
 
@@ -828,21 +836,9 @@ export function ProfileCard({ bundle, result, verifying, shortId, banner }: Prop
           <StatCell label={t("profile.stats.sessions")} titleKey="profile.stats.sessions.title" descKey="profile.stats.sessions.desc" value={l2?.sessions_analyzed ?? 0} withBar={false} tooltipAlign="right" />
         </div>
 
-        {/* ── trend placeholder (chain not available client-side) ─────────── */}
-        <section className="border-b border-slate-200 p-8 dark:border-slate-800">
-          <h3 className="mb-3 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
-            <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-            <span>TREND: <span className="text-slate-900 dark:text-slate-100">{t("profile.trend.title")}</span></span>
-          </h3>
-          <p
-            className="mb-4 text-xs text-slate-500 dark:text-slate-400 [&_code]:font-mono"
-            dangerouslySetInnerHTML={{ __html: t("profile.trend.subtitle_html") }}
-          />
-          <div
-            className="flex h-32 items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400 [&_code]:font-mono"
-            dangerouslySetInnerHTML={{ __html: t("profile.trend.unavailable_html") }}
-          />
-        </section>
+        {/* ── trend (12-month deterministic projection from current snapshot) ─ */}
+        <TrendSection bundle={bundle} t={t} />
+
 
         {/* ── L1 + L2 ─────────────────────────────────────────────────────── */}
         <div className="grid gap-12 p-8 md:grid-cols-2">
@@ -854,5 +850,109 @@ export function ProfileCard({ bundle, result, verifying, shortId, banner }: Prop
         <ProofFooter bundle={bundle} result={result} verifying={verifying} />
       </article>
     </>
+  );
+}
+
+// ── TrendSection ────────────────────────────────────────────────────────────
+//
+// Deterministic 12-month projection from a single signed snapshot.  Anchored
+// to the current scores (latest point matches exactly), seeded by the bundle
+// hash (same bundle ⇒ same chart).  The chain is referenced via previous_hash
+// but its content is not embedded in a bundle — so the line itself is a
+// projection, not a reconstruction.  The note below the chart makes that
+// explicit.
+
+function TrendKPI({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "accent" | "destructive";
+}) {
+  return (
+    <div className="rounded border border-slate-200 bg-slate-50/60 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/40">
+      <div className="font-mono text-[9px] uppercase text-slate-500 dark:text-slate-500">
+        {label}
+      </div>
+      <div
+        className={[
+          "font-mono text-sm font-bold tabular-nums",
+          tone === "accent"
+            ? "text-emerald-600 dark:text-emerald-400"
+            : tone === "destructive"
+              ? "text-red-600 dark:text-red-400"
+              : "text-slate-800 dark:text-slate-200",
+        ].join(" ")}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function TrendSection({ bundle, t }: { bundle: Bundle; t: TFunc }) {
+  const payload = bundle.payload;
+  const snapshots = buildHistory(
+    payload.scores,
+    payload.created_at,
+    bundle.hash,
+  );
+  const delta = netGrowth(snapshots);
+  const stdev = consistency(snapshots);
+  const peak = peakSnapshot(snapshots);
+  const consistKey = `profile.trend.kpi.consistency.${consistencyLabel(stdev)}`;
+
+  const legendLabels: Record<string, string> = {
+    "profile.trend.legend.overall": t("profile.trend.legend.overall"),
+    "profile.trend.legend.prompt": t("profile.trend.legend.prompt"),
+    "profile.trend.legend.test": t("profile.trend.legend.test"),
+    "profile.trend.legend.breadth": t("profile.trend.legend.breadth"),
+    "profile.trend.legend.growth": t("profile.trend.legend.growth"),
+  };
+
+  return (
+    <section className="border-b border-slate-200 p-8 dark:border-slate-800">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h3 className="mb-1 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+            <span>
+              TREND:{" "}
+              <span className="text-slate-900 dark:text-slate-100">
+                {t("profile.trend.title")}
+              </span>
+            </span>
+          </h3>
+          <p
+            className="text-xs text-slate-500 dark:text-slate-400 [&_code]:font-mono"
+            dangerouslySetInnerHTML={{ __html: t("profile.trend.subtitle_html") }}
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <TrendKPI
+            label={t("profile.trend.kpi.netdelta")}
+            value={`${delta >= 0 ? "+" : ""}${delta}`}
+            tone={delta >= 0 ? "accent" : "destructive"}
+          />
+          <TrendKPI
+            label={t("profile.trend.kpi.peak")}
+            value={String(peak.overall)}
+          />
+          <TrendKPI
+            label={t("profile.trend.kpi.consistency")}
+            value={t(consistKey)}
+          />
+        </div>
+      </div>
+
+      <TrendChart snapshots={snapshots} legendLabels={legendLabels} />
+
+      <p
+        className="mt-3 text-[10px] leading-relaxed text-slate-400 dark:text-slate-500 [&_code]:font-mono"
+        dangerouslySetInnerHTML={{ __html: t("profile.trend.projection_note") }}
+      />
+    </section>
   );
 }
