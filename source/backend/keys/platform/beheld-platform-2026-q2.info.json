@@ -1,8 +1,8 @@
 {
   "key_id": "beheld-platform-2026-q2",
   "algorithm": "ed25519",
-  "fingerprint_sha256": "435e50624c8f3cd82406d085bbad152e776c4b25e729e2b61ffd6cbd25d419e6",
-  "created_at": "2026-05-19T18:13:07Z",
+  "fingerprint_sha256": "bd460dff67abb596eb9658c4a407fa4d8827e1a1e67eb3b91d4a794c4bd6e603",
+  "created_at": "2026-05-23T22:48:00Z",
   "active": true,
   "revoked": false,
   "rotated_at": null
