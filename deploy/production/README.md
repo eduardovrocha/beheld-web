@@ -80,19 +80,31 @@ on the host. No port mapping, no Docker bridge in between.
 This is the pragmatic choice for a single-VPS deploy. Move to bridged
 networks + a docker-internal Postgres only when scaling to multi-node.
 
-## TLS (post-DNS)
+## TLS
 
-Once `beheld.dev` resolves to this VPS, edit `Caddyfile`:
+Caddy auto-provisions Let's Encrypt certs for both `beheld.dev` and
+`install.beheld.dev` on the first hit to port 443. **Prerequisite:**
+both A records must resolve to this VPS before `deploy.sh` runs —
+otherwise the HTTP-01 challenge fails and Caddy keeps retrying with
+no site available. Verify with:
 
-```diff
-- :80 {
--   ...
-- }
-+ beheld.dev {
-+   ...
-+ }
+```sh
+dig +short beheld.dev install.beheld.dev
+# both should return 45.225.129.168
 ```
 
-Remove the `auto_https off` block at the top. Caddy will provision a
-Let's Encrypt cert on the first hit to port 443. Update the GitHub
-OAuth App's callback URL to `https://beheld.dev/...`.
+After cutover, update the GitHub OAuth App's callback URL to
+`https://beheld.dev/api/auth/github/callback`.
+
+## Install script subdomain
+
+`install.beheld.dev` redirects (302) to
+`raw.githubusercontent.com/eduardovrocha/beheld/main/scripts/install.sh`.
+The intended usage is:
+
+```sh
+curl -fsSL install.beheld.dev | sh
+```
+
+To pin a specific version, swap `main` for a tag in the Caddyfile
+(e.g. `/v0.2.0/scripts/install.sh`).

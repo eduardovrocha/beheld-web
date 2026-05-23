@@ -1,15 +1,14 @@
 # Production Caddyfile for beheld.
 #
-# Until DNS for beheld.dev resolves to this VPS, we serve HTTP on :80
-# only. After DNS is in place, swap the `:80` site address for `beheld.dev`
-# and Caddy will auto-provision a TLS cert via Let's Encrypt.
+# Requires DNS A records for `beheld.dev` AND `install.beheld.dev` to
+# resolve to this VPS before deploy — otherwise Let's Encrypt cert
+# provisioning will fail on startup. Check with:
+#   dig +short beheld.dev install.beheld.dev
+#
+# Caddy auto-provisions TLS certs via Let's Encrypt on first hit to
+# port 443. No manual cert work required.
 
-{
-  # Disable auto-HTTPS while we're on a raw IP (no domain yet).
-  auto_https off
-}
-
-:80 {
+beheld.dev {
   encode gzip zstd
 
   log {
@@ -53,4 +52,12 @@
     try_files {path} /index.html
     file_server
   }
+}
+
+# ── Install script — redirects to GitHub raw on every request ───────────────
+# `curl -fsSL install.beheld.dev | sh` follows the 302 and pulls the latest
+# scripts/install.sh from `main`. Pin to a tag (e.g. `/v0.2.0/`) if you need
+# install-script immutability.
+install.beheld.dev {
+  redir https://raw.githubusercontent.com/eduardovrocha/beheld/main/scripts/install.sh 302
 }
