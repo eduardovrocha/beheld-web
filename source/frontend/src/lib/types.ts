@@ -62,7 +62,7 @@ export type BundleSignals = BundleL2Section;
 
 export interface BundlePayload {
   created_at: string;
-  devprofile_version: string;
+  beheld_version: string;
   previous_hash: string | null;
   scores: BundleScores;
   l1: BundleL1Section;
@@ -73,7 +73,7 @@ export interface BundlePayload {
  *  bundles generated before Phase 6 and emit a friendly warning. */
 export interface BundlePayloadV1 {
   created_at: string;
-  devprofile_version: string;
+  beheld_version: string;
   previous_hash: string | null;
   scores: BundleScores;
   signals: BundleL2Section;

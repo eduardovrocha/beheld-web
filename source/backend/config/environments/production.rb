@@ -44,7 +44,7 @@ Rails.application.configure do
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
   # Force SSL by default, but allow overriding via env var for the
   # HTTP-only deploy phase (before DNS resolves + TLS cert is provisioned).
-  config.force_ssl = ENV.fetch("DEVPROFILE_FORCE_SSL", "true") != "false"
+  config.force_ssl = ENV.fetch("BEHELD_FORCE_SSL", "true") != "false"
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }

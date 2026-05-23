@@ -12,7 +12,7 @@ RSpec.describe "POST /api/attestation/claim (Phase 5 / F5.6.1)", type: :request 
   let(:attestation_payload) do
     {
       "payload"   => {
-        "type"            => "devprofile-identity-attestation/v1",
+        "type"            => "beheld-identity-attestation/v1",
         "platform_key_id" => "test-platform-key",
         "github"          => { "user_id" => 12345, "login" => "octocat" },
       },

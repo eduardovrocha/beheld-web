@@ -1,4 +1,4 @@
-# devprofile / web
+# beheld / web
 
 Portal companion repo for the [beheld](https://github.com/eduardovrocha/beheld) CLI/engine. Hosts the public profile pages and signed-snapshot upload endpoint behind `beheld.dev`.
 
@@ -23,7 +23,7 @@ Detailed instructions, env vars, and troubleshooting in [`deploy/development/REA
 
 ## How this fits with the CLI
 
-The CLI in the [parent devprofile repo](https://github.com/eduardovrocha/beheld) generates signed `.dpbundle` files. When invoked with `devprofile snapshot --share`, it `POST`s to this backend's `/bundles`, gets back a short URL, and renders a QR. Anyone with the URL can hit `/v/:id` in this frontend, which:
+The CLI in the [parent beheld repo](https://github.com/eduardovrocha/beheld) generates signed `.dpbundle` files. When invoked with `beheld snapshot --share`, it `POST`s to this backend's `/bundles`, gets back a short URL, and renders a QR. Anyone with the URL can hit `/v/:id` in this frontend, which:
 
 1. Fetches the bundle JSON via the API.
 2. Re-computes the SHA-256 of the canonical payload locally.
@@ -34,7 +34,7 @@ The bundle wire format is locked across three runtimes (Python engine, Bun CLI, 
 ## Architecture
 
 ```
-devprofile CLI ──POST /bundles──▶ Rails API ──persists──▶ Postgres
+beheld CLI ──POST /bundles──▶ Rails API ──persists──▶ Postgres
                                        │
                                        └──serves──▶  GET /v/:id
                                                        │

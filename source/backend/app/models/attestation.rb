@@ -11,7 +11,7 @@
 # instead of a DB migration.
 
 class Attestation < ApplicationRecord
-  ATTESTATION_TYPE = "devprofile-identity-attestation/v1".freeze
+  ATTESTATION_TYPE = "beheld-identity-attestation/v1".freeze
 
   validates :dev_pubkey_b64,         presence: true
   validates :dev_pubkey_fingerprint, presence: true

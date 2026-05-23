@@ -13,20 +13,20 @@ RSpec.describe "Auth GitHub OAuth flow (Phase 5 / F5.6.1)", type: :request do
   around do |ex|
     cid_was      = ENV["GITHUB_OAUTH_CLIENT_ID"]
     csec_was     = ENV["GITHUB_OAUTH_CLIENT_SECRET"]
-    kid_was      = ENV["DEVPROFILE_PLATFORM_KEY_ID"]
-    priv_was     = ENV["DEVPROFILE_PLATFORM_PRIVATE_KEY"]
+    kid_was      = ENV["BEHELD_PLATFORM_KEY_ID"]
+    priv_was     = ENV["BEHELD_PLATFORM_PRIVATE_KEY"]
 
     ENV["GITHUB_OAUTH_CLIENT_ID"]         = "test-cid"
     ENV["GITHUB_OAUTH_CLIENT_SECRET"]     = "test-csec"
-    ENV["DEVPROFILE_PLATFORM_KEY_ID"]     = "test-platform-key"
-    ENV["DEVPROFILE_PLATFORM_PRIVATE_KEY"] = platform_seed_b64
+    ENV["BEHELD_PLATFORM_KEY_ID"]     = "test-platform-key"
+    ENV["BEHELD_PLATFORM_PRIVATE_KEY"] = platform_seed_b64
 
     ex.run
 
     ENV["GITHUB_OAUTH_CLIENT_ID"]         = cid_was
     ENV["GITHUB_OAUTH_CLIENT_SECRET"]     = csec_was
-    ENV["DEVPROFILE_PLATFORM_KEY_ID"]     = kid_was
-    ENV["DEVPROFILE_PLATFORM_PRIVATE_KEY"] = priv_was
+    ENV["BEHELD_PLATFORM_KEY_ID"]     = kid_was
+    ENV["BEHELD_PLATFORM_PRIVATE_KEY"] = priv_was
   end
 
   before do

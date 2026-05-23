@@ -33,13 +33,13 @@ RSpec.describe PlatformKeySigner do
     let(:valid_seed_b64) { Base64.strict_encode64("\x00" * 32) }
 
     around do |ex|
-      key_id_was = ENV["DEVPROFILE_PLATFORM_KEY_ID"]
-      priv_was   = ENV["DEVPROFILE_PLATFORM_PRIVATE_KEY"]
-      ENV["DEVPROFILE_PLATFORM_KEY_ID"]      = "test-key-id"
-      ENV["DEVPROFILE_PLATFORM_PRIVATE_KEY"] = valid_seed_b64
+      key_id_was = ENV["BEHELD_PLATFORM_KEY_ID"]
+      priv_was   = ENV["BEHELD_PLATFORM_PRIVATE_KEY"]
+      ENV["BEHELD_PLATFORM_KEY_ID"]      = "test-key-id"
+      ENV["BEHELD_PLATFORM_PRIVATE_KEY"] = valid_seed_b64
       ex.run
-      ENV["DEVPROFILE_PLATFORM_KEY_ID"]      = key_id_was
-      ENV["DEVPROFILE_PLATFORM_PRIVATE_KEY"] = priv_was
+      ENV["BEHELD_PLATFORM_KEY_ID"]      = key_id_was
+      ENV["BEHELD_PLATFORM_PRIVATE_KEY"] = priv_was
     end
 
     it "carrega o signer com key_id do env" do
@@ -47,26 +47,26 @@ RSpec.describe PlatformKeySigner do
     end
 
     it "estoura MissingConfiguration quando KEY_ID está vazia" do
-      ENV["DEVPROFILE_PLATFORM_KEY_ID"] = ""
+      ENV["BEHELD_PLATFORM_KEY_ID"] = ""
       expect { described_class.from_env }.to raise_error(
-        PlatformKeySigner::MissingConfiguration, /DEVPROFILE_PLATFORM_KEY_ID/,
+        PlatformKeySigner::MissingConfiguration, /BEHELD_PLATFORM_KEY_ID/,
       )
     end
 
     it "estoura MissingConfiguration quando PRIVATE_KEY está ausente" do
-      ENV.delete("DEVPROFILE_PLATFORM_PRIVATE_KEY")
+      ENV.delete("BEHELD_PLATFORM_PRIVATE_KEY")
       expect { described_class.from_env }.to raise_error(
-        PlatformKeySigner::MissingConfiguration, /DEVPROFILE_PLATFORM_PRIVATE_KEY/,
+        PlatformKeySigner::MissingConfiguration, /BEHELD_PLATFORM_PRIVATE_KEY/,
       )
     end
 
     it "estoura InvalidKey quando seed não tem 32 bytes" do
-      ENV["DEVPROFILE_PLATFORM_PRIVATE_KEY"] = Base64.strict_encode64("too short")
+      ENV["BEHELD_PLATFORM_PRIVATE_KEY"] = Base64.strict_encode64("too short")
       expect { described_class.from_env }.to raise_error(PlatformKeySigner::InvalidKey, /32-byte/)
     end
 
     it "estoura InvalidKey quando seed não é base64 válido" do
-      ENV["DEVPROFILE_PLATFORM_PRIVATE_KEY"] = "$$$ not base64 $$$"
+      ENV["BEHELD_PLATFORM_PRIVATE_KEY"] = "$$$ not base64 $$$"
       expect { described_class.from_env }.to raise_error(PlatformKeySigner::InvalidKey, /base64/)
     end
   end

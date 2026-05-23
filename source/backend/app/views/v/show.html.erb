@@ -133,7 +133,7 @@
 
     <% if trend.size <= 1 %>
       <div class="chart-empty">
-        Apenas 1 snapshot na cadeia — a trajetória aparece após o segundo <code class="text-mono">devprofile snapshot</code>.
+        Apenas 1 snapshot na cadeia — a trajetória aparece após o segundo <code class="text-mono">beheld snapshot</code>.
       </div>
     <% else %>
       <div class="chart-wrap" role="img" aria-label="Score trajectory chart">
@@ -184,7 +184,7 @@
       <%
         # Descriptions reused by the info tooltip on every L1 / L2 row.
         fact_descs = {
-          "Total Repositories"   => "Número de repositórios git importados via devprofile import. Cada repo contribui uma única vez para a baseline histórica.",
+          "Total Repositories"   => "Número de repositórios git importados via beheld import. Cada repo contribui uma única vez para a baseline histórica.",
           "Total Commits"        => "Soma dos commits feitos por você (filtrados pelo seu email de git) entre os repositórios importados.",
           "Activity Window"      => "Janela temporal entre o seu primeiro e último commit nos repositórios importados — proxy de há quanto tempo você programa profissionalmente.",
           "Average Test Ratio"   => "Proporção média de arquivos de teste vs arquivos de produção entre os repositórios. Mede disciplina histórica de testes.",
@@ -246,7 +246,7 @@
       <% else %>
         <div class="empty-card">
           <div class="badge">Bootstrap não realizado</div>
-          <p>Execute <code class="text-mono">devprofile import &lt;url&gt;</code> para popular a base histórica.</p>
+          <p>Execute <code class="text-mono">beheld import &lt;url&gt;</code> para popular a base histórica.</p>
         </div>
       <% end %>
     </section>
@@ -344,7 +344,7 @@
     <%# ISSUED — informational, value visible. %>
     <div class="proof-row">
       <span class="field">ISSUED</span>
-      <span class="val"><%= format_iso_z(inner["created_at"]) %> · devprofile <%= inner["devprofile_version"] %></span>
+      <span class="val"><%= format_iso_z(inner["created_at"]) %> · beheld <%= inner["beheld_version"] %></span>
     </div>
   </footer>
 </article>

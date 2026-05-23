@@ -1,4 +1,4 @@
-# Development orchestration for devprofile (Rails 7.2 API + React SPA).
+# Development orchestration for beheld (Rails 7.2 API + React SPA).
 #
 # Postgres and Redis are expected to be running on the HOST (not in containers).
 # The `host.docker.internal:host-gateway` mapping makes that work on:
@@ -10,15 +10,15 @@
 # Explicit project name — without this, Compose derives the project name from
 # the parent directory ("development"), which collides with any other project
 # at <something>/deploy/development/.
-name: devprofile
+name: beheld
 
 services:
   backend:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    image: devprofile-backend:dev
-    container_name: devprofile-backend-dev
+    image: beheld-backend:dev
+    container_name: beheld-backend-dev
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -36,8 +36,8 @@ services:
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_NAME: ${DB_NAME:-devprofile_backend_development}
-      DB_NAME_TEST: ${DB_NAME_TEST:-devprofile_backend_test}
+      DB_NAME: ${DB_NAME:-beheld_backend_development}
+      DB_NAME_TEST: ${DB_NAME_TEST:-beheld_backend_test}
       # Redis on the host
       REDIS_URL: ${REDIS_URL:-redis://host.docker.internal:6379/1}
       # CORS — comma-separated list, "*" for dev
@@ -50,8 +50,8 @@ services:
       # Platform signing key (Phase 5 / F5.6.1) — used to sign identity
       # attestations. The private key NEVER leaves the host environment;
       # it's loaded as a base64-encoded raw 32-byte seed.
-      DEVPROFILE_PLATFORM_KEY_ID: ${DEVPROFILE_PLATFORM_KEY_ID:-}
-      DEVPROFILE_PLATFORM_PRIVATE_KEY: ${DEVPROFILE_PLATFORM_PRIVATE_KEY:-}
+      BEHELD_PLATFORM_KEY_ID: ${BEHELD_PLATFORM_KEY_ID:-}
+      BEHELD_PLATFORM_PRIVATE_KEY: ${BEHELD_PLATFORM_PRIVATE_KEY:-}
     tty: true
     stdin_open: true
     restart: unless-stopped
@@ -60,8 +60,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend.dev
-    image: devprofile-frontend:dev
-    container_name: devprofile-frontend-dev
+    image: beheld-frontend:dev
+    container_name: beheld-frontend-dev
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
     volumes:
@@ -79,8 +79,8 @@ services:
 
 volumes:
   bundle-cache:
-    name: devprofile-backend-bundle-cache
+    name: beheld-backend-bundle-cache
   rails-tmp:
-    name: devprofile-backend-rails-tmp
+    name: beheld-backend-rails-tmp
   frontend-node-modules:
-    name: devprofile-frontend-node-modules
+    name: beheld-frontend-node-modules

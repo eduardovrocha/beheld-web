@@ -1,4 +1,4 @@
-# devprofile — development (Docker)
+# beheld — development (Docker)
 
 Containerizes the Rails 7.2 API at [`../../source/backend`](../../source/backend) **and** the React + Vite SPA at [`../../source/frontend`](../../source/frontend). Connects to **Postgres** and **Redis** running on the host machine (not in containers).
 
@@ -40,8 +40,8 @@ The backend serves the Phase 5 portal API for signed `.dpbundle` snapshots:
 | Method | Path | Returns | Used by |
 |---|---|---|---|
 | `GET`  | `/up` | health probe | infrastructure / monitors |
-| `POST` | `/bundles` | `{ id, url, ttl_days, created_at, deduplicated? }`; sets `X-TTL` header | `devprofile snapshot --share` |
-| `GET`  | `/v/:id` | full bundle JSON (incl. signature + public_key for client-side verification) | browsers, `devprofile verify` |
+| `POST` | `/bundles` | `{ id, url, ttl_days, created_at, deduplicated? }`; sets `X-TTL` header | `beheld snapshot --share` |
+| `GET`  | `/v/:id` | full bundle JSON (incl. signature + public_key for client-side verification) | browsers, `beheld verify` |
 | `GET`  | `/v/:id/summary` | sanitized JSON (scores + signals + metadata, no proof fields) | OG previews, dashboards |
 | `GET`  | `/v/:id/badge.svg` | shields.io-style SVG badge with overall score | README / LinkedIn embeds |
 
@@ -50,8 +50,8 @@ Bundles uploaded without an account expire after 30 days (see `Bundle::DEFAULT_T
 Smoke test the full pipeline (engine generates → CLI signs → portal stores):
 
 ```sh
-# from the devprofile worktree:
-DEVPROFILE_PORTAL_URL=http://localhost:3000 devprofile snapshot --share
+# from the beheld worktree:
+BEHELD_PORTAL_URL=http://localhost:3000 beheld snapshot --share
 ```
 
 ## How it works
@@ -78,7 +78,7 @@ Code reloads instantly without rebuilding the image. The `bundle-cache` volume k
 | `DB_HOST` | `host.docker.internal` | Where the container looks for Postgres |
 | `DB_PORT` | `5432` | Postgres port on the host |
 | `DB_USER` / `DB_PASSWORD` | `postgres` / `postgres` | Override if your host uses different credentials |
-| `DB_NAME` | `devprofile_backend_development` | Created by `rails db:create` |
+| `DB_NAME` | `beheld_backend_development` | Created by `rails db:create` |
 | `REDIS_URL` | `redis://host.docker.internal:6379/1` | Database 1 reserved for Rails cache |
 | `CORS_ORIGINS` | `*` | Comma-separated allow list; tighten in staging/prod |
 

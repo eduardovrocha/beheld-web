@@ -782,7 +782,7 @@ function ProofFooter({
       <div className="flex gap-4 text-[11px] leading-relaxed">
         <span className="w-16 shrink-0 text-slate-500">ISSUED</span>
         <span className="break-all text-slate-700 dark:text-slate-300">
-          {formatIsoZ(inner.created_at)} · devprofile {inner.devprofile_version}
+          {formatIsoZ(inner.created_at)} · beheld {inner.beheld_version}
         </span>
       </div>
     </footer>

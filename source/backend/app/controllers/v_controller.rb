@@ -42,7 +42,7 @@ class VController < ActionController::Base
     b = bundle_for_id
     score = b.payload.dig("payload", "scores", "overall").to_i
     style = (params[:style].presence || "flat").to_s
-    label = params[:label].presence&.to_s || "devprofile"
+    label = params[:label].presence&.to_s || "beheld"
     response.headers["Cache-Control"] = "public, max-age=300"
     response.headers["Content-Type"]  = "image/svg+xml; charset=utf-8"
     render plain: build_badge_svg(score: score, style: style, label: label)

@@ -9,7 +9,7 @@
  *   - growth_rate (slope: higher growth → steeper climb from the past)
  *   - a stable RNG seeded by the bundle hash (same bundle ⇒ same chart)
  *
- * This mirrors `dashboard/src/lib/devprofile-history.ts`.
+ * This mirrors `dashboard/src/lib/beheld-history.ts`.
  */
 import type { BundleScores } from "./types";
 

@@ -20,22 +20,22 @@ RSpec.describe PlatformKey do
       result = described_class.all(root: fixtures_root)
       key_ids = result.map { |k| k["key_id"] }
       expect(key_ids).to eq([
-        "devprofile-platform-2026-q1",
-        "devprofile-platform-2026-q2",
-        "devprofile-platform-2026-q3",
+        "beheld-platform-2026-q1",
+        "beheld-platform-2026-q2",
+        "beheld-platform-2026-q3",
       ])
     end
 
     it "prefixa a public_key com 'ed25519-pub:'" do
       result = described_class.all(root: fixtures_root)
-      active = result.find { |k| k["key_id"] == "devprofile-platform-2026-q2" }
+      active = result.find { |k| k["key_id"] == "beheld-platform-2026-q2" }
       expect(active["public_key"]).to start_with("ed25519-pub:")
       expect(active["public_key"]).to eq("ed25519-pub:BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=")
     end
 
     it "preserva flags active/revoked da chave ativa" do
       result = described_class.all(root: fixtures_root)
-      active = result.find { |k| k["key_id"] == "devprofile-platform-2026-q2" }
+      active = result.find { |k| k["key_id"] == "beheld-platform-2026-q2" }
       expect(active["active"]).to be(true)
       expect(active["revoked"]).to be(false)
       expect(active["rotated_at"]).to be_nil
@@ -45,7 +45,7 @@ RSpec.describe PlatformKey do
 
     it "preserva rotated_at da chave aposentada (rotacionada)" do
       result = described_class.all(root: fixtures_root)
-      rotated = result.find { |k| k["key_id"] == "devprofile-platform-2026-q1" }
+      rotated = result.find { |k| k["key_id"] == "beheld-platform-2026-q1" }
       expect(rotated["active"]).to be(false)
       expect(rotated["revoked"]).to be(false)
       expect(rotated["rotated_at"]).to eq("2026-04-10T09:00:00Z")
@@ -53,7 +53,7 @@ RSpec.describe PlatformKey do
 
     it "preserva revoked_at + revoked_reason da chave comprometida" do
       result = described_class.all(root: fixtures_root)
-      revoked = result.find { |k| k["key_id"] == "devprofile-platform-2026-q3" }
+      revoked = result.find { |k| k["key_id"] == "beheld-platform-2026-q3" }
       expect(revoked["active"]).to be(false)
       expect(revoked["revoked"]).to be(true)
       expect(revoked["revoked_at"]).to eq("2026-04-21T03:00:00Z")

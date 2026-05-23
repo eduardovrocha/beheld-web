@@ -25,7 +25,7 @@ RSpec.describe "Public profile page (/v/:id)", type: :system do
   let(:v1_inner) do
     {
       "created_at" => "2026-05-14T10:32:00+00:00",
-      "devprofile_version" => "0.1.0",
+      "beheld_version" => "0.1.0",
       "previous_hash" => nil,
       "scores" => base_scores,
       "signals" => {
@@ -48,7 +48,7 @@ RSpec.describe "Public profile page (/v/:id)", type: :system do
   let(:v2_inner) do
     {
       "created_at" => "2026-05-14T10:32:00+00:00",
-      "devprofile_version" => "0.3.0",
+      "beheld_version" => "0.3.0",
       "previous_hash" => nil,
       "scores" => base_scores,
       "l1" => {

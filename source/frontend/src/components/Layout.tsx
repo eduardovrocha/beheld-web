@@ -32,7 +32,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <Link to="/" className="flex items-center gap-2">
             <Logo />
             <span className="font-mono text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              devprofile
+              beheld
             </span>
           </Link>
           <nav className="flex items-center gap-4">

@@ -164,7 +164,7 @@ function TerminalHero({ caption }: { caption: string }) {
   rows.push(
     <>
       <span className="text-slate-500 dark:text-slate-500">$ </span>
-      <span className="text-slate-800 dark:text-slate-200">devprofile view</span>{" "}
+      <span className="text-slate-800 dark:text-slate-200">beheld view</span>{" "}
       <span className="text-slate-500 dark:text-slate-500">--scores-only</span>
     </>,
   );

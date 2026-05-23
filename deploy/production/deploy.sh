@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Production deploy orchestrator. Runs on the VPS at /opt/devprofile/web.
+# Production deploy orchestrator. Runs on the VPS at /opt/beheld/web.
 #
 # Sequence:
 #   1. git pull (assumes deploy key is already set up — see README.md).
@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-REPO_DIR="/opt/devprofile/web"
+REPO_DIR="/opt/beheld/web"
 COMPOSE_DIR="$REPO_DIR/deploy/production"
 FRONTEND_DIR="$REPO_DIR/source/frontend"
 FRONTEND_DIST="$FRONTEND_DIR/dist"
@@ -27,7 +27,7 @@ echo
 echo "→ frontend build (bun in throwaway container, output → $FRONTEND_DIST)"
 docker run --rm \
   -v "$FRONTEND_DIR:/app" \
-  -v devprofile_frontend_node_modules:/app/node_modules \
+  -v beheld_frontend_node_modules:/app/node_modules \
   -w /app \
   -e VITE_API_URL="" \
   oven/bun:1-slim \
@@ -63,7 +63,7 @@ echo "→ sanity: GET /api/platform-keys via Caddy"
 response="$(curl -fsS http://127.0.0.1/api/platform-keys)"
 echo "$response" | head -c 300
 echo
-if echo "$response" | grep -q '"key_id":"devprofile-platform-'; then
+if echo "$response" | grep -q '"key_id":"beheld-platform-'; then
   echo "  ✓ JSON contains expected key_id"
 else
   echo "  ✗ unexpected response — Caddy may be routing to SPA instead of Rails"

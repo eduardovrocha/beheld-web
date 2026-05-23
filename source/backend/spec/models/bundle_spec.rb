@@ -18,7 +18,7 @@ RSpec.describe Bundle, type: :model do
   let(:v1_inner_payload) do
     {
       "created_at" => "2026-05-14T00:00:00+00:00",
-      "devprofile_version" => "0.1.0",
+      "beheld_version" => "0.1.0",
       "previous_hash" => nil,
       "scores" => base_scores,
       "signals" => {
@@ -36,7 +36,7 @@ RSpec.describe Bundle, type: :model do
   let(:v2_inner_payload) do
     {
       "created_at" => "2026-05-14T00:00:00+00:00",
-      "devprofile_version" => "0.3.0",
+      "beheld_version" => "0.3.0",
       "previous_hash" => nil,
       "scores" => base_scores,
       "l1" => {
@@ -119,13 +119,13 @@ RSpec.describe Bundle, type: :model do
       expect(Bundle.valid_payload?(bad)).to be(false)
     end
 
-    it "rejeita payload sem devprofile_version" do
-      bad = v2_inner_payload.dup.tap { |h| h.delete("devprofile_version") }
+    it "rejeita payload sem beheld_version" do
+      bad = v2_inner_payload.dup.tap { |h| h.delete("beheld_version") }
       expect(Bundle.valid_payload?(bad)).to be(false)
     end
 
     it "rejeita payload com schema :unknown (sem signals nem l1+l2)" do
-      bad = { "created_at" => "x", "devprofile_version" => "y", "scores" => base_scores }
+      bad = { "created_at" => "x", "beheld_version" => "y", "scores" => base_scores }
       expect(Bundle.valid_payload?(bad)).to be(false)
     end
 
@@ -162,7 +162,7 @@ RSpec.describe Bundle, type: :model do
     end
 
     it "rejeita save quando schema é :unknown" do
-      bad_inner = { "created_at" => "x", "devprofile_version" => "y", "scores" => base_scores }
+      bad_inner = { "created_at" => "x", "beheld_version" => "y", "scores" => base_scores }
       b = Bundle.new(
         bundle_hash: "sha256:" + ("d" * 64),
         public_key: "ed25519:" + "k" * 43,

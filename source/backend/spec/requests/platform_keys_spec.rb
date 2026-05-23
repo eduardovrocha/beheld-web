@@ -21,9 +21,9 @@ RSpec.describe "GET /api/platform-keys (Phase 5 / F5.6)", type: :request do
     body = JSON.parse(response.body)
     key_ids = body["keys"].map { |k| k["key_id"] }
     expect(key_ids).to contain_exactly(
-      "devprofile-platform-2026-q1",
-      "devprofile-platform-2026-q2",
-      "devprofile-platform-2026-q3",
+      "beheld-platform-2026-q1",
+      "beheld-platform-2026-q2",
+      "beheld-platform-2026-q3",
     )
   end
 
@@ -40,14 +40,14 @@ RSpec.describe "GET /api/platform-keys (Phase 5 / F5.6)", type: :request do
     body = JSON.parse(response.body)
     actives = body["keys"].select { |k| k["active"] }
     expect(actives.size).to eq(1)
-    expect(actives.first["key_id"]).to eq("devprofile-platform-2026-q2")
+    expect(actives.first["key_id"]).to eq("beheld-platform-2026-q2")
   end
 
   it "expõe revoked_at + revoked_reason na chave revogada" do
     get "/api/platform-keys"
     body = JSON.parse(response.body)
     revoked = body["keys"].find { |k| k["revoked"] }
-    expect(revoked["key_id"]).to eq("devprofile-platform-2026-q3")
+    expect(revoked["key_id"]).to eq("beheld-platform-2026-q3")
     expect(revoked["revoked_at"]).to eq("2026-04-21T03:00:00Z")
     expect(revoked["revoked_reason"]).to be_a(String).and(satisfy { |s| s.length > 0 })
   end

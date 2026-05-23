@@ -18,7 +18,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
   let(:v1_inner) do
     {
       "created_at" => "2026-05-14T00:00:00+00:00",
-      "devprofile_version" => "0.1.0",
+      "beheld_version" => "0.1.0",
       "previous_hash" => nil,
       "scores" => base_scores,
       "signals" => {
@@ -36,7 +36,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
   let(:v2_inner) do
     {
       "created_at" => "2026-05-14T00:00:00+00:00",
-      "devprofile_version" => "0.3.0",
+      "beheld_version" => "0.3.0",
       "previous_hash" => nil,
       "scores" => base_scores,
       "l1" => {
@@ -112,7 +112,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
     it "rejeita bundle com payload sem signals nem l1+l2" do
       bad_inner = {
         "created_at" => "x",
-        "devprofile_version" => "y",
+        "beheld_version" => "y",
         "scores" => base_scores,
       }
       post "/bundles",

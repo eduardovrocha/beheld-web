@@ -95,7 +95,7 @@ RSpec.describe "POST /api/attestation/verify (Phase 5 / F5.6.1)", type: :request
 
   it "retorna payload_valid=false quando payload missing campos" do
     post "/api/attestation/verify", params: {
-      payload: { "type" => "devprofile-identity-attestation/v1" },
+      payload: { "type" => "beheld-identity-attestation/v1" },
       signature: "ed25519:AAAA",
     }.to_json, headers: { "Content-Type" => "application/json" }
 

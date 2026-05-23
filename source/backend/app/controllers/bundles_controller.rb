@@ -2,7 +2,7 @@
 # Phase 6 / F6.8 retrocompat).
 #
 # POST /bundles
-#   Body: the full .dpbundle JSON as produced by `devprofile snapshot`
+#   Body: the full .dpbundle JSON as produced by `beheld snapshot`
 #   201: { id, url, ttl_days, created_at }
 #   200: same shape + deduplicated: true  (when re-uploading by bundle_hash)
 #   400: malformed JSON

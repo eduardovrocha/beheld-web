@@ -7,7 +7,7 @@ RSpec.describe "GET /v/:id/badge.svg", type: :request do
   def make_bundle(overall:, hash_seed:)
     inner = {
       "created_at" => "2026-05-14T00:00:00+00:00",
-      "devprofile_version" => "0.3.0",
+      "beheld_version" => "0.3.0",
       "previous_hash" => nil,
       "scores" => {
         "overall" => overall,
@@ -91,7 +91,7 @@ RSpec.describe "GET /v/:id/badge.svg", type: :request do
     get "/v/#{b.short_id}/badge.svg?style=invalid"
     expect(response).to have_http_status(:ok)
     # Flat style uses lowercased label.
-    expect(response.body).to include("devprofile")
+    expect(response.body).to include("beheld")
     expect(response.body).not_to include('font-weight="bold"')
   end
 

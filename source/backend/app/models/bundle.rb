@@ -17,7 +17,7 @@ class Bundle < ApplicationRecord
   DEFAULT_TTL_DAYS  = 30
   SHORT_ID_BYTES    = 8 # → 11 URL-safe base64 chars (~64 bits of entropy)
 
-  REQUIRED_INNER_FIELDS = %w[created_at devprofile_version scores].freeze
+  REQUIRED_INNER_FIELDS = %w[created_at beheld_version scores].freeze
   REQUIRED_SCORE_FIELDS = %w[overall prompt_quality test_maturity tech_breadth growth_rate].freeze
 
   validates :short_id,       presence: true, uniqueness: true
@@ -83,7 +83,7 @@ class Bundle < ApplicationRecord
       signals: inner["signals"],
       l1: inner["l1"],
       l2: inner["l2"],
-      devprofile_version: inner["devprofile_version"],
+      beheld_version: inner["beheld_version"],
       bundle_version: payload["version"],
     }.compact
   end

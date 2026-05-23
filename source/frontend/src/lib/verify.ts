@@ -49,7 +49,7 @@ function validateSchema(raw: unknown): CheckResult {
     return { ok: false, reason: "malformed 'public_key'" };
   if (!isObject(raw.payload)) return { ok: false, reason: "missing or invalid 'payload'" };
   const payload = raw.payload as Record<string, unknown>;
-  for (const required of ["created_at", "devprofile_version", "previous_hash", "scores"]) {
+  for (const required of ["created_at", "beheld_version", "previous_hash", "scores"]) {
     if (!(required in payload)) {
       return { ok: false, reason: `payload missing '${required}'` };
     }

@@ -29,7 +29,7 @@ const pt: Dict = {
   // Layout
   "nav.verify_bundle": "Verificar bundle",
   "nav.github": "GitHub",
-  "footer.tagline": "devprofile · privacy-first developer profiling · signed snapshots",
+  "footer.tagline": "beheld · privacy-first developer profiling · signed snapshots",
 
   // ThemeToggle
   "theme.auto": "auto",
@@ -55,12 +55,12 @@ const pt: Dict = {
   "land.hero.headline_verbs":
     "trabalha,pesquisa,testa,refatora,descobre,evolui,codifica,programa,constrói,prototipa,arquiteta,modela,entrega,embarca,explora,aprende,analisa,experimenta,investiga,mede,depura,corrige,revisa,valida,otimiza,documenta,migra,itera,comita,integra,automatiza,escala,planeja,cria,quebra,conserta",
   "land.hero.sub":
-    "O devprofile roda em background enquanto você usa o Claude Code, Cursor* ou WindSurf*. Identifica padrões de teste, ferramentas, consistência, plataformas ou linguagens e gera um perfil verificável que ninguém consegue forjar.",
+    "O beheld roda em background enquanto você usa o Claude Code, Cursor* ou WindSurf*. Identifica padrões de teste, ferramentas, consistência, plataformas ou linguagens e gera um perfil verificável que ninguém consegue forjar.",
   "land.hero.install_label": "Instale em uma linha",
   "land.hero.install_sub": "Funciona em macOS e Linux. Zero dependências.",
   "land.hero.cta_github": "Ver no GitHub",
   "land.hero.cta_hirer": "Sou recrutador →",
-  "land.hero.terminal_caption": "Output de devprofile view",
+  "land.hero.terminal_caption": "Output de beheld view",
 
   "land.how.title": "Como funciona",
   "land.how.step1.title": "Você não precisa fazer nada diferente",
@@ -90,7 +90,7 @@ const pt: Dict = {
   "land.priv.what":
     "O DevProfile coleta apenas metadados derivados: nomes de tools, extensões de arquivo, timestamps, sequências de ação.",
   "land.priv.closer_html":
-    "Tudo fica em <code>~/.devprofile/</code> — no seu disco, sob seu controle.",
+    "Tudo fica em <code>~/.beheld/</code> — no seu disco, sob seu controle.",
 
   "land.crypto.title": "Como a verificação funciona",
   "land.crypto.body_html":
@@ -161,9 +161,9 @@ const pt: Dict = {
   "profile.l1.platforms": "Platforms",
   "profile.l1.empty.badge": "Bootstrap não realizado",
   "profile.l1.empty.hint_html":
-    "Execute <code>devprofile import &lt;url&gt;</code> para popular a base histórica.",
+    "Execute <code>beheld import &lt;url&gt;</code> para popular a base histórica.",
   "profile.l1.repos.desc":
-    "Número de repositórios git importados via devprofile import. Cada repo contribui uma única vez para a baseline histórica.",
+    "Número de repositórios git importados via beheld import. Cada repo contribui uma única vez para a baseline histórica.",
   "profile.l1.commits.desc":
     "Soma dos commits feitos por você (filtrados pelo seu email de git) entre os repositórios importados.",
   "profile.l1.activity_window.desc":
@@ -257,7 +257,7 @@ const pt: Dict = {
 const en: Dict = {
   "nav.verify_bundle": "Verify bundle",
   "nav.github": "GitHub",
-  "footer.tagline": "devprofile · privacy-first developer profiling · signed snapshots",
+  "footer.tagline": "beheld · privacy-first developer profiling · signed snapshots",
 
   "theme.auto": "auto",
   "theme.light": "light",
@@ -279,12 +279,12 @@ const en: Dict = {
   "land.hero.headline_verbs":
     "work,research,test,refactor,discover,evolve,code,program,build,prototype,architect,model,ship,deploy,explore,learn,analyze,experiment,investigate,measure,debug,fix,review,validate,optimize,document,migrate,iterate,commit,integrate,automate,scale,plan,create,break,repair",
   "land.hero.sub":
-    "devprofile runs in the background while you use Claude Code, Cursor* or WindSurf*. It identifies test patterns, tools, consistency, platforms and languages and produces a verifiable profile nobody can fake.",
+    "beheld runs in the background while you use Claude Code, Cursor* or WindSurf*. It identifies test patterns, tools, consistency, platforms and languages and produces a verifiable profile nobody can fake.",
   "land.hero.install_label": "Install in one line",
   "land.hero.install_sub": "Works on macOS and Linux. Zero dependencies.",
   "land.hero.cta_github": "View on GitHub",
   "land.hero.cta_hirer": "I'm a recruiter →",
-  "land.hero.terminal_caption": "Output of devprofile view",
+  "land.hero.terminal_caption": "Output of beheld view",
 
   "land.how.title": "How it works",
   "land.how.step1.title": "You don't need to do anything different",
@@ -314,7 +314,7 @@ const en: Dict = {
   "land.priv.what":
     "DevProfile only collects derived metadata: tool names, file extensions, timestamps, action sequences.",
   "land.priv.closer_html":
-    "Everything stays in <code>~/.devprofile/</code> — on your disk, under your control.",
+    "Everything stays in <code>~/.beheld/</code> — on your disk, under your control.",
 
   "land.crypto.title": "How verification works",
   "land.crypto.body_html":
@@ -381,9 +381,9 @@ const en: Dict = {
   "profile.l1.platforms": "Platforms",
   "profile.l1.empty.badge": "Bootstrap not performed",
   "profile.l1.empty.hint_html":
-    "Run <code>devprofile import &lt;url&gt;</code> to populate the historical baseline.",
+    "Run <code>beheld import &lt;url&gt;</code> to populate the historical baseline.",
   "profile.l1.repos.desc":
-    "Number of git repositories imported via devprofile import. Each repo contributes once to the historical baseline.",
+    "Number of git repositories imported via beheld import. Each repo contributes once to the historical baseline.",
   "profile.l1.commits.desc":
     "Sum of commits authored by you (filtered by your git email) across the imported repositories.",
   "profile.l1.activity_window.desc":
@@ -472,7 +472,7 @@ const en: Dict = {
 const es: Dict = {
   "nav.verify_bundle": "Verificar bundle",
   "nav.github": "GitHub",
-  "footer.tagline": "devprofile · perfilado de desarrolladores con privacidad · snapshots firmados",
+  "footer.tagline": "beheld · perfilado de desarrolladores con privacidad · snapshots firmados",
 
   "theme.auto": "auto",
   "theme.light": "claro",
@@ -494,12 +494,12 @@ const es: Dict = {
   "land.hero.headline_verbs":
     "trabajas,investigas,pruebas,refactorizas,descubres,evolucionas,codificas,programas,construyes,prototipas,diseñas,modelas,entregas,despliegas,exploras,aprendes,analizas,experimentas,indagas,mides,depuras,arreglas,revisas,validas,optimizas,documentas,migras,iteras,commiteas,integras,automatizas,escalas,planificas,creas,rompes,reparas",
   "land.hero.sub":
-    "devprofile corre en segundo plano mientras usas Claude Code, Cursor* o WindSurf*. Identifica patrones de test, herramientas, consistencia, plataformas y lenguajes y genera un perfil verificable que nadie puede falsificar.",
+    "beheld corre en segundo plano mientras usas Claude Code, Cursor* o WindSurf*. Identifica patrones de test, herramientas, consistencia, plataformas y lenguajes y genera un perfil verificable que nadie puede falsificar.",
   "land.hero.install_label": "Instala en una línea",
   "land.hero.install_sub": "Funciona en macOS y Linux. Cero dependencias.",
   "land.hero.cta_github": "Ver en GitHub",
   "land.hero.cta_hirer": "Soy reclutador →",
-  "land.hero.terminal_caption": "Salida de devprofile view",
+  "land.hero.terminal_caption": "Salida de beheld view",
 
   "land.how.title": "Cómo funciona",
   "land.how.step1.title": "No necesitas hacer nada diferente",
@@ -529,7 +529,7 @@ const es: Dict = {
   "land.priv.what":
     "DevProfile solo recoge metadatos derivados: nombres de tools, extensiones de archivo, timestamps, secuencias de acción.",
   "land.priv.closer_html":
-    "Todo queda en <code>~/.devprofile/</code> — en tu disco, bajo tu control.",
+    "Todo queda en <code>~/.beheld/</code> — en tu disco, bajo tu control.",
 
   "land.crypto.title": "Cómo funciona la verificación",
   "land.crypto.body_html":
@@ -596,9 +596,9 @@ const es: Dict = {
   "profile.l1.platforms": "Plataformas",
   "profile.l1.empty.badge": "Bootstrap no realizado",
   "profile.l1.empty.hint_html":
-    "Ejecuta <code>devprofile import &lt;url&gt;</code> para poblar la base histórica.",
+    "Ejecuta <code>beheld import &lt;url&gt;</code> para poblar la base histórica.",
   "profile.l1.repos.desc":
-    "Número de repositorios git importados vía devprofile import. Cada repo contribuye una vez a la baseline histórica.",
+    "Número de repositorios git importados vía beheld import. Cada repo contribuye una vez a la baseline histórica.",
   "profile.l1.commits.desc":
     "Suma de los commits hechos por ti (filtrados por tu email de git) entre los repositorios importados.",
   "profile.l1.activity_window.desc":

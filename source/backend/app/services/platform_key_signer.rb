@@ -13,8 +13,8 @@ require "base64"
 require "json"
 
 class PlatformKeySigner
-  ENV_KEY_ID      = "DEVPROFILE_PLATFORM_KEY_ID".freeze
-  ENV_PRIVATE_KEY = "DEVPROFILE_PLATFORM_PRIVATE_KEY".freeze
+  ENV_KEY_ID      = "BEHELD_PLATFORM_KEY_ID".freeze
+  ENV_PRIVATE_KEY = "BEHELD_PLATFORM_PRIVATE_KEY".freeze
 
   class MissingConfiguration < StandardError; end
   class InvalidKey < StandardError; end

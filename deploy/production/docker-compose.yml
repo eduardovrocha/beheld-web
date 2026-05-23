@@ -1,21 +1,21 @@
-# Production orchestration for devprofile (Rails 7.2 API + React SPA + Caddy).
+# Production orchestration for beheld (Rails 7.2 API + React SPA + Caddy).
 #
 # Postgres and Redis run NATIVELY on the host (no containers). Rails reaches
 # them via 127.0.0.1 thanks to `network_mode: host`. The frontend is built
 # once into ../../source/frontend/dist and served by Caddy as static files.
 #
-# Secrets live outside the repo, in /etc/devprofile/ (perms 600), and are
+# Secrets live outside the repo, in /etc/beheld/ (perms 600), and are
 # loaded via env_file. See README.md for the exact files + populated values.
 
-name: devprofile
+name: beheld
 
 services:
   backend:
     build:
       context: ../../source/backend
       dockerfile: Dockerfile
-    image: devprofile-backend:prod
-    container_name: devprofile-backend
+    image: beheld-backend:prod
+    container_name: beheld-backend
     network_mode: host
     environment:
       RAILS_ENV: production
@@ -24,8 +24,8 @@ services:
       BINDING: "127.0.0.1"
       PORT: "3000"
     env_file:
-      - /etc/devprofile/app.env
-      - /etc/devprofile/postgres.env
+      - /etc/beheld/app.env
+      - /etc/beheld/postgres.env
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/up || exit 1"]
@@ -36,7 +36,7 @@ services:
 
   caddy:
     image: caddy:2-alpine
-    container_name: devprofile-caddy
+    container_name: beheld-caddy
     network_mode: host
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
@@ -50,6 +50,6 @@ services:
 
 volumes:
   caddy_data:
-    name: devprofile-caddy-data
+    name: beheld-caddy-data
   caddy_config:
-    name: devprofile-caddy-config
+    name: beheld-caddy-config

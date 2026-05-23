@@ -9,13 +9,13 @@ default: &default
 
 development:
   <<: *default
-  database: <%= ENV.fetch("DB_NAME", "devprofile_backend_development") %>
+  database: <%= ENV.fetch("DB_NAME", "beheld_backend_development") %>
 
 test:
   <<: *default
-  database: <%= ENV.fetch("DB_NAME_TEST", "devprofile_backend_test") %>
+  database: <%= ENV.fetch("DB_NAME_TEST", "beheld_backend_test") %>
 
 production:
   <<: *default
-  database: <%= ENV.fetch("DB_NAME", "devprofile_backend_production") %>
+  database: <%= ENV.fetch("DB_NAME", "beheld_backend_production") %>
   url: <%= ENV["DATABASE_URL"] %>
