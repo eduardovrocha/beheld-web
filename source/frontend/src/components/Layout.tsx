@@ -38,7 +38,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <nav className="flex items-center gap-4">
             <NavItem to="/verify">{t("nav.verify_bundle")}</NavItem>
             <a
-              href="https://github.com/ioit-solutions/devprofile"
+              href="https://github.com/eduardovrocha/beheld"
               target="_blank"
               rel="noreferrer"
               className="text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"

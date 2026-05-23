@@ -84,7 +84,7 @@ function TypewriterCycle({
 }
 
 const INSTALL_CMD = "curl -fsSL install.devprofile.info | sh";
-const GITHUB_URL = "https://github.com/eduardovrocha/devprofile";
+const GITHUB_URL = "https://github.com/eduardovrocha/beheld";
 const HIRER_EARLY_ACCESS_URL =
   "mailto:contato@devprofile.app?subject=Acesso%20antecipado%20%E2%80%94%20empresa";
 

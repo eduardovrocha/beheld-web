@@ -1,6 +1,6 @@
 # devprofile / web
 
-Portal companion repo for the [devprofile](https://github.com/ioit-solutions/devprofile) CLI/engine. Hosts the public profile pages and signed-snapshot upload endpoint behind `devprofile.app`.
+Portal companion repo for the [devprofile](https://github.com/eduardovrocha/beheld) CLI/engine. Hosts the public profile pages and signed-snapshot upload endpoint behind `devprofile.app`.
 
 | Path | What |
 |---|---|
@@ -23,7 +23,7 @@ Detailed instructions, env vars, and troubleshooting in [`deploy/development/REA
 
 ## How this fits with the CLI
 
-The CLI in the [parent devprofile repo](https://github.com/ioit-solutions/devprofile) generates signed `.dpbundle` files. When invoked with `devprofile snapshot --share`, it `POST`s to this backend's `/bundles`, gets back a short URL, and renders a QR. Anyone with the URL can hit `/v/:id` in this frontend, which:
+The CLI in the [parent devprofile repo](https://github.com/eduardovrocha/beheld) generates signed `.dpbundle` files. When invoked with `devprofile snapshot --share`, it `POST`s to this backend's `/bundles`, gets back a short URL, and renders a QR. Anyone with the URL can hit `/v/:id` in this frontend, which:
 
 1. Fetches the bundle JSON via the API.
 2. Re-computes the SHA-256 of the canonical payload locally.
