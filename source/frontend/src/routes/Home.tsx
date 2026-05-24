@@ -576,7 +576,7 @@ export function Home() {
           right="3 estados possíveis"
         />
         <p
-          className="mb-7 max-w-xl"
+          className="mb-7"
           style={{ color: "var(--muted)", fontSize: 14.5, lineHeight: 1.9 }}
         >
           O dev declara o que é. O daemon mostra o que{" "}
