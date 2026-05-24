@@ -299,7 +299,7 @@ function GlanceCard({
       >
         {num}
       </div>
-      <div style={{ color: "var(--muted)", fontSize: 12, lineHeight: 1.45 }}>{note}</div>
+      <div style={{ color: "var(--muted)", fontSize: 12, lineHeight: 1.65 }}>{note}</div>
     </div>
   );
 }
@@ -327,18 +327,18 @@ function ClaimRow({
     >
       <div
         className="text-center font-mono"
-        style={{ color: status === "ok" ? "var(--ok)" : "var(--warn)", fontSize: 14, lineHeight: 1.5 }}
+        style={{ color: status === "ok" ? "var(--ok)" : "var(--warn)", fontSize: 14, lineHeight: 1.9 }}
       >
         {status === "ok" ? "✓" : "⚠"}
       </div>
       <div>
         <div
           className="font-medium"
-          style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.4 }}
+          style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.95 }}
         >
           {title}: <span style={{ color: "var(--accent)", fontWeight: 400 }}>{role}</span>
         </div>
-        <div className="mt-1" style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.55 }}>
+        <div className="mt-1" style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.95 }}>
           {obs}
         </div>
       </div>
@@ -428,7 +428,7 @@ function ChainRow({
         <div className="font-medium" style={{ color: "var(--text)", fontSize: 14 }}>
           {name}
         </div>
-        <div className="mt-0.5" style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.5 }}>
+        <div className="mt-0.5" style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.9 }}>
           {desc}
         </div>
       </div>
@@ -493,9 +493,9 @@ export function Home() {
       </div>
 
       {/* ═══ LETTER ═════════════════════════════════════════════════════ */}
-      <section className="py-14" style={{ borderBottom: "1px solid var(--rule)" }}>
+      <section className="py-20" style={{ borderBottom: "1px solid var(--rule)" }}>
         <Eyebrow>— sobre o produto</Eyebrow>
-        <div className="mt-5" style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.75 }}>
+        <div className="mt-5" style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.95 }}>
           O LinkedIn não viu você trabalhar. O recrutador não sabe que você escreveu aquele test antes do
           código. O gerente que te rejeitou não sabe que seu{" "}
           <span style={{ color: "var(--accent)", fontWeight: 500 }}>
@@ -514,7 +514,7 @@ export function Home() {
       </section>
 
       {/* ═══ 01 · CAPTURE ═══════════════════════════════════════════════ */}
-      <section className="py-12" style={{ borderBottom: "1px solid var(--rule)" }}>
+      <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="01"
           title="O que o daemon"
@@ -557,7 +557,7 @@ export function Home() {
       </section>
 
       {/* ═══ 02 · CLAIMED vs DEMONSTRATED ═══════════════════════════════ */}
-      <section className="py-12" style={{ borderBottom: "1px solid var(--rule)" }}>
+      <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="02"
           title="Claimed vs Demonstrated"
@@ -566,7 +566,7 @@ export function Home() {
         />
         <p
           className="mb-7 max-w-xl"
-          style={{ color: "var(--muted)", fontSize: 14.5, lineHeight: 1.7 }}
+          style={{ color: "var(--muted)", fontSize: 14.5, lineHeight: 1.9 }}
         >
           O dev declara o que é. O daemon mostra o que{" "}
           <strong style={{ color: "var(--text)", fontWeight: 500 }}>
@@ -615,7 +615,7 @@ export function Home() {
               >
                 emprego autodeclarado
               </div>
-              <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55 }}>
+              <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.95 }}>
                 Stripe (2020–2022)
                 <br />
                 Stack Overflow (2018–2020)
@@ -628,7 +628,7 @@ export function Home() {
               >
                 formação autodeclarada
               </div>
-              <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55 }}>
+              <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.95 }}>
                 Mestrado em Computação
                 <br />
                 USP, 2017
@@ -640,7 +640,7 @@ export function Home() {
             style={{
               color: "var(--muted-soft)",
               fontSize: 12,
-              lineHeight: 1.55,
+              lineHeight: 1.75,
               borderTop: "1px solid var(--rule-soft)",
             }}
           >
@@ -651,7 +651,7 @@ export function Home() {
       </section>
 
       {/* ═══ 03 · HOW IT WORKS ══════════════════════════════════════════ */}
-      <section className="py-12" style={{ borderBottom: "1px solid var(--rule)" }}>
+      <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="03"
           title="Como funciona"
@@ -700,7 +700,7 @@ export function Home() {
       </section>
 
       {/* ═══ 04 · VERIFICATION CHAIN ════════════════════════════════════ */}
-      <section className="py-12">
+      <section className="py-16">
         <SectionHead
           num="04"
           title="Cadeia de verificação"
@@ -739,7 +739,7 @@ export function Home() {
 
       {/* ═══ FOOTER ═════════════════════════════════════════════════════ */}
       <footer
-        className="mt-6 grid items-end gap-8 py-12 sm:grid-cols-2"
+        className="mt-6 grid items-end gap-8 py-16 sm:grid-cols-2"
         style={{ borderTop: "1px solid var(--rule)" }}
       >
         <div className="font-mono" style={{ color: "var(--text)", fontSize: 13 }}>
@@ -747,7 +747,7 @@ export function Home() {
         </div>
         <div
           className="text-right font-mono uppercase"
-          style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", lineHeight: 1.8 }}
+          style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", lineHeight: 2 }}
         >
           <div style={{ color: "var(--accent)", fontWeight: 500 }}>forever free for developers</div>
           <div className="space-x-1">
