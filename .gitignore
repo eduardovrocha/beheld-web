@@ -29,3 +29,10 @@ node_modules/
 # Docker
 docker-compose.override.yml
 source/dashboard/
+
+# Per-developer platform key material (key_id ending in -dev). Each dev
+# generates their own via scripts/generate-dev-platform-key.sh — the .pub
+# and .info.json stay local, the .priv is pasted into .env. The committed
+# prod key remains the only source of truth shipped to release builds.
+source/backend/keys/platform/*-dev.pub
+source/backend/keys/platform/*-dev.info.json
