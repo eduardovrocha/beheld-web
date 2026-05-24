@@ -120,13 +120,45 @@ step "docker compose up --build -d"
 docker compose up --build -d
 echo
 
-# ── 4. Wait for backend health ───────────────────────────────────────────────
+# ── 4. Schema setup (MUST run before /up — Rails dev blocks every request
+#       with ActiveRecord::PendingMigrationError until migrations are applied)
+#
+# Both db:create and db:migrate are idempotent:
+#   - db:create on an existing DB → "already exists" (exit 0)
+#   - db:migrate with nothing pending → no-op (exit 0)
+# So we run unconditionally and avoid the chicken-and-egg of probing /up
+# through a pending-migration guard.
+
+step "Esperando backend container subir"
+for i in $(seq 1 30); do
+  state=$(docker compose ps --format json backend 2>/dev/null | grep -o '"State":"[^"]*"' | head -1 | cut -d'"' -f4)
+  if [[ "$state" == "running" ]]; then
+    ok "Container backend running"
+    break
+  fi
+  if [[ $i -eq 30 ]]; then
+    fail "Container backend não entrou em 'running' em 30s. Logs:"
+    docker compose logs --tail 30 backend
+    exit 1
+  fi
+  sleep 1
+done
+
+step "Schema: db:create + db:migrate (idempotente)"
+if docker compose exec -T backend bin/rails db:create db:migrate 2>&1 | tail -20; then
+  ok "Schema em dia"
+else
+  fail "Falha em db:create/db:migrate — veja a saída acima"
+  exit 1
+fi
+
+# ── 5. Wait for backend health (now that migrations are applied) ─────────────
 
 BACKEND_PORT=$(grep -E '^BACKEND_PORT=' "$ENV_FILE" 2>/dev/null | tail -1 | cut -d= -f2)
 BACKEND_PORT="${BACKEND_PORT:-3000}"
 HEALTH_URL="http://localhost:${BACKEND_PORT}/up"
 
-step "Aguardando backend (${HEALTH_URL})"
+step "Aguardando backend healthy (${HEALTH_URL})"
 for i in $(seq 1 60); do
   if curl -fsS -m 2 "$HEALTH_URL" >/dev/null 2>&1; then
     ok "Backend healthy"
@@ -139,25 +171,6 @@ for i in $(seq 1 60); do
   fi
   sleep 1
 done
-
-# ── 5. First-time DB setup ───────────────────────────────────────────────────
-
-step "Estado do schema"
-PENDING_MIGRATIONS=$(docker compose exec -T backend bin/rails db:migrate:status 2>&1 | grep -c "^   down" || true)
-
-if docker compose exec -T backend bin/rails runner "ActiveRecord::Base.connection.tables" >/dev/null 2>&1; then
-  if [[ "$PENDING_MIGRATIONS" -gt 0 ]]; then
-    warn "${PENDING_MIGRATIONS} migrações pendentes — aplicando"
-    docker compose exec -T backend bin/rails db:migrate
-    ok "Migrações aplicadas"
-  else
-    ok "Schema em dia"
-  fi
-else
-  warn "Database não existe — criando + migrando (primeira execução)"
-  docker compose exec -T backend bin/rails db:create db:migrate
-  ok "Database criada"
-fi
 
 # ── 6. Resumo ────────────────────────────────────────────────────────────────
 
