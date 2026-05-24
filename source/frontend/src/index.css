@@ -18,10 +18,19 @@
   --warn: #b56135;
   --lens: #1a1f29;
   --card-bg: #ffffff;
-  --term-bg: #1a1f29;
-  --term-text: #e6e1d8;
-  --term-rule: #2a3140;
-  --term-prompt: #7fa87f;
+
+  /* Terminal — light variant: cream bg, deep text, page accent */
+  --term-bg: #f0ead8;
+  --term-text: #1a1f29;
+  --term-rule: #d8cfba;
+  --term-prompt: #4a7c4e;
+  --term-muted: #6e6555;
+  --term-key: #2e2a20;
+  --term-accent: #8a6f3e;
+  --term-dim: #948a78;
+  --term-ok: #4a7c4e;
+  --term-bar-bg: rgba(138, 111, 62, 0.12);
+  --term-bar-tint: rgba(0, 0, 0, 0.02);
 }
 html.dark {
   --bg: #0d1117;
@@ -38,10 +47,19 @@ html.dark {
   --warn: #d4923e;
   --lens: #d8d3c4;
   --card-bg: var(--surface);
+
+  /* Terminal — dark variant: matches original mock */
   --term-bg: #070a0f;
   --term-text: #e6e1d8;
   --term-rule: #1a2030;
   --term-prompt: #7fa87f;
+  --term-muted: #8b8278;
+  --term-key: #cfc7b5;
+  --term-accent: #c9a96e;
+  --term-dim: #5a5550;
+  --term-ok: #5fb47f;
+  --term-bar-bg: rgba(201, 169, 110, 0.12);
+  --term-bar-tint: rgba(255, 255, 255, 0.02);
 }
 
 @layer base {

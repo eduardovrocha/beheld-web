@@ -97,29 +97,30 @@ function TerminalDemo() {
     >
       <div
         className="flex items-center gap-3.5 px-3.5 py-2.5"
-        style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid var(--term-rule)" }}
+        style={{ background: "var(--term-bar-tint)", borderBottom: "1px solid var(--term-rule)" }}
       >
         <div className="flex gap-1.5">
+          {/* macOS traffic-light dots stay fixed across themes */}
           <span className="block size-2.5 rounded-full" style={{ background: "#ed6b5b" }} />
           <span className="block size-2.5 rounded-full" style={{ background: "#dab451" }} />
           <span className="block size-2.5 rounded-full" style={{ background: "#5fb47f" }} />
         </div>
         <span
           className="font-mono uppercase"
-          style={{ color: "#8b8278", fontSize: 10, letterSpacing: "0.12em" }}
+          style={{ color: "var(--term-muted)", fontSize: 10, letterSpacing: "0.12em" }}
         >
           ~/projects · beheld view --snapshot
         </span>
       </div>
 
       <div className="px-4 pb-5 pt-4">
-        <span className="mb-3.5 block" style={{ color: "#e6e1d8" }}>
+        <span className="mb-3.5 block" style={{ color: "var(--term-text)" }}>
           <span style={{ color: "var(--term-prompt)" }}>$</span> beheld view --snapshot
         </span>
 
         <div
           className="mb-2 mt-3.5 font-mono uppercase"
-          style={{ color: "#8b8278", fontSize: 10, letterSpacing: "0.12em" }}
+          style={{ color: "var(--term-muted)", fontSize: 10, letterSpacing: "0.12em" }}
         >
           sinais observados · últimos 90d
         </div>
@@ -132,8 +133,8 @@ function TerminalDemo() {
         <TermSummary k="sessões 90d" v="87" delta="8 repos em L1" />
         <TermSummary k="trajetória L1" v="7 anos" delta="contínua desde 2017" />
 
-        <div className="mt-3" style={{ color: "#8b8278", fontSize: 10.5 }}>
-          → test ratio é <span style={{ color: "#c9a96e" }}>4.2×</span> mediana global · bundle ed25519 · rev. 47
+        <div className="mt-3" style={{ color: "var(--term-muted)", fontSize: 10.5 }}>
+          → test ratio é <span style={{ color: "var(--term-accent)" }}>4.2×</span> mediana global · bundle ed25519 · rev. 47
         </div>
       </div>
     </div>
@@ -156,17 +157,17 @@ function TermBar({
       className="grid items-center gap-2.5 py-0.5"
       style={{ gridTemplateColumns: "1fr 90px 30px" }}
     >
-      <span style={{ color: "#cfc7b5" }}>{label}</span>
-      <span className="relative block h-2 overflow-hidden" style={{ background: "rgba(201,169,110,0.12)" }}>
+      <span style={{ color: "var(--term-key)" }}>{label}</span>
+      <span className="relative block h-2 overflow-hidden" style={{ background: "var(--term-bar-bg)" }}>
         <span
           className="block h-full"
           style={{
             width: `${pct}%`,
-            background: tone === "dim" ? "#5a5550" : "#c9a96e",
+            background: tone === "dim" ? "var(--term-dim)" : "var(--term-accent)",
           }}
         />
       </span>
-      <span className="text-right tabular-nums" style={{ color: "#e6e1d8" }}>
+      <span className="text-right tabular-nums" style={{ color: "var(--term-text)" }}>
         {value}
       </span>
     </div>
@@ -176,13 +177,13 @@ function TermBar({
 function TermSummary({ k, v, delta }: { k: string; v: string; delta?: string }) {
   return (
     <div className="flex items-baseline justify-between py-0.5">
-      <span className="font-medium" style={{ color: "#cfc7b5" }}>
+      <span className="font-medium" style={{ color: "var(--term-key)" }}>
         {k}
       </span>
-      <span className="tabular-nums" style={{ color: "#e6e1d8" }}>
+      <span className="tabular-nums" style={{ color: "var(--term-text)" }}>
         {v}
         {delta ? (
-          <span className="ml-2" style={{ color: "#5fb47f" }}>
+          <span className="ml-2" style={{ color: "var(--term-ok)" }}>
             {delta}
           </span>
         ) : null}
