@@ -85,6 +85,9 @@ html.dark {
     font-weight: 400;
     line-height: 1.85;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    /* Equivalente a zoom 120% em toda a app — escala fontes, paddings,
+       max-width, posição da caixinha de controles, tudo proporcional. */
+    zoom: 1.2;
   }
   code {
     @apply font-mono;
