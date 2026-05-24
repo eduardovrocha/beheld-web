@@ -24,4 +24,8 @@ Rails.application.routes.draw do
 
   # Attestation verify — pure crypto + revocation-status check. No DB write.
   post "api/attestation/verify"   => "attestations#verify",  as: :api_attestation_verify
+
+  # Attestation revoke — dev-initiated per-attestation revocation (F_UNINSTALL).
+  # The dev signs {action, issued_at, timestamp} with their own Ed25519 key.
+  post "api/attestation/revoke"   => "attestations#revoke",  as: :api_attestation_revoke
 end
