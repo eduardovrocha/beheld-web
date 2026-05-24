@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_19_185847) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_24_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -25,9 +25,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_19_185847) do
     t.datetime "attested_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "revoked_at"
     t.index ["dev_pubkey_fingerprint"], name: "index_attestations_on_dev_pubkey_fingerprint"
     t.index ["github_user_id"], name: "index_attestations_on_github_user_id"
     t.index ["platform_key_id"], name: "index_attestations_on_platform_key_id"
+    t.index ["revoked_at"], name: "index_attestations_on_revoked_at"
   end
 
   create_table "bundles", force: :cascade do |t|
