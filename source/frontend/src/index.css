@@ -31,6 +31,11 @@
   --term-ok: #4a7c4e;
   --term-bar-bg: rgba(138, 111, 62, 0.12);
   --term-bar-tint: rgba(0, 0, 0, 0.02);
+
+  /* Score bands — light: stronger saturation for contrast on cream bg */
+  --term-band-low: #c8462a;
+  --term-band-med: #c97d2a;
+  --term-band-high: #4a7c4e;
 }
 html.dark {
   --bg: #0d1117;
@@ -60,6 +65,11 @@ html.dark {
   --term-ok: #5fb47f;
   --term-bar-bg: rgba(201, 169, 110, 0.12);
   --term-bar-tint: rgba(255, 255, 255, 0.02);
+
+  /* Score bands — dark: softer tones, still legible on near-black bg */
+  --term-band-low: #e07a5f;
+  --term-band-med: #e0b54a;
+  --term-band-high: #5fb47f;
 }
 
 @layer base {

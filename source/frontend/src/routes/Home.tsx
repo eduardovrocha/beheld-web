@@ -126,7 +126,7 @@ function TerminalDemo() {
         </div>
         <TermBar label="stack ratio (py/ts)" pct={87} value="87%" />
         <TermBar label="test ratio" pct={38} value="38%" />
-        <TermBar label="react ratio" pct={2} value="2%" tone="dim" />
+        <TermBar label="react ratio" pct={2} value="2%" />
 
         <div className="my-2.5 border-t border-dashed" style={{ borderColor: "var(--term-rule)" }} />
 
@@ -141,6 +141,17 @@ function TerminalDemo() {
   );
 }
 
+// Score-band thresholds — same cutoffs the backend badge uses.
+//   < 34   → low     red-ish (signal fraco / valor baixo)
+//   34–66  → med     amber (sinal médio)
+//   ≥ 67   → high    green (sinal forte / valor alto)
+// `tone` opcional sobrescreve a derivação automática.
+function pctTone(pct: number): "low" | "med" | "high" {
+  if (pct < 34) return "low";
+  if (pct < 67) return "med";
+  return "high";
+}
+
 function TermBar({
   label,
   pct,
@@ -150,8 +161,13 @@ function TermBar({
   label: string;
   pct: number;
   value: string;
-  tone?: "dim";
+  tone?: "low" | "med" | "high";
 }) {
+  const band = tone ?? pctTone(pct);
+  const fill =
+    band === "low" ? "var(--term-band-low)"
+    : band === "med" ? "var(--term-band-med)"
+    : "var(--term-band-high)";
   return (
     <div
       className="grid items-center gap-2.5 py-0.5"
@@ -159,13 +175,7 @@ function TermBar({
     >
       <span style={{ color: "var(--term-key)" }}>{label}</span>
       <span className="relative block h-2 overflow-hidden" style={{ background: "var(--term-bar-bg)" }}>
-        <span
-          className="block h-full"
-          style={{
-            width: `${pct}%`,
-            background: tone === "dim" ? "var(--term-dim)" : "var(--term-accent)",
-          }}
-        />
+        <span className="block h-full" style={{ width: `${pct}%`, background: fill }} />
       </span>
       <span className="text-right tabular-nums" style={{ color: "var(--term-text)" }}>
         {value}
