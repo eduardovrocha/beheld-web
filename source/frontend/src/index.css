@@ -2,23 +2,84 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme tokens (mirrors deploy/development/.../beheld-landing-v4 mock) ── */
+:root {
+  --bg: #f5f1e8;
+  --surface: #ebe6d6;
+  --surface-2: #ddd6c2;
+  --rule: #cec5b1;
+  --rule-soft: #ddd6c2;
+  --text: #1a1f29;
+  --muted: #6e6555;
+  --muted-soft: #948a78;
+  --accent: #8a6f3e;
+  --accent-deep: #5e4928;
+  --ok: #4a7c4e;
+  --warn: #b56135;
+  --lens: #1a1f29;
+  --card-bg: #ffffff;
+  --term-bg: #1a1f29;
+  --term-text: #e6e1d8;
+  --term-rule: #2a3140;
+  --term-prompt: #7fa87f;
+}
+html.dark {
+  --bg: #0d1117;
+  --surface: #11161e;
+  --surface-2: #161b22;
+  --rule: #252b35;
+  --rule-soft: #1e242e;
+  --text: #e6e1d8;
+  --muted: #8b8278;
+  --muted-soft: #5a5550;
+  --accent: #c9a96e;
+  --accent-deep: #a07840;
+  --ok: #5a9e5e;
+  --warn: #d4923e;
+  --lens: #d8d3c4;
+  --card-bg: var(--surface);
+  --term-bg: #070a0f;
+  --term-text: #e6e1d8;
+  --term-rule: #1a2030;
+  --term-prompt: #7fa87f;
+}
+
 @layer base {
   html {
-    @apply bg-slate-50 text-slate-900 transition-colors duration-200;
-  }
-  html.dark {
-    @apply bg-slate-950 text-slate-100;
+    background: var(--bg);
+    color: var(--text);
+    border-top: 3px solid var(--accent);
+    transition: background-color 200ms ease, color 150ms ease, border-color 150ms ease;
   }
   body {
-    @apply min-h-screen font-sans antialiased;
+    @apply min-h-screen antialiased;
+    font-family: 'Switzer', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    line-height: 1.65;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   code {
     @apply font-mono;
   }
 }
 
-/* Terminal hero — line-by-line fade-in.  Each .terminal-line carries an
-   inline style="--d:Xms" that staggers the animation start. */
+/* ── Hero blinking cursor (mirrors mock) ─────────────────────────────────── */
+@keyframes cursor-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.cmd-cursor::after {
+  content: '';
+  display: inline-block;
+  width: 0.5em;
+  height: 0.9em;
+  background: var(--text);
+  margin-left: 0.2em;
+  vertical-align: -0.08em;
+  animation: cursor-blink 1.05s steps(1) infinite;
+}
+
+/* ── Terminal hero — line-by-line fade-in (kept from prior version) ──────── */
 @keyframes terminal-line-in {
   from { opacity: 0; transform: translateY(2px); }
   to   { opacity: 1; transform: translateY(0); }

@@ -27,21 +27,32 @@ export function Layout({ children }: { children: ReactNode }) {
   const t = useT();
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-200/80 bg-slate-50/80 backdrop-blur dark:border-slate-800/80 dark:bg-slate-950/80">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+      <header
+        className="backdrop-blur"
+        style={{
+          background: "color-mix(in srgb, var(--bg) 80%, transparent)",
+          borderBottom: "1px solid var(--rule)",
+        }}
+      >
+        <div className="mx-auto flex items-center justify-between px-6 py-3" style={{ maxWidth: 860 }}>
           <Link to="/" className="flex items-center gap-2">
             <Logo />
-            <span className="font-mono text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            <span
+              className="font-mono font-bold tracking-tight"
+              style={{ color: "var(--text)", fontSize: 13 }}
+            >
               beheld
+              <span style={{ color: "var(--accent)", fontWeight: 400 }}>.dev</span>
             </span>
           </Link>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-4" style={{ color: "var(--muted)" }}>
             <NavItem to="/verify">{t("nav.verify_bundle")}</NavItem>
             <a
               href="https://github.com/eduardovrocha/beheld"
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+              className="text-sm transition-colors hover:opacity-100"
+              style={{ color: "var(--muted)" }}
             >
               {t("nav.github")}
             </a>
@@ -51,9 +62,17 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-6 py-10">{children}</main>
+      <main>{children}</main>
 
-      <footer className="mt-16 border-t border-slate-200/80 py-8 text-center text-xs text-slate-500 dark:border-slate-800/80">
+      <footer
+        className="mt-16 py-8 text-center font-mono uppercase"
+        style={{
+          color: "var(--muted)",
+          fontSize: 10,
+          letterSpacing: "0.14em",
+          borderTop: "1px solid var(--rule)",
+        }}
+      >
         {t("footer.tagline")}
       </footer>
     </div>
