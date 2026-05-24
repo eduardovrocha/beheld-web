@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { useT } from "@/i18n/I18nProvider";
 
+import { Constellation } from "./Constellation";
 import { LocaleToggle } from "./LocaleToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -14,7 +15,10 @@ import { ThemeToggle } from "./ThemeToggle";
 export function Layout({ children }: { children: ReactNode }) {
   const t = useT();
   return (
-    <div className="min-h-screen">
+    <div className="relative min-h-screen" style={{ zIndex: 1 }}>
+      {/* Ambient constellation — portaled to document.body, fixed behind. */}
+      <Constellation />
+
       {/* Floating controls box (top-right) */}
       <div
         className="fixed z-50 flex items-center gap-3.5"
