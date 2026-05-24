@@ -647,7 +647,7 @@ export function Home() {
             </div>
           </div>
           <div
-            className="pt-3.5 italic"
+            className="pt-3.5"
             style={{
               color: "var(--muted-soft)",
               fontSize: 12,

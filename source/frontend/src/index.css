@@ -72,6 +72,9 @@ html.dark {
   --term-band-high: #5fb47f;
 }
 
+/* No italics anywhere — em/i tags + .italic Tailwind utility all render upright */
+em, i, .italic { font-style: normal !important; }
+
 @layer base {
   html {
     background: var(--bg);
