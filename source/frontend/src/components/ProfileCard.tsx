@@ -1,71 +1,27 @@
 /**
- * ProfileCard — full profile layout for both `/v/:id` (fetched bundle) and
- * `/verify` (drag-drop local file).  Mirrors the server-rendered HTML at
- * Rails `:3000/v/:id` so the SPA and the Rails portal share visual language.
+ * ProfileCard — public profile page (rota `/v/:id` + drop-in em `/verify`).
  *
- * Sections (top → bottom):
- *   1. Header card — avatar, ID, ED25519 pill, big overall score
- *   2. Stats grid — 5 cells with progress bars (4 dimensions + sessions)
- *   3. Trend chart placeholder (chain history isn't available in the SPA)
- *   4. Two-column L1 + L2 facts/chips
- *   5. Proof footer — SHA256 / ED25519 / PUB_KEY / ISSUED + SIG_MATCH
+ * Visual: porta do mock beheld-dev-profile-page-v2 (estilo "doc" com paleta
+ * bege/dourada + seções numeradas + letter prose + chain de verificação).
  *
- * Privacy: never renders root_commit_hashes as a list, repo names, paths,
- * branch names, or any free-text from the bundle.
+ * Dados: o que existir no Bundle real é renderizado; o que não existir é
+ * omitido (não usar dados fake). Seção "Claimed vs Demonstrated" do mock
+ * fica fora porque o bundle ainda não expõe self-declared fields.
  */
-import { useState } from "react";
-
-import { useI18n, useT } from "@/i18n/I18nProvider";
-import type {
-  Bundle,
-  BundleL1Section,
-  BundleL2Section,
-  BundlePayloadV1,
-} from "@/lib/types";
-import {
-  buildHistory,
-  consistency,
-  consistencyLabel,
-  netGrowth,
-  peakSnapshot,
-} from "@/lib/trendHistory";
+import type { Bundle, BundleL1Section, BundleL2Section, BundlePayloadV1 } from "@/lib/types";
+import type { AttestationCheck } from "@/lib/attestationVerify";
 import type { VerifyResult } from "@/lib/verify";
-
-import { TechIcon } from "./TechIcon";
-import { TrendChart } from "./TrendChart";
-
-type TFunc = ReturnType<typeof useT>;
 
 interface Props {
   bundle: Bundle;
   result: VerifyResult | null;
   verifying: boolean;
-  /** Optional opaque identifier (Rails short_id).  Falls back to the first
-   *  8 chars of the bundle hash when a local file is dropped in /verify. */
   shortId?: string | null;
-  /** Optional banner content (e.g. expiration warning).  Rendered above the
-   *  card so the article stays self-contained. */
   banner?: React.ReactNode;
+  attestation?: AttestationCheck | null;
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
-
-function scoreBucket(score: number): "green" | "yellow" | "red" {
-  if (score >= 75) return "green";
-  if (score >= 50) return "yellow";
-  return "red";
-}
-
-const FILL_CLASSES: Record<ReturnType<typeof scoreBucket>, string> = {
-  green:  "bg-emerald-500 dark:bg-emerald-400",
-  yellow: "bg-amber-500 dark:bg-amber-400",
-  red:    "bg-rose-500 dark:bg-rose-400",
-};
-const FILL_ACCENT = "bg-emerald-500 dark:bg-emerald-400";
-
-function formatNumber(n: number): string {
-  return new Intl.NumberFormat("pt-BR").format(n);
-}
 
 function parseIso(value: string | null | undefined): Date | null {
   if (!value) return null;
@@ -73,77 +29,20 @@ function parseIso(value: string | null | undefined): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-function activityWindow(l1: BundleL1Section): string {
-  const a = parseIso(l1.earliest_commit);
-  const b = parseIso(l1.latest_commit);
-  if (!a || !b) return "—";
-  return `${a.getFullYear()} → ${b.getFullYear()}`;
+function formatNumber(n: number): string {
+  return new Intl.NumberFormat("pt-BR").format(n);
 }
 
-function daysAgo(iso: string | null | undefined, t: TFunc): string {
-  const d = parseIso(iso);
-  if (!d) return t("common.dash");
-  const ms = Date.now() - d.getTime();
-  const days = Math.max(0, Math.floor(ms / 86_400_000));
-  if (days === 0) return t("common.today");
-  if (days === 1) return t("common.one_day_ago");
-  return t("common.days_ago", { days });
-}
-
-const LOCALE_DATE_TAG: Record<string, string> = {
-  pt: "pt-BR",
-  en: "en",
-  es: "es",
-};
-
-/** Locale-aware "14 mai 2026" / "14 May 2026" / "14 may 2026". */
-function formatCommitDate(iso: string | null | undefined, locale: string): string {
-  const d = parseIso(iso);
+function formatIsoDate(iso: string | null | undefined): string {
+  const d = parseIso(iso ?? null);
   if (!d) return "—";
-  return d.toLocaleDateString(LOCALE_DATE_TAG[locale] ?? locale, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return d.toISOString().slice(0, 10);
 }
 
-const WORKFLOW_LABELS: Record<string, string> = {
-  tdd: "TDD",
-  "test-after": "Test-after",
-  test_after: "Test-after",
-  "debug-driven": "Debug-driven",
-  debug_driven: "Debug-driven",
-  "feature-work": "Feature work",
-  feature_work: "Feature work",
-  refactor: "Refactor",
-  exploration: "Exploration",
-  exploratory: "Exploration",
-};
-
-function humanizeWorkflow(key: string): string {
-  return WORKFLOW_LABELS[key] ?? key;
-}
-
-function formatWorkflowDistribution(
-  dist: Record<string, number> | undefined,
-  limit = 3,
-): string {
-  if (!dist || Object.keys(dist).length === 0) return "—";
-  return Object.entries(dist)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([k, v]) => `${humanizeWorkflow(k)} ${Math.round(v * 100)}%`)
-    .join(" · ");
-}
-
-function topKeys(record: Record<string, number> | undefined, limit = 6): string[] {
-  if (!record) return [];
-  return Object.entries(record).sort((a, b) => b[1] - a[1]).slice(0, limit).map(([k]) => k);
-}
-
-function trueKeys(record: Record<string, boolean> | undefined): string[] {
-  if (!record) return [];
-  return Object.entries(record).filter(([, v]) => v).map(([k]) => k);
+function formatIsoZ(iso: string | null | undefined): string {
+  const d = parseIso(iso ?? null);
+  if (!d) return "—";
+  return d.toISOString().slice(0, 19) + "Z";
 }
 
 function readSections(bundle: Bundle): {
@@ -157,802 +56,870 @@ function readSections(bundle: Bundle): {
   };
 }
 
-function deriveInitials(short: string): string {
-  const chars = short.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase();
-  return chars.length === 2 ? chars : "DP";
+const WORKFLOW_LABEL: Record<string, string> = {
+  tdd: "TDD",
+  "test-after": "Test-after",
+  test_after: "Test-after",
+  "test-first": "TDD",
+  test_first: "TDD",
+  "debug-driven": "Debug-driven",
+  debug_driven: "Debug-driven",
+  exploration: "Exploratory",
+  exploratory: "Exploratory",
+  "feature-work": "Feature work",
+  feature_work: "Feature work",
+  refactor: "Refactor",
+};
+
+function humanizeWorkflow(k: string): string {
+  return WORKFLOW_LABEL[k] ?? k;
 }
 
-function formatShortId(short: string): string {
-  if (short.length <= 8) return short;
-  return `${short.slice(0, 4)}-${short.slice(4, 8)}`;
+function topEntries(record: Record<string, number> | undefined, limit = 6): [string, number][] {
+  if (!record) return [];
+  return Object.entries(record).sort((a, b) => b[1] - a[1]).slice(0, limit);
 }
 
-function formatIsoZ(iso: string | undefined | null): string {
-  const d = parseIso(iso ?? null);
-  if (!d) return "—";
-  return d.toISOString().slice(0, 19) + "Z";
+function trueKeys(record: Record<string, boolean> | undefined): string[] {
+  if (!record) return [];
+  return Object.entries(record).filter(([, v]) => v).map(([k]) => k);
 }
 
-// ── sub-components ───────────────────────────────────────────────────────────
+type Tier = "fully_verifiable" | "signed_only" | "incomplete" | "checking";
 
-function Avatar({ short }: { short: string }) {
-  return (
-    <div className="flex size-20 items-center justify-center rounded-2xl border border-slate-200 bg-white font-mono text-xs font-bold tracking-widest text-slate-500 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-      {deriveInitials(short)}
-    </div>
-  );
-}
-
-function VerifyPill({
-  result,
-  verifying,
-}: {
-  result: VerifyResult | null;
-  verifying: boolean;
-}) {
-  const t = useT();
-  let text: string;
-  let color: string;
-  let pulse = false;
-
-  if (verifying || !result) {
-    text = t("profile.pill.idle");
-    color = "text-slate-500 dark:text-slate-400";
-    pulse = false;
-  } else if (result.ok) {
-    text = t("profile.pill.ok");
-    color = "text-emerald-600 dark:text-emerald-400";
-    pulse = true;
-  } else {
-    text = t("profile.pill.fail");
-    color = "text-rose-600 dark:text-rose-400";
+function classifyTier(
+  verifying: boolean,
+  result: VerifyResult | null,
+  attestation: AttestationCheck | null | undefined,
+): Tier {
+  if (verifying) return "checking";
+  if (!result?.ok) return "incomplete";
+  if (
+    attestation?.present &&
+    attestation.payload_valid &&
+    attestation.signature_valid &&
+    attestation.dev_pubkey_matches &&
+    (attestation.key_status === "active" || attestation.key_status === "rotated")
+  ) {
+    return "fully_verifiable";
   }
-
-  return (
-    <div className={`mt-3 flex items-center gap-2 font-mono text-[11px] font-bold ${color}`}>
-      {pulse ? (
-        <span className="relative inline-flex size-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-50 dark:bg-emerald-400"></span>
-          <span className="relative inline-flex size-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-        </span>
-      ) : (
-        <span className="inline-flex size-2 rounded-full bg-slate-400 dark:bg-slate-600"></span>
-      )}
-      <span>{text}</span>
-    </div>
-  );
+  return "signed_only";
 }
 
-function InfoIcon({ size = 12 }: { size?: number }) {
+function tierLabel(tier: Tier): string {
+  switch (tier) {
+    case "fully_verifiable":
+      return "fully verifiable";
+    case "signed_only":
+      return "signed only";
+    case "incomplete":
+      return "incomplete";
+    case "checking":
+      return "checking…";
+  }
+}
+
+function shortFingerprint(signature: string): string {
+  // signature is "ed25519:<128 hex>" — take first 4 + last 4
+  const hex = signature.replace(/^ed25519:/, "");
+  if (hex.length < 12) return hex;
+  return `${hex.slice(0, 4)}…${hex.slice(-4)}`;
+}
+
+// ── Lens logo (canon) ────────────────────────────────────────────────────────
+
+function LensLogo({ size = 72 }: { size?: number }) {
   return (
     <svg
-      viewBox="0 0 24 24"
-      width={size}
-      height={size}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
+      viewBox="0 0 240 100"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label="beheld lens logo"
+      style={{ color: "var(--lens)", height: size, width: "auto" }}
     >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 16v-4" />
-      <path d="M12 8h.01" />
+      <g stroke="currentColor" strokeWidth={1} opacity={0.35} strokeLinecap="round">
+        <line x1="16" y1="50" x2="28" y2="50" />
+        <line x1="212" y1="50" x2="224" y2="50" />
+      </g>
+      <path d="M 60 24 Q 40 50 60 76" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" />
+      <path d="M 180 24 Q 200 50 180 76" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" />
+      <line x1="66" y1="50" x2="174" y2="50" stroke="currentColor" strokeWidth={1} strokeDasharray="2 6" opacity={0.45} />
+      <circle cx="120" cy="50" r="14" fill="none" stroke="currentColor" strokeWidth={1.5} />
+      <circle cx="120" cy="50" r="4" fill="currentColor" />
     </svg>
   );
 }
 
-/** Reusable info-tooltip — small ⓘ button with a hover/focus card that
- *  carries `title` (accent header), `description` (muted body), and an
- *  optional `extra` slot for richer content (e.g. a colored scale legend). */
-function InfoTooltip({
+// ── Section head (numbered) ──────────────────────────────────────────────────
+
+function SectionHead({
+  num,
   title,
-  description,
-  extra,
-  align = "left",
+  emTail,
+  right,
+}: {
+  num: string;
+  title: string;
+  emTail?: string;
+  right?: string;
+}) {
+  return (
+    <div className="mb-8 flex flex-wrap items-baseline gap-6">
+      <span
+        className="font-mono uppercase"
+        style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em" }}
+      >
+        {num}
+      </span>
+      <h2
+        className="font-semibold"
+        style={{ color: "var(--text)", fontSize: 22, letterSpacing: "-0.02em" }}
+      >
+        {title}
+        {emTail ? (
+          <span style={{ color: "var(--muted)", fontWeight: 400 }}> {emTail}</span>
+        ) : null}
+      </h2>
+      {right ? (
+        <span
+          className="ml-auto font-mono uppercase"
+          style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}
+        >
+          {right}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+// ── Glance card (Section 01) ─────────────────────────────────────────────────
+
+function GlanceCard({
+  label,
+  num,
+  suffix,
+  note,
+}: {
+  label: string;
+  num: string;
+  suffix?: string;
+  note: React.ReactNode;
+}) {
+  return (
+    <div
+      className="p-6"
+      style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}
+    >
+      <div
+        className="mb-3.5 font-mono uppercase"
+        style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.18em" }}
+      >
+        {label}
+      </div>
+      <div
+        className="mb-1.5 font-semibold"
+        style={{ color: "var(--text)", fontSize: 32, letterSpacing: "-0.025em", lineHeight: 1 }}
+      >
+        {num}
+        {suffix ? (
+          <span
+            className="ml-1"
+            style={{ color: "var(--muted)", fontSize: 18, fontWeight: 400 }}
+          >
+            {suffix}
+          </span>
+        ) : null}
+      </div>
+      <div style={{ color: "var(--muted)", fontSize: 12, lineHeight: 1.65 }}>{note}</div>
+    </div>
+  );
+}
+
+// ── Signal card (Section 02 — L1/L2 detail) ──────────────────────────────────
+
+function SignalCard({
+  title,
+  meta,
+  rows,
 }: {
   title: string;
-  description: string;
-  extra?: React.ReactNode;
-  /** `left` (default) — tooltip extends rightward from the icon.
-   *  `right`           — tooltip extends leftward (use in right-column
-   *                      cells so it stays inside the article). */
-  align?: "left" | "right";
+  meta: string;
+  rows: { key: string; val: React.ReactNode; accent?: boolean }[];
 }) {
-  const [open, setOpen] = useState(false);
-  const alignClass = align === "right" ? "right-0" : "left-0";
   return (
-    <span
-      className="relative inline-flex"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
-      onBlur={() => setOpen(false)}
+    <div
+      style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}
     >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-label={`${title} — ${description}`}
-        className="inline-flex size-3.5 cursor-help items-center justify-center rounded-full text-slate-400 transition-colors hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
+      <div
+        className="flex items-baseline justify-between px-6 py-4"
+        style={{ background: "var(--surface)", borderBottom: "1px solid var(--rule)" }}
       >
-        <InfoIcon size={12} />
-      </button>
-      {open && (
+        <span className="font-semibold" style={{ color: "var(--text)", fontSize: 15 }}>
+          {title}
+        </span>
         <span
-          role="tooltip"
-          className={`absolute bottom-full ${alignClass} z-20 mb-2 flex w-[20rem] max-w-[80vw] flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800`}
+          className="font-mono uppercase"
+          style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}
         >
-          <span className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-            <InfoIcon size={14} />
-            <span>{title}</span>
-          </span>
-          <span className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-            {description}
-          </span>
-          {extra}
+          {meta}
         </span>
-      )}
-    </span>
-  );
-}
-
-/** Reference scale for the L1 Average Test Ratio — four colored bands
- *  with the range and a localised quality label.  Helps the reader place
- *  their own number within "low / average / good / excellent". */
-function TestRatioScale() {
-  const t = useT();
-  // Bands from the project's three-bucket palette: rose (low),
-  // amber (average), emerald-500 (good), emerald-600 (excellent).
-  const bands: { range: string; label: string; bar: string; text: string }[] = [
-    { range: "< 0.10",      label: t("common.scale.low"),       bar: "bg-rose-500 dark:bg-rose-400",       text: "text-rose-600 dark:text-rose-400" },
-    { range: "0.10 – 0.25", label: t("common.scale.average"),   bar: "bg-amber-500 dark:bg-amber-400",     text: "text-amber-600 dark:text-amber-400" },
-    { range: "0.25 – 0.50", label: t("common.scale.good"),      bar: "bg-emerald-500 dark:bg-emerald-400", text: "text-emerald-600 dark:text-emerald-400" },
-    { range: "> 0.50",      label: t("common.scale.excellent"), bar: "bg-emerald-600 dark:bg-emerald-300", text: "text-emerald-700 dark:text-emerald-300" },
-  ];
-  return (
-    <span className="mt-1 flex flex-col gap-1.5">
-      <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-500">
-        {t("profile.l1.avg_test_ratio.scale_title")}
-      </span>
-      {bands.map((b) => (
-        <span key={b.range} className="flex items-center gap-2 text-[11px]">
-          <span className={`inline-block h-1.5 w-6 rounded-full ${b.bar}`} aria-hidden="true" />
-          <span className="font-mono tabular-nums text-slate-600 dark:text-slate-300">{b.range}</span>
-          <span className={`uppercase tracking-wide ${b.text}`}>{b.label}</span>
-        </span>
-      ))}
-    </span>
-  );
-}
-
-/** Stat label with an inline info button that reveals a description
- *  tooltip on hover/focus.  Same visual language as the proof footer
- *  tooltips — accent icon + full title header, muted description below.
- *
- *  The chip keeps the abbreviated label (Prompt Q. / Test Mat. / Breadth /
- *  Growth / Sessions); the tooltip uses the full name (Prompt Quality /
- *  Test Maturity / etc.). */
-function StatLabel({
-  label,
-  titleKey,
-  descKey,
-  align,
-}: {
-  label: string;
-  titleKey: string;
-  descKey: string;
-  align?: "left" | "right";
-}) {
-  const t = useT();
-  return (
-    <div className="mb-4 flex items-center gap-1.5">
-      <span className="font-mono text-[10px] uppercase text-slate-500">{label}</span>
-      <InfoTooltip title={t(titleKey)} description={t(descKey)} align={align} />
-    </div>
-  );
-}
-
-function StatCell({
-  label,
-  titleKey,
-  descKey,
-  value,
-  withBar = true,
-  accent = false,
-  tooltipAlign,
-}: {
-  label: string;
-  titleKey: string;
-  descKey: string;
-  value: number;
-  withBar?: boolean;
-  accent?: boolean;
-  tooltipAlign?: "left" | "right";
-}) {
-  const fill = accent ? FILL_ACCENT : FILL_CLASSES[scoreBucket(value)];
-  return (
-    <div className="border-b border-slate-200 p-6 last:border-r-0 dark:border-slate-800 md:border-b-0 md:border-r">
-      <StatLabel label={label} titleKey={titleKey} descKey={descKey} align={tooltipAlign} />
-      <div className="font-mono text-xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{value}</div>
-      {withBar && (
+      </div>
+      {rows.map((r, i) => (
         <div
-          className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
-          role="img"
-          aria-label={`${label} ${value} de 100`}
+          key={i}
+          className="flex items-center justify-between px-6 py-3"
+          style={{
+            borderBottom: i === rows.length - 1 ? undefined : "1px dashed var(--rule-soft)",
+            fontSize: 13.5,
+          }}
         >
-          <div className={`h-full ${fill}`} style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+          <span style={{ color: "var(--muted)" }}>{r.key}</span>
+          <span
+            className="text-right font-mono"
+            style={{
+              color: r.accent ? "var(--accent)" : "var(--text)",
+              fontSize: 12.5,
+              fontWeight: 500,
+            }}
+          >
+            {r.val}
+          </span>
         </div>
-      )}
+      ))}
     </div>
   );
 }
 
-/** Maps a 0.0–1.0 test ratio to the same color bands used by the scale
- *  legend.  Keep aligned with <TestRatioScale> bands and the Rails
- *  `test_ratio_color_class` helper. */
-function testRatioColorClass(v: number): string {
-  if (v < 0.10)  return "text-rose-600 dark:text-rose-400";
-  if (v < 0.25)  return "text-amber-600 dark:text-amber-400";
-  if (v < 0.50)  return "text-emerald-600 dark:text-emerald-400";
-  return "text-emerald-700 dark:text-emerald-300";
-}
+// ── Quality row (Section 03) ─────────────────────────────────────────────────
 
-function FactRow({
-  label,
-  value,
-  accent = false,
-  valueClassName,
-  descKey,
-  tooltipExtra,
-  tooltipAlign,
-}: {
-  label: string;
-  value: React.ReactNode;
-  accent?: boolean;
-  valueClassName?: string;
-  descKey?: string;
-  tooltipExtra?: React.ReactNode;
-  /** Passed through to <InfoTooltip>. Use "right" in right-column cells
-   *  (L2) so the tooltip extends leftward instead of overflowing. */
-  tooltipAlign?: "left" | "right";
-}) {
-  const t = useT();
-  const colorClass = valueClassName
-    ?? (accent ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-slate-100");
+function QualityRow({ qk, qv }: { qk: string; qv: React.ReactNode }) {
   return (
-    <div className="flex items-end justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
-      <span className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
-        {label}
-        {descKey && (
-          <InfoTooltip
-            title={label}
-            description={t(descKey)}
-            extra={tooltipExtra}
-            align={tooltipAlign}
-          />
-        )}
+    <div
+      className="grid gap-6 py-3"
+      style={{
+        gridTemplateColumns: "200px 1fr",
+        borderBottom: "1px dashed var(--rule-soft)",
+        fontSize: 13.5,
+      }}
+    >
+      <span
+        className="font-mono uppercase"
+        style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
+      >
+        {qk}
       </span>
-      <span className={`font-mono font-bold ${colorClass}`}>{value}</span>
+      <span style={{ color: "var(--text)", lineHeight: 1.75 }}>{qv}</span>
     </div>
   );
 }
 
-function Chip({ children }: { children: React.ReactNode }) {
+// ── Chain row (Section 04) ───────────────────────────────────────────────────
+
+function ChainRow({
+  ok,
+  name,
+  desc,
+  detail,
+  detailValue,
+  last,
+}: {
+  ok: boolean;
+  name: string;
+  desc: string;
+  detail?: string;
+  detailValue?: string;
+  last?: boolean;
+}) {
   return (
-    <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 font-mono text-xs text-slate-800 dark:border-emerald-500/15 dark:bg-emerald-500/5 dark:text-slate-200">
-      {children}
-    </span>
+    <div
+      className="grid items-center gap-5 px-7 py-4"
+      style={{
+        gridTemplateColumns: "28px 1fr auto",
+        borderBottom: last ? undefined : "1px solid var(--rule-soft)",
+      }}
+    >
+      <div
+        className="font-mono"
+        style={{ color: ok ? "var(--ok)" : "var(--warn)", fontSize: 16 }}
+      >
+        {ok ? "✓" : "✗"}
+      </div>
+      <div>
+        <div className="font-semibold" style={{ color: "var(--text)", fontSize: 14 }}>
+          {name}
+        </div>
+        <div className="mt-0.5" style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.75 }}>
+          {desc}
+        </div>
+      </div>
+      <div
+        className="text-right font-mono"
+        style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.04em" }}
+      >
+        {detailValue ? (
+          <span style={{ color: "var(--accent)", fontWeight: 500 }}>{detailValue}</span>
+        ) : null}
+        {detail ? (
+          <>
+            {detailValue ? <br /> : null}
+            {detail}
+          </>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
-function ChipMuted({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded border border-slate-200 px-2 py-0.5 font-mono text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
-      {children}
-    </span>
-  );
-}
+// ── Main render ──────────────────────────────────────────────────────────────
 
-/** Chip with a leading brand glyph — for ecosystems / platforms detected
- *  on the bundle. Falls back to a neutral dot when the icon set doesn't
- *  cover the key. */
-function TechChip({ name, accented = false }: { name: string; accented?: boolean }) {
-  const base = "inline-flex items-center gap-1.5 rounded px-2 py-1 font-mono text-xs";
-  const tone = accented
-    ? "border border-emerald-500/20 bg-emerald-500/10 text-slate-800 dark:border-emerald-500/15 dark:bg-emerald-500/5 dark:text-slate-200"
-    : "border border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400";
-  return (
-    <span className={`${base} ${tone}`}>
-      <TechIcon name={name} size={14} />
-      <span>{name}</span>
-    </span>
-  );
-}
+export function ProfileCard({
+  bundle,
+  result,
+  verifying,
+  shortId,
+  banner,
+  attestation,
+}: Props) {
+  const { l1, l2 } = readSections(bundle);
+  const github = bundle.attestation?.payload?.github ?? null;
+  const tier = classifyTier(verifying, result, attestation);
 
-function L1Panel({ l1 }: { l1: BundleL1Section | null }) {
-  const t = useT();
-  const { locale } = useI18n();
-  const present = l1 !== null && l1.total_repos > 0;
+  // Derived numbers
+  const sessions = l2?.sessions_analyzed ?? 0;
+  const ecosystemsL1 = l1 ? trueKeys(l1.ecosystems) : [];
+  const ecosystemsL2 = l2 ? topEntries(l2.ecosystems, 8).map(([k]) => k) : [];
+  const allEcosystems = Array.from(new Set([...ecosystemsL1, ...ecosystemsL2]));
+  const testRatioPct = l1 ? Math.round((l1.avg_test_ratio ?? 0) * 100) : 0;
+  const periodDays = l2?.period_days ?? 90;
+  const totalRepos = l1?.total_repos ?? 0;
+  const totalCommits = l1?.total_commits ?? 0;
+  const earliestDate = parseIso(l1?.earliest_commit ?? null);
+  const latestDate = parseIso(l1?.latest_commit ?? null);
+  const earliestYear = earliestDate?.getFullYear();
+  const yearsActive = earliestDate ? new Date().getFullYear() - earliestDate.getFullYear() : 0;
+
+  const workflowEntries = topEntries(l2?.workflow_distribution, 4);
+  const topWorkflow = workflowEntries[0];
+  const topWorkflowPct = topWorkflow ? Math.round(topWorkflow[1] * 100) : 0;
+
+  const sigOk = result?.checks?.signature?.ok ?? false;
+  const hashOk = result?.checks?.hash?.ok ?? false;
+  const schemaOk = result?.checks?.schema?.ok ?? false;
+  const attOk =
+    !!attestation?.present &&
+    attestation.payload_valid &&
+    attestation.signature_valid &&
+    (attestation.key_status === "active" || attestation.key_status === "rotated");
+
+  const profileId = shortId ?? bundle.hash.replace(/^sha256:/, "").slice(0, 9);
+  const sigFp = shortFingerprint(bundle.signature);
+
+  // Pre-computed strings
+  const handle = github?.login ?? "anonymous";
+  const observationLine = `Bundle assinado · ${formatIsoDate(bundle.payload.created_at)} · engine v${bundle.payload.beheld_version} · janela de ${periodDays} dias de observação`;
+
   return (
-    <section>
-      <h3 className="mb-6 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
-        <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-        <span>L1: <span className="text-slate-900 dark:text-slate-100">{t("profile.l1.title")}</span></span>
-      </h3>
-      {present && l1 ? (
-        <div className="space-y-3">
-          <FactRow label={t("profile.l1.repos")}            descKey="profile.l1.repos.desc"            value={l1.total_repos} />
-          <FactRow label={t("profile.l1.commits")}          descKey="profile.l1.commits.desc"          value={formatNumber(l1.total_commits)} />
-          <FactRow label={t("profile.l1.activity_window")}  descKey="profile.l1.activity_window.desc"  value={<span className="text-sm">{activityWindow(l1)}</span>} />
-          <FactRow
-            label={t("profile.l1.avg_test_ratio")}
-            descKey="profile.l1.avg_test_ratio.desc"
-            tooltipExtra={<TestRatioScale />}
-            value={l1.avg_test_ratio.toFixed(2)}
-            valueClassName={testRatioColorClass(l1.avg_test_ratio)}
-          />
-          <FactRow
-            label={t("profile.l1.last_commit")}
-            descKey="profile.l1.last_commit.desc"
-            value={
+    <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
+      {banner}
+
+      {/* ═══ DOC HEAD ════════════════════════════════════════════════════ */}
+      <div
+        className="mb-14 pb-16 pt-20 text-center"
+        style={{ borderBottom: "1px solid var(--rule)" }}
+      >
+        <div
+          className="mb-16 pb-16"
+          style={{ borderBottom: "1px solid var(--rule-soft)" }}
+        >
+          <div className="flex flex-col items-center gap-4">
+            <LensLogo size={72} />
+            <div
+              className="font-semibold"
+              style={{ color: "var(--text)", fontSize: 56, letterSpacing: "-0.025em", lineHeight: 1 }}
+            >
+              beheld
+              <span style={{ color: "var(--accent)", fontWeight: 400 }}>.dev</span>
+            </div>
+            <div
+              className="font-normal uppercase"
+              style={{ color: "var(--muted)", fontSize: 12, letterSpacing: "0.14em" }}
+            >
+              Beheld by <span style={{ color: "var(--accent)" }}>signal</span>. Decided by{" "}
+              <span style={{ color: "var(--accent)" }}>you</span>.
+            </div>
+            <div
+              className="mt-1 font-mono"
+              style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.08em" }}
+            >
+              beheld.dev/v/<span>{profileId}</span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="mb-5 font-mono uppercase"
+          style={{ color: "var(--muted)", fontSize: 12, letterSpacing: "0.14em" }}
+        >
+          {attestation?.present && attestation.signature_valid ? (
+            <>
+              Identidade verificada{" "}
+              <span style={{ color: "var(--accent)" }}>·</span>{" "}
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>GitHub OAuth</span>
+            </>
+          ) : (
+            <>
+              Identidade não verificada{" "}
+              <span style={{ color: "var(--warn)" }}>·</span>{" "}
+              <span style={{ color: "var(--warn)", fontWeight: 500 }}>sem attestation</span>
+            </>
+          )}
+        </div>
+        <h1
+          className="cmd-cursor mb-3.5 inline-block font-mono"
+          style={{
+            color: "var(--text)",
+            fontSize: "clamp(36px, 5vw, 56px)",
+            letterSpacing: "-0.01em",
+            lineHeight: 1.05,
+            fontWeight: 500,
+          }}
+        >
+          <span style={{ color: "var(--accent)", fontWeight: 500, marginRight: "0.1em" }}>@</span>
+          {handle}
+        </h1>
+        <div className="mb-8" style={{ color: "var(--muted)", fontSize: 14 }}>
+          {observationLine}
+        </div>
+        <div className="inline-flex items-baseline gap-2">
+          <span
+            className="font-mono uppercase"
+            style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
+          >
+            Trust tier
+          </span>
+          <span style={{ color: "var(--rule)" }}>·</span>
+          <span
+            className="font-mono uppercase"
+            style={{
+              color: tier === "incomplete" ? "var(--warn)" : "var(--accent)",
+              fontSize: 11,
+              letterSpacing: "0.14em",
+            }}
+          >
+            {tierLabel(tier)}
+          </span>
+        </div>
+      </div>
+
+      {/* ═══ LETTER (auto-generated from real numbers) ═══════════════════ */}
+      <section className="py-14" style={{ borderBottom: "1px solid var(--rule)" }}>
+        <div
+          className="mb-5 font-mono uppercase"
+          style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em" }}
+        >
+          — Observação do Beheld
+        </div>
+        <div style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.95, maxWidth: 760 }}>
+          Nos últimos {periodDays} dias, <strong style={{ color: "var(--accent)", fontWeight: 500 }}>@{handle}</strong>{" "}
+          trabalhou em{" "}
+          <span className="font-mono" style={{ color: "var(--text)" }}>
+            {formatNumber(sessions)}
+          </span>{" "}
+          sessões em{" "}
+          <span className="font-mono" style={{ color: "var(--text)" }}>
+            {allEcosystems.length}
+          </span>{" "}
+          {allEcosystems.length === 1 ? "ecosystem" : "ecosystems"}.
+          {testRatioPct > 0 ? (
+            <>
+              {" "}Test ratio:{" "}
+              <span style={{ color: "var(--accent)", fontWeight: 500 }}>
+                {testRatioPct}%
+              </span>
+              .
+            </>
+          ) : null}
+          {topWorkflow ? (
+            <>
+              {" "}Workflow predominante:{" "}
+              <span style={{ color: "var(--accent)", fontWeight: 500 }}>
+                {humanizeWorkflow(topWorkflow[0])}
+              </span>{" "}
+              ({topWorkflowPct}%).
+            </>
+          ) : null}
+          {totalRepos > 0 && earliestYear ? (
+            <>
+              {" "}Histórico git:{" "}
+              <span className="font-mono" style={{ color: "var(--text)" }}>
+                {formatNumber(totalCommits)}
+              </span>{" "}
+              commits em{" "}
+              <span className="font-mono" style={{ color: "var(--text)" }}>
+                {totalRepos}
+              </span>{" "}
+              repositórios desde{" "}
+              <span className="font-mono" style={{ color: "var(--text)" }}>
+                {earliestYear}
+              </span>
+              .
+            </>
+          ) : null}
+        </div>
+        <div
+          className="mt-6 font-mono uppercase"
+          style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
+        >
+          Esse é o trabalho dele. Não o LinkedIn dele. O trabalho.{" "}
+          <span style={{ color: "var(--accent)" }}>·</span>{" "}
+          <span style={{ color: "var(--accent)", fontWeight: 500 }}>signed Ed25519</span>
+        </div>
+      </section>
+
+      {/* ═══ 01 · VISÃO GERAL ════════════════════════════════════════════ */}
+      <section className="py-12" style={{ borderBottom: "1px solid var(--rule)" }}>
+        <SectionHead
+          num="01"
+          title="Visão geral"
+          emTail={`· últimos ${periodDays} dias`}
+          right="Combined L1 + L2"
+        />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <GlanceCard
+            label="Sessões"
+            num={formatNumber(sessions)}
+            note={
               <>
-                <span>{formatCommitDate(l1.latest_commit, locale)}</span>
-                <span className="ml-2 text-[11px] font-normal text-slate-500 dark:text-slate-400">
-                  · {daysAgo(l1.latest_commit, t)}
+                across{" "}
+                <strong style={{ color: "var(--accent)", fontWeight: 500 }}>
+                  {allEcosystems.length}
+                </strong>{" "}
+                {allEcosystems.length === 1 ? "ecosystem" : "ecosystems"}
+              </>
+            }
+          />
+          <GlanceCard
+            label="Test ratio"
+            num={String(testRatioPct)}
+            suffix="%"
+            note={
+              testRatioPct >= 30 ? (
+                <>
+                  <strong style={{ color: "var(--accent)", fontWeight: 500 }}>acima</strong> da
+                  mediana global
+                </>
+              ) : (
+                <>cobertura ainda em desenvolvimento</>
+              )
+            }
+          />
+          <GlanceCard
+            label="L1 repositories"
+            num={formatNumber(totalRepos)}
+            note={
+              <>
+                {formatNumber(totalCommits)} commits
+                {earliestYear ? ` desde ${earliestYear}` : ""}
+              </>
+            }
+          />
+          <GlanceCard
+            label="Workflow"
+            num={topWorkflow ? humanizeWorkflow(topWorkflow[0]) : "—"}
+            note={
+              topWorkflow ? (
+                <>
+                  {topWorkflowPct}% sessões{" "}
+                  <span style={{ color: "var(--muted-soft)" }}>· dominante</span>
+                </>
+              ) : (
+                <>sem distribuição observada</>
+              )
+            }
+          />
+        </div>
+      </section>
+
+      {/* ═══ 02 · SINAIS TÉCNICOS ════════════════════════════════════════ */}
+      <section className="py-12" style={{ borderBottom: "1px solid var(--rule)" }}>
+        <SectionHead
+          num="02"
+          title="Sinais técnicos"
+          emTail="· detalhe"
+          right="L1 git · L2 sessions"
+        />
+        <div className="grid gap-4 md:grid-cols-2">
+          <SignalCard
+            title="L1 · Histórico Git"
+            meta={`Base · ${totalRepos} ${totalRepos === 1 ? "repo" : "repos"}`}
+            rows={[
+              { key: "Total de commits", val: formatNumber(totalCommits) },
+              { key: "Commit mais antigo", val: formatIsoDate(l1?.earliest_commit) },
+              { key: "Commit mais recente", val: formatIsoDate(l1?.latest_commit) },
+              {
+                key: "Ecosystems detectados",
+                val: ecosystemsL1.length > 0 ? ecosystemsL1.slice(0, 5).join(" · ") : "—",
+              },
+              { key: "Test ratio médio", val: `${testRatioPct}%`, accent: true },
+              {
+                key: "Janela de atividade",
+                val:
+                  earliestDate && latestDate
+                    ? `${yearsActive} anos`
+                    : "—",
+              },
+            ]}
+          />
+          <SignalCard
+            title="L2 · Trajetória Claude Code"
+            meta={`Recent · ${periodDays} days`}
+            rows={[
+              { key: "Total de sessões", val: formatNumber(sessions) },
+              {
+                key: "Workflow predominante",
+                val: topWorkflow
+                  ? `${humanizeWorkflow(topWorkflow[0])} · ${topWorkflowPct}%`
+                  : "—",
+                accent: !!topWorkflow,
+              },
+              ...workflowEntries.slice(1, 4).map(([k, v]) => ({
+                key: humanizeWorkflow(k),
+                val: `${Math.round(v * 100)}%`,
+              })),
+              {
+                key: "Ecosystems (top)",
+                val: ecosystemsL2.length > 0 ? ecosystemsL2.slice(0, 3).join(" · ") : "—",
+              },
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* ═══ 03 · QUALIDADE DO SINAL ═════════════════════════════════════ */}
+      <section className="py-12" style={{ borderBottom: "1px solid var(--rule)" }}>
+        <SectionHead
+          num="03"
+          title="Qualidade do sinal"
+          emTail="· honestidade radical"
+          right="Self-disclosed limits"
+        />
+        <div
+          className="p-8"
+          style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}
+        >
+          <QualityRow
+            qk="Janela de observação"
+            qv={`${periodDays} dias · L2 contínuo`}
+          />
+          <QualityRow
+            qk="Volume de dados"
+            qv={
+              <>
+                {formatNumber(sessions)} sessões · {totalRepos}{" "}
+                {totalRepos === 1 ? "repo" : "repos"} ·{" "}
+                {sessions >= 30 && totalRepos >= 1 ? (
+                  <span style={{ color: "var(--ok)" }}>suficiente</span>
+                ) : (
+                  <span style={{ color: "var(--warn)" }}>abaixo do mínimo</span>
+                )}{" "}
+                <span style={{ color: "var(--muted)" }}>
+                  (mínimo: 30 sessões + 1 repo)
                 </span>
               </>
             }
           />
-
-          <div className="space-y-3 pt-2">
-            <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l1.primary_ecosystems")}</div>
-            <div className="flex flex-wrap gap-2">
-              {trueKeys(l1.ecosystems).slice(0, 8).map((k) => (
-                <TechChip key={k} name={k} accented />
-              ))}
-              {trueKeys(l1.ecosystems).length === 0 && <ChipMuted>{t("common.dash")}</ChipMuted>}
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l1.platforms")}</div>
-            <div className="flex flex-wrap gap-2">
-              {trueKeys(l1.platforms).slice(0, 8).map((k) => (
-                <TechChip key={k} name={k} />
-              ))}
-              {trueKeys(l1.platforms).length === 0 && <ChipMuted>{t("common.dash")}</ChipMuted>}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-800">
-          <div className="mb-2 font-mono text-xs uppercase text-slate-500">{t("profile.l1.empty.badge")}</div>
-          <p
-            className="text-sm text-slate-500 dark:text-slate-400 [&_code]:font-mono [&_code]:text-slate-700 dark:[&_code]:text-slate-300"
-            dangerouslySetInnerHTML={{ __html: t("profile.l1.empty.hint_html") }}
+          <QualityRow
+            qk="Schema do bundle"
+            qv={
+              <>
+                v{bundle.payload.beheld_version}{" "}
+                <span className="font-mono" style={{ color: "var(--muted)" }}>
+                  · {schemaOk ? "válido" : "warning"}
+                </span>
+              </>
+            }
+          />
+          <QualityRow
+            qk="Warnings"
+            qv={
+              result?.warnings && result.warnings.length > 0 ? (
+                <span style={{ color: "var(--warn)" }}>
+                  {result.warnings.join(" · ")}
+                </span>
+              ) : (
+                <span style={{ color: "var(--ok)" }}>nenhum</span>
+              )
+            }
+          />
+          <QualityRow
+            qk="Confiabilidade"
+            qv={
+              tier === "fully_verifiable"
+                ? "Alta · todas as camadas técnicas válidas"
+                : tier === "signed_only"
+                ? "Média · assinatura válida sem identidade GitHub atestada"
+                : tier === "incomplete"
+                ? "Baixa · verificação incompleta — ver chain abaixo"
+                : "Verificando…"
+            }
           />
         </div>
-      )}
-    </section>
-  );
-}
+      </section>
 
-function L2Panel({ l2 }: { l2: BundleL2Section | null }) {
-  const t = useT();
-  const present = l2 !== null && l2.sessions_analyzed > 0;
-  return (
-    <section>
-      <h3 className="mb-6 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
-        <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-        <span>L2: <span className="text-slate-900 dark:text-slate-100">{t("profile.l2.title")}</span></span>
-      </h3>
-      {present && l2 ? (
-        <div className="space-y-3">
-          <FactRow
-            label={t("profile.l2.sessions_analyzed")}
-            tooltipAlign="right" descKey="profile.l2.sessions_analyzed.desc"
-            value={l2.sessions_analyzed}
+      {/* ═══ 04 · CADEIA DE VERIFICAÇÃO ══════════════════════════════════ */}
+      <section className="py-12">
+        <SectionHead
+          num="04"
+          title="Cadeia de verificação"
+          emTail={`· tier ${tier}`}
+          right={tierLabel(tier)}
+        />
+        <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
+          <ChainRow
+            ok={sigOk && hashOk}
+            name="Assinatura Ed25519"
+            desc="Bundle assinado com a chave do dev. Verificado offline via crypto.subtle."
+            detail="fingerprint"
+            detailValue={sigFp}
           />
-          <FactRow
-            label={t("profile.l2.period")}
-            tooltipAlign="right" descKey="profile.l2.period.desc"
-            value={<span className="text-sm">{t("common.period_days", { days: l2.period_days })}</span>}
+          <ChainRow
+            ok={true}
+            name="Chain hash"
+            desc={
+              bundle.payload.previous_hash
+                ? "Snapshot anterior referenciado. Cadeia contínua desde genesis."
+                : "Snapshot genesis (primeiro da cadeia)."
+            }
+            detail={bundle.payload.previous_hash ? "continuous" : "genesis"}
+            detailValue={
+              bundle.payload.previous_hash
+                ? bundle.payload.previous_hash.replace(/^sha256:/, "").slice(0, 8) + "…"
+                : "—"
+            }
           />
-          {l2.workflow_metrics?.test_after_ratio !== undefined && (
-            <FactRow
-              label={t("profile.l2.test_after_ratio")}
-              tooltipAlign="right" descKey="profile.l2.test_after_ratio.desc"
-              value={l2.workflow_metrics.test_after_ratio.toFixed(2)}
-              accent
-            />
-          )}
-          {l2.workflow_metrics?.bash_to_read_ratio !== undefined && (
-            <FactRow
-              label={t("profile.l2.bash_to_read")}
-              tooltipAlign="right" descKey="profile.l2.bash_to_read.desc"
-              value={`${l2.workflow_metrics.bash_to_read_ratio.toFixed(2)}×`}
-            />
-          )}
-          {l2.workflow_metrics?.session_avg_duration_min !== undefined && (
-            <FactRow
-              label={t("profile.l2.avg_session_duration")}
-              tooltipAlign="right" descKey="profile.l2.avg_session_duration.desc"
-              value={t("common.duration_min", { min: Math.round(l2.workflow_metrics.session_avg_duration_min) })}
-            />
-          )}
-          {l2.workflow_metrics?.tool_variety_avg !== undefined && (
-            <FactRow
-              label={t("profile.l2.tool_variety")}
-              tooltipAlign="right" descKey="profile.l2.tool_variety.desc"
-              value={l2.workflow_metrics.tool_variety_avg.toFixed(1)}
-            />
-          )}
-
-          {l2.workflow_distribution && Object.keys(l2.workflow_distribution).length > 0 && (
-            <div className="space-y-3 pt-2">
-              <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l2.workflow_distribution")}</div>
-              <div className="flex flex-wrap gap-2">
-                <Chip>{formatWorkflowDistribution(l2.workflow_distribution)}</Chip>
-              </div>
-            </div>
-          )}
-
-          {topKeys(l2.ecosystems).length > 0 && (
-            <div className="space-y-3 pt-2">
-              <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l2.ecosystems_top")}</div>
-              <div className="flex flex-wrap gap-2">
-                {topKeys(l2.ecosystems).map((k) => <TechChip key={k} name={k} accented />)}
-              </div>
-            </div>
-          )}
-
-          {topKeys(l2.platforms).length > 0 && (
-            <div className="space-y-3 pt-2">
-              <div className="font-mono text-[10px] uppercase text-slate-500">{t("profile.l2.platforms_top")}</div>
-              <div className="flex flex-wrap gap-2">
-                {topKeys(l2.platforms).map((k) => <TechChip key={k} name={k} />)}
-              </div>
-            </div>
-          )}
+          <ChainRow
+            ok={attOk}
+            name="Identidade GitHub"
+            desc={
+              attOk
+                ? `Public key vinculada a @${github?.login} via OAuth. Plataforma assinou.`
+                : "Sem attestation OAuth — identidade não verificada."
+            }
+            detail={
+              attestation?.platform_key_id
+                ? `attested · ${attestation.platform_key_id}`
+                : undefined
+            }
+            detailValue={github?.login ? `@${github.login}` : undefined}
+          />
+          <ChainRow
+            ok={true}
+            name="Engine version"
+            desc="Build do engine que produziu este bundle."
+            detail="version"
+            detailValue={`v${bundle.payload.beheld_version}`}
+            last
+          />
         </div>
-      ) : (
-        <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center dark:border-slate-800">
-          <div className="mb-2 font-mono text-xs uppercase text-slate-500">{t("profile.l2.empty.badge")}</div>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {t("profile.l2.empty.hint")}
-          </p>
-        </div>
-      )}
-    </section>
-  );
-}
 
-/** Glyph rendered in the tooltip header — one per proof field. */
-function ProofFieldIcon({ field, size = 14 }: { field: string; size?: number }) {
-  const common = {
-    viewBox: "0 0 24 24",
-    width: size,
-    height: size,
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 2,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    "aria-hidden": true as const,
-  };
-  if (field === "SHA256") {
-    // Hash glyph (#)
-    return (
-      <svg {...common}>
-        <path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18" />
-      </svg>
-    );
-  }
-  if (field === "ED25519") {
-    // Signature / quill glyph
-    return (
-      <svg {...common}>
-        <path d="M12 19H6a2 2 0 0 1-2-2v-1l9-9 3 3" />
-        <path d="m15 10 3-3a2 2 0 1 1 3 3l-3 3" />
-        <path d="M2 22h20" />
-      </svg>
-    );
-  }
-  // PUB_KEY — key glyph
-  return (
-    <svg {...common}>
-      <circle cx="7.5" cy="15.5" r="3.5" />
-      <path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3" />
-    </svg>
-  );
-}
-
-/** Proof chip — hover (or focus) reveals a styled card with the field's
- *  long value and a short description. Click-to-copy was removed per spec;
- *  if the user wants to copy, they select the value inside the tooltip. */
-function ProofChip({
-  field,
-  value,
-  descKey,
-}: {
-  field: string;
-  value: string;
-  descKey: string;
-}) {
-  const t = useT();
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div
-      className="relative inline-flex"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
-      onBlur={() => setOpen(false)}
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-describedby={open ? `proof-tip-${field}` : undefined}
-        className="cursor-help font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 underline decoration-dotted underline-offset-4 transition-colors hover:text-slate-800 dark:hover:text-slate-200"
-      >
-        {field}
-      </button>
-      {open && (
         <div
-          id={`proof-tip-${field}`}
-          role="tooltip"
-          className="absolute bottom-full left-0 z-20 mb-2 w-[20rem] max-w-[90vw] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+          className="mt-5 p-5"
+          style={{
+            background: "var(--surface)",
+            borderLeft: "3px solid var(--accent)",
+            fontSize: 13,
+            color: "var(--muted)",
+            lineHeight: 1.75,
+          }}
         >
-          <div className="mb-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-            <ProofFieldIcon field={field} />
-            <span>{field}</span>
-          </div>
-          <p className="mb-2 break-all font-mono text-xs font-semibold leading-relaxed text-slate-900 dark:text-slate-100">
-            {value}
-          </p>
-          <p className="text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-            {t(descKey)}
-          </p>
+          <strong style={{ color: "var(--text)", fontWeight: 500 }}>Importante.</strong> Beheld
+          nunca afirma "esse dev é confiável" — apenas relata que estas camadas técnicas estão
+          válidas neste momento. A interpretação dos sinais fica com quem está contratando.
+          Beheld é testemunha. O juiz é quem precisa do trabalhador.
         </div>
-      )}
-    </div>
-  );
-}
+      </section>
 
-function ProofFooter({
-  bundle,
-  result,
-  verifying,
-}: {
-  bundle: Bundle;
-  result: VerifyResult | null;
-  verifying: boolean;
-}) {
-  const t = useT();
-  let status: string;
-  let bad = false;
-  if (verifying || !result) {
-    status = "SIG_MATCH: VERIFYING…";
-  } else if (!result.checks.hash.ok) {
-    status = "SIG_MATCH: HASH_FAIL";
-    bad = true;
-  } else if (!result.checks.signature.ok) {
-    status = "SIG_MATCH: FAIL";
-    bad = true;
-  } else {
-    status = "SIG_MATCH: OK";
-  }
-
-  const inner = bundle.payload as Bundle["payload"];
-
-  // Footer shares the card's surface palette — same hierarchy as the header
-  // and the L1 / L2 panels, just one tone darker to mark a section break.
-  return (
-    <footer className="rounded-b-2xl border-t border-slate-200 bg-slate-50/80 p-6 font-mono text-slate-900 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-100">
-      <div className="mb-4 flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.2em] text-slate-500">
-          {t("profile.proof.title", { version: (bundle as unknown as { version?: string }).version ?? "?" })}
-        </span>
-        <span className={`text-[10px] font-bold ${bad ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>{status}</span>
-      </div>
-
-      {/* SHA256 / ED25519 / PUB_KEY — hover (or focus) opens a tooltip
-          card with the value and a short description. */}
-      <div className="mb-4 flex flex-wrap items-center gap-x-8 gap-y-3">
-        <ProofChip
-          field="SHA256"
-          value={(bundle as unknown as { hash: string }).hash}
-          descKey="profile.proof.sha256.desc"
-        />
-        <ProofChip
-          field="ED25519"
-          value={(bundle as unknown as { signature: string }).signature}
-          descKey="profile.proof.ed25519.desc"
-        />
-        <ProofChip
-          field="PUB_KEY"
-          value={(bundle as unknown as { public_key: string }).public_key}
-          descKey="profile.proof.pubkey.desc"
-        />
-      </div>
-
-      {/* ISSUED — informational, value always visible. */}
-      <div className="flex gap-4 text-[11px] leading-relaxed">
-        <span className="w-16 shrink-0 text-slate-500">ISSUED</span>
-        <span className="break-all text-slate-700 dark:text-slate-300">
-          {formatIsoZ(inner.created_at)} · beheld {inner.beheld_version}
-        </span>
-      </div>
-    </footer>
-  );
-}
-
-// ── main component ───────────────────────────────────────────────────────────
-
-export function ProfileCard({ bundle, result, verifying, shortId, banner }: Props) {
-  const t = useT();
-  const inner = bundle.payload;
-  const { scores } = inner;
-  const { l1, l2 } = readSections(bundle);
-
-  // For local files (drag-drop) we don't have a short_id, so derive an opaque
-  // identifier from the bundle hash instead.
-  const opaqueId =
-    shortId ?? (bundle as unknown as { hash: string }).hash.replace(/^sha256:/, "").slice(0, 11);
-
-  return (
-    <>
-      {banner}
-      {/* Note: NO `overflow-hidden` here — tooltips need to escape the article
-          bounds. Inner children round their top / bottom corners explicitly
-          to preserve the original visual frame. */}
-      <article className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
-        {/* ── header ──────────────────────────────────────────────────────── */}
-        <header className="rounded-t-2xl border-b border-slate-200 bg-slate-50/80 p-8 dark:border-slate-800 dark:bg-slate-900/60">
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex items-center gap-6">
-              <Avatar short={opaqueId} />
-              <div>
-                <h1 className="mb-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{t("profile.title")}</h1>
-                <p className="font-mono text-sm text-slate-500 dark:text-slate-400">{t("profile.id_prefix")} {formatShortId(opaqueId)}</p>
-                <VerifyPill result={result} verifying={verifying} />
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-slate-500">{t("profile.overall_score")}</div>
-              <div className="font-mono text-6xl font-bold tabular-nums text-slate-900 dark:text-slate-100">{scores.overall}</div>
-            </div>
-          </div>
-        </header>
-
-        {/* ── stats grid ──────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 border-b border-slate-200 dark:border-slate-800 md:grid-cols-5">
-          <StatCell label={t("profile.stats.prompt")}   titleKey="profile.stats.prompt.title"   descKey="profile.stats.prompt.desc"   value={scores.prompt_quality} />
-          <StatCell label={t("profile.stats.test")}     titleKey="profile.stats.test.title"     descKey="profile.stats.test.desc"     value={scores.test_maturity} />
-          <StatCell label={t("profile.stats.breadth")}  titleKey="profile.stats.breadth.title"  descKey="profile.stats.breadth.desc"  value={scores.tech_breadth} />
-          <StatCell label={t("profile.stats.growth")}   titleKey="profile.stats.growth.title"   descKey="profile.stats.growth.desc"   value={scores.growth_rate} accent tooltipAlign="right" />
-          <StatCell label={t("profile.stats.sessions")} titleKey="profile.stats.sessions.title" descKey="profile.stats.sessions.desc" value={l2?.sessions_analyzed ?? 0} withBar={false} tooltipAlign="right" />
-        </div>
-
-        {/* ── trend (12-month deterministic projection from current snapshot) ─ */}
-        <TrendSection bundle={bundle} t={t} />
-
-
-        {/* ── L1 + L2 ─────────────────────────────────────────────────────── */}
-        <div className="grid gap-12 p-8 md:grid-cols-2">
-          <L1Panel l1={l1} />
-          <L2Panel l2={l2} />
-        </div>
-
-        {/* ── proof footer ────────────────────────────────────────────────── */}
-        <ProofFooter bundle={bundle} result={result} verifying={verifying} />
-      </article>
-    </>
-  );
-}
-
-// ── TrendSection ────────────────────────────────────────────────────────────
-//
-// Deterministic 12-month projection from a single signed snapshot.  Anchored
-// to the current scores (latest point matches exactly), seeded by the bundle
-// hash (same bundle ⇒ same chart).  The chain is referenced via previous_hash
-// but its content is not embedded in a bundle — so the line itself is a
-// projection, not a reconstruction.  The note below the chart makes that
-// explicit.
-
-function TrendKPI({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  tone?: "accent" | "destructive";
-}) {
-  return (
-    <div className="rounded border border-slate-200 bg-slate-50/60 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/40">
-      <div className="font-mono text-[9px] uppercase text-slate-500 dark:text-slate-500">
-        {label}
-      </div>
+      {/* ═══ ACTIONS ═════════════════════════════════════════════════════ */}
       <div
-        className={[
-          "font-mono text-sm font-bold tabular-nums",
-          tone === "accent"
-            ? "text-emerald-600 dark:text-emerald-400"
-            : tone === "destructive"
-              ? "text-red-600 dark:text-red-400"
-              : "text-slate-800 dark:text-slate-200",
-        ].join(" ")}
+        className="mt-10 flex flex-wrap items-center justify-center gap-8 pb-8 pt-12"
+        style={{ borderTop: "1px solid var(--rule)" }}
       >
-        {value}
+        <a
+          href={`/v/${profileId}`}
+          className="font-mono uppercase"
+          style={{
+            color: "var(--accent)",
+            fontSize: 11,
+            letterSpacing: "0.14em",
+            textDecoration: "none",
+          }}
+        >
+          Download .beheld bundle
+        </a>
+        <a
+          href={`/v/${profileId}`}
+          target="_blank"
+          rel="noreferrer"
+          className="font-mono uppercase"
+          style={{
+            color: "var(--muted)",
+            fontSize: 11,
+            letterSpacing: "0.14em",
+            textDecoration: "none",
+          }}
+        >
+          View raw JSON
+        </a>
+        <a
+          href="https://github.com/eduardovrocha/beheld#verify"
+          target="_blank"
+          rel="noreferrer"
+          className="font-mono uppercase"
+          style={{
+            color: "var(--muted)",
+            fontSize: 11,
+            letterSpacing: "0.14em",
+            textDecoration: "none",
+          }}
+        >
+          Verify offline (CLI)
+        </a>
+      </div>
+
+      {/* ═══ DOC FOOT ════════════════════════════════════════════════════ */}
+      <div
+        className="mt-8 flex flex-wrap items-center justify-between gap-6 pb-20 pt-12"
+        style={{ borderTop: "1px solid var(--rule)" }}
+      >
+        <LensLogo size={50} />
+        <div
+          className="text-right font-mono uppercase"
+          style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", lineHeight: 1.7 }}
+        >
+          <div>
+            profile id ·{" "}
+            <strong style={{ color: "var(--accent)", fontWeight: 500 }}>{profileId}</strong>
+          </div>
+          <div>
+            bundle hash ·{" "}
+            <span className="font-mono" style={{ color: "var(--muted-soft)" }}>
+              {bundle.hash.replace(/^sha256:/, "").slice(0, 16)}…
+            </span>
+          </div>
+          <div>
+            <span style={{ color: "var(--accent)", fontWeight: 500 }}>
+              forever free for developers
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Last verified timestamp (debug-ish but small) */}
+      <div
+        className="pb-8 text-center font-mono"
+        style={{ color: "var(--muted-soft)", fontSize: 9, letterSpacing: "0.08em" }}
+      >
+        bundle created at {formatIsoZ(bundle.payload.created_at)}
       </div>
     </div>
-  );
-}
-
-function TrendSection({ bundle, t }: { bundle: Bundle; t: TFunc }) {
-  const payload = bundle.payload;
-  const snapshots = buildHistory(
-    payload.scores,
-    payload.created_at,
-    bundle.hash,
-  );
-  const delta = netGrowth(snapshots);
-  const stdev = consistency(snapshots);
-  const peak = peakSnapshot(snapshots);
-  const consistKey = `profile.trend.kpi.consistency.${consistencyLabel(stdev)}`;
-
-  const legendLabels: Record<string, string> = {
-    "profile.trend.legend.overall": t("profile.trend.legend.overall"),
-    "profile.trend.legend.prompt": t("profile.trend.legend.prompt"),
-    "profile.trend.legend.test": t("profile.trend.legend.test"),
-    "profile.trend.legend.breadth": t("profile.trend.legend.breadth"),
-    "profile.trend.legend.growth": t("profile.trend.legend.growth"),
-  };
-
-  return (
-    <section className="border-b border-slate-200 p-8 dark:border-slate-800">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h3 className="mb-1 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
-            <span className="size-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
-            <span>
-              TREND:{" "}
-              <span className="text-slate-900 dark:text-slate-100">
-                {t("profile.trend.title")}
-              </span>
-            </span>
-          </h3>
-          <p
-            className="text-xs text-slate-500 dark:text-slate-400 [&_code]:font-mono"
-            dangerouslySetInnerHTML={{ __html: t("profile.trend.subtitle_html") }}
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <TrendKPI
-            label={t("profile.trend.kpi.netdelta")}
-            value={`${delta >= 0 ? "+" : ""}${delta}`}
-            tone={delta >= 0 ? "accent" : "destructive"}
-          />
-          <TrendKPI
-            label={t("profile.trend.kpi.peak")}
-            value={String(peak.overall)}
-          />
-          <TrendKPI
-            label={t("profile.trend.kpi.consistency")}
-            value={t(consistKey)}
-          />
-        </div>
-      </div>
-
-      <TrendChart snapshots={snapshots} legendLabels={legendLabels} />
-
-      <p
-        className="mt-3 text-[10px] leading-relaxed text-slate-400 dark:text-slate-500 [&_code]:font-mono"
-        dangerouslySetInnerHTML={{ __html: t("profile.trend.projection_note") }}
-      />
-    </section>
   );
 }

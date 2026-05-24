@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 
-import { IdentityTag } from "@/components/IdentityTag";
 import { ProfileCard } from "@/components/ProfileCard";
 import { useT } from "@/i18n/I18nProvider";
 import { verifyAttestation, type AttestationCheck } from "@/lib/attestationVerify";
@@ -108,15 +107,12 @@ export function VerifyLocal() {
           <div className="text-sm text-slate-600 dark:text-slate-400">
             {t("verify.local.file_label")} <code className="text-slate-800 dark:text-slate-200">{state.filename}</code>
           </div>
-          <IdentityTag
-            attestation={state.kind === "done" ? state.attestation : null}
-            loading={state.kind === "verifying"}
-          />
           <ProfileCard
             bundle={state.bundle}
             result={state.kind === "done" ? state.result : null}
             verifying={state.kind === "verifying"}
             shortId={null}
+            attestation={state.kind === "done" ? state.attestation : null}
           />
         </div>
       )}

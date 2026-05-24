@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { IdentityTag } from "@/components/IdentityTag";
 import { ProfileCard } from "@/components/ProfileCard";
 import { useT } from "@/i18n/I18nProvider";
 import { fetchBundle } from "@/lib/api";
@@ -65,10 +64,13 @@ export function VerifyPublic() {
   }
 
   return (
-    <div className="space-y-4">
-      <IdentityTag attestation={attestation} loading={verifying && attestation === null} />
-      <ProfileCard bundle={bundle} result={result} verifying={verifying} shortId={id} />
-    </div>
+    <ProfileCard
+      bundle={bundle}
+      result={result}
+      verifying={verifying}
+      shortId={id}
+      attestation={attestation}
+    />
   );
 }
 
