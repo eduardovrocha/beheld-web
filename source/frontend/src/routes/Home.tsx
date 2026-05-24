@@ -446,7 +446,7 @@ function ChainRow({
 
 export function Home() {
   return (
-    <div className="mx-auto" style={{ maxWidth: 860, padding: "0 32px" }}>
+    <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
       {/* ═══ DOC HEAD ═══════════════════════════════════════════════════ */}
       <div
         className="mb-12 pb-14 pt-16"
