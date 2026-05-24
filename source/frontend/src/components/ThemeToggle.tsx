@@ -1,11 +1,10 @@
 /**
  * Theme toggle — cycles auto → light → dark → auto, persisting the user's
- * choice in localStorage["dp-theme"].  Mirrors the Rails portal toggle so
- * the two views share the same UX.
+ * choice in localStorage["dp-theme"]. Display matches the mock: a minimal
+ * text-only button reading "— dark" / "+ light" / "· auto".
  *
  * Pre-paint bootstrap lives in `index.html` and applies the `dark` class
- * before React mounts, so no FOUC.  This component handles user-driven
- * changes and live OS updates after mount.
+ * before React mounts, so no FOUC.
  */
 import { useEffect, useState } from "react";
 
@@ -22,35 +21,31 @@ function readSaved(): Mode {
 }
 
 function prefersDark(): boolean {
-  return typeof window !== "undefined"
-    && !!window.matchMedia
-    && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return (
+    typeof window !== "undefined" &&
+    !!window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  );
 }
 
 function applyMode(mode: Mode): void {
   const root = document.documentElement;
   const wantsDark = mode === "dark" || (mode === "auto" && prefersDark());
   root.classList.toggle("dark", wantsDark);
-  if (mode === "auto") {
-    root.removeAttribute("data-theme");
-  } else {
-    root.setAttribute("data-theme", mode);
-  }
+  if (mode === "auto") root.removeAttribute("data-theme");
+  else root.setAttribute("data-theme", mode);
 }
 
 export function ThemeToggle() {
   const t = useT();
   const [mode, setMode] = useState<Mode>(readSaved);
-
-  // Keep the icon (which depends on system pref in auto mode) live-updating
-  // when the user flips the OS theme.
   const [systemDark, setSystemDark] = useState<boolean>(prefersDark);
+
   useEffect(() => {
     if (!window.matchMedia) return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
       setSystemDark(mq.matches);
-      // re-resolve in case we're in auto mode
       applyMode(readSaved());
     };
     mq.addEventListener?.("change", onChange);
@@ -67,10 +62,9 @@ export function ThemeToggle() {
     applyMode(next);
   }
 
-  // Icon reflects the effectively-rendered theme.
   const effectiveDark = mode === "dark" || (mode === "auto" && systemDark);
-  const icon = effectiveDark ? "☾" : "☀︎";
-  const label = t(`theme.${mode}`);
+  const prefix = mode === "auto" ? "·" : effectiveDark ? "—" : "+";
+  const label = mode === "auto" ? t("theme.auto") : effectiveDark ? "dark" : "light";
 
   return (
     <button
@@ -78,10 +72,22 @@ export function ThemeToggle() {
       onClick={cycle}
       aria-label={t("theme.aria")}
       title={t("theme.aria")}
-      className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2.5 py-1 font-mono text-[11px] text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-200"
+      style={{
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+        fontSize: 10,
+        letterSpacing: "0.18em",
+        textTransform: "uppercase",
+        color: "var(--muted)",
+        padding: 0,
+        transition: "color 150ms ease",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+      onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}
     >
-      <span aria-hidden="true">{icon}</span>
-      <span>{label}</span>
+      {prefix} {label}
     </button>
   );
 }
