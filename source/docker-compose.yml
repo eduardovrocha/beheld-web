@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: beheld
+      POSTGRES_PASSWORD: beheld
+      POSTGRES_DB: beheld_development
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beheld -d beheld_development"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgres://beheld:beheld@postgres:5432/beheld_development
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/rails
+      - bundle_cache:/usr/local/bundle
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: bin/rails server -b 0.0.0.0 -p 3000
+
+  sidekiq:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgres://beheld:beheld@postgres:5432/beheld_development
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ./backend:/rails
+      - bundle_cache:/usr/local/bundle
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: bundle exec sidekiq
+
+volumes:
+  postgres_data:
+  redis_data:
+  bundle_cache:

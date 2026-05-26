@@ -40,5 +40,14 @@ module Backend
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Re-enable cookies + flash + sessions for the server-rendered surfaces
+    # (Dashboard and the public /v/:slug page). Pure API endpoints are
+    # unaffected — they don't read or write the session.
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore,
+                          key: "_beheld_session_store",
+                          same_site: :lax
+    config.middleware.use ActionDispatch::Flash
   end
 end

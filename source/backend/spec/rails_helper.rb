@@ -1,6 +1,9 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'spec_helper'
-ENV['RAILS_ENV'] ||= 'test'
+# Force test env even when the container's default is development — the
+# `||=` form silently keeps RAILS_ENV=development and routes specs against
+# the dev DB and dev `config.hosts`, which blocks Rack::Test's www.example.com.
+ENV['RAILS_ENV'] = 'test'
 require_relative '../config/environment'
 # Prevent database truncation if the environment is production
 abort("The Rails environment is running in production mode!") if Rails.env.production?
@@ -38,7 +41,17 @@ begin
 rescue ActiveRecord::PendingMigrationError => e
   abort e.to_s.strip
 end
+require "factory_bot_rails"
+require "faker"
+
 RSpec.configure do |config|
+  # FactoryBot shorthand — write `create(:account)` instead of
+  # `FactoryBot.create(:account)`.
+  config.include FactoryBot::Syntax::Methods
+
+  # `travel_to`, `travel_back`, `freeze_time` in specs.
+  config.include ActiveSupport::Testing::TimeHelpers
+
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
   config.fixture_paths = [
     Rails.root.join('spec/fixtures')
