@@ -1,0 +1,151 @@
+<% portal = ENV.fetch("PORTAL_PUBLIC_URL", "https://beheld.dev").sub(%r{/+\z}, "") %>
+
+<% unless @contact_configured %>
+  <div class="warning" role="alert">
+    Configure email e telefone de contato para habilitar
+    <strong>Responder</strong>.
+    <a href="#configuracoes">Ir para Configurações ↓</a>
+  </div>
+<% end %>
+
+<%# ───────── Bundles publicados ───────── %>
+<section class="card" id="bundles">
+  <h2>Bundles publicados</h2>
+
+  <% if @bundles.empty? %>
+    <p class="empty">Você ainda não publicou nenhum bundle. Execute <code>beheld share</code> no CLI.</p>
+  <% else %>
+    <% @bundles.each do |bundle| %>
+      <% status = bundle.status %>
+      <% verifications_count = bundle.verifications.count %>
+      <div class="row">
+        <div class="info">
+          <div class="title">
+            <%= bundle.published_at.strftime("%d/%m/%Y") %>
+            <% if status == :verified %><span class="badge verified">verificado</span>
+            <% elsif status == :outdated %><span class="badge outdated">desatualizado</span>
+            <% elsif status == :revoked  %><span class="badge revoked">revogado</span>
+            <% end %>
+          </div>
+          <div class="sub">
+            <a class="url" href="<%= portal %>/v/<%= bundle.url_slug %>">
+              beheld.dev/v/<%= bundle.url_slug %>
+            </a>
+            · <%= verifications_count %> <%= verifications_count == 1 ? "verificação" : "verificações" %>
+            · <%= bundle.visible ? "público" : "oculto" %>
+          </div>
+        </div>
+        <div class="actions">
+          <%= form_with url: toggle_dashboard_bundle_path(bundle.id), method: :patch, class: "inline", local: true do %>
+            <button type="submit"><%= bundle.visible ? "Ocultar" : "Mostrar" %></button>
+          <% end %>
+          <%= form_with url: dashboard_bundle_path(bundle.id), method: :delete, class: "inline", local: true,
+                        data: { turbo_confirm: "Tem certeza? Esta ação é permanente." } do %>
+            <button type="submit" class="danger">Revogar</button>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</section>
+
+<%# ───────── Notificações (verificações) ───────── %>
+<section class="card" id="notificacoes">
+  <h2>Notificações</h2>
+  <% if @notifications.empty? %>
+    <p class="empty">Nenhuma verificação registrada ainda.</p>
+  <% else %>
+    <% @notifications.each do |v| %>
+      <div class="row">
+        <div class="info">
+          <div class="title">
+            <%= v.company&.name %>
+            <span class="sub">
+              <%= v.verified_at.strftime("%d/%m/%Y · %H:%M") %>
+            </span>
+          </div>
+          <% if v.job_title.present? || v.area.present? %>
+            <div class="sub"><%= [v.job_title, v.area].compact_blank.join(" · ") %></div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</section>
+
+<%# ───────── Mensagens ───────── %>
+<section class="card" id="mensagens">
+  <h2>Mensagens</h2>
+  <% if @messages.empty? %>
+    <p class="empty">Nenhuma mensagem recebida ainda.</p>
+  <% else %>
+    <% @messages.each do |m| %>
+      <div class="row">
+        <div class="info">
+          <div class="title">
+            <%= m.company.name %>
+            <span class="sub"><%= m.sent_at.strftime("%d/%m/%Y · %H:%M") %></span>
+          </div>
+          <% if m.job_title.present? %>
+            <div class="sub"><%= m.job_title %></div>
+          <% end %>
+          <div class="body-preview"><%= truncate(m.body.to_s, length: 120) %></div>
+        </div>
+        <div class="actions">
+          <% if m.pending? %>
+            <%= form_with url: respond_dashboard_message_path(m.id), method: :post, class: "inline", local: true do %>
+              <button type="submit" class="primary" <%= "disabled" unless @contact_configured %>>Responder</button>
+            <% end %>
+            <%= form_with url: ignore_dashboard_message_path(m.id), method: :post, class: "inline", local: true do %>
+              <button type="submit">Ignorar</button>
+            <% end %>
+          <% elsif m.responded? %>
+            <span class="sub">Respondido em <%= m.responded_at.strftime("%d/%m/%Y") %></span>
+          <% elsif m.ignored? %>
+            <span class="sub">Ignorado</span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</section>
+
+<%# ───────── Configurações ───────── %>
+<section class="card" id="configuracoes">
+  <h2>Configurações</h2>
+  <%= form_with url: url_for(controller: "dashboard", action: "settings"), method: :patch, class: "settings", local: true do %>
+    <label>
+      Email de recuperação
+      <input type="email" name="email_recovery" value="<%= current_account.email_recovery %>" autocomplete="email">
+    </label>
+    <label>
+      Email de contato <span class="sub">(obrigatório para habilitar Responder)</span>
+      <input type="email" name="email_contact" value="<%= current_account.email_contact %>" autocomplete="email">
+    </label>
+    <label>
+      Telefone de contato <span class="sub">(obrigatório para habilitar Responder)</span>
+      <input type="tel" name="phone_contact" value="<%= current_account.phone_contact %>" autocomplete="tel">
+    </label>
+    <label class="checkbox">
+      <input type="hidden" name="directory" value="false">
+      <input type="checkbox" name="directory" value="true" <%= "checked" if current_account.directory %>>
+      Aparecer no diretório público
+    </label>
+    <label class="checkbox">
+      <input type="hidden" name="watch" value="false">
+      <input type="checkbox" name="watch" value="true" <%= "checked" if current_account.watch %>>
+      Receber notificações de visualizações (watch)
+    </label>
+    <label>
+      Email de notificação <span class="sub">(opcional)</span>
+      <input type="email" name="notification_email" value="<%= current_account.notification_email %>">
+    </label>
+    <label>
+      Webhook URL <span class="sub">(opcional)</span>
+      <input type="url" name="notification_webhook" value="<%= current_account.notification_webhook %>">
+    </label>
+    <div>
+      <button type="submit" class="primary">Salvar</button>
+    </div>
+  <% end %>
+</section>
