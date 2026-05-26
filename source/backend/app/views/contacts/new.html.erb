@@ -1,0 +1,23 @@
+<section class="card">
+  <h2>Entrar em contato</h2>
+  <p class="empty">Você está enviando para <strong><%= @account.display_handle %></strong>.</p>
+
+  <%= form_with url: account_contact_path(@account.id), method: :post, class: "settings", local: true do %>
+    <label>
+      Cargo da vaga <span class="empty">(opcional)</span>
+      <input type="text" name="job_title" autocomplete="off">
+    </label>
+    <label>
+      Mensagem
+      <textarea name="body" rows="5" required></textarea>
+    </label>
+    <div>
+      <button type="submit" class="primary">Enviar</button>
+    </div>
+  <% end %>
+
+  <p class="empty" style="margin-top: 16px; font-size: 12px;">
+    Sua mensagem aparecerá no dashboard do dev. Se ele aceitar, beheld
+    encaminha o email e telefone dele direto para o seu email cadastrado.
+  </p>
+</section>
