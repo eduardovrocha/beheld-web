@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 
-import { useT } from "@/i18n/I18nProvider";
-
 import { Constellation } from "./Constellation";
 import { LocaleToggle } from "./LocaleToggle";
 import { ThemeToggle } from "./ThemeToggle";
@@ -13,7 +11,6 @@ import { ThemeToggle } from "./ThemeToggle";
  *   - Main content owns its own column width / padding
  */
 export function Layout({ children }: { children: ReactNode }) {
-  const t = useT();
   return (
     <div className="relative min-h-screen" style={{ zIndex: 1 }}>
       {/* Ambient constellation — portaled to document.body, fixed behind. */}
@@ -44,19 +41,13 @@ export function Layout({ children }: { children: ReactNode }) {
         <ThemeToggle />
       </div>
 
-      <main>{children}</main>
-
-      <footer
-        className="mt-16 py-8 text-center font-mono uppercase"
-        style={{
-          color: "var(--muted)",
-          fontSize: 10,
-          letterSpacing: "0.14em",
-          borderTop: "1px solid var(--rule)",
-        }}
-      >
-        {t("footer.tagline")}
-      </footer>
+      {/* Global column constraint — all views (Home, Dashboard, /v/:slug,
+          /verify) live within the same 1032px max width. Individual routes
+          may still add their own inner wrapper for padding/typography
+          rhythm; nesting same-width wrappers is a no-op visually. */}
+      <main className="mx-auto" style={{ maxWidth: 1032 }}>
+        {children}
+      </main>
     </div>
   );
 }

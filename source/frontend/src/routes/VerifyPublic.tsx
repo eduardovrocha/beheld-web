@@ -1,19 +1,30 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { ProfileCard } from "@/components/ProfileCard";
+import { SaveDevButton } from "@/components/company/SaveDevButton";
 import { useT } from "@/i18n/I18nProvider";
-import { fetchBundle } from "@/lib/api";
+import { fetchBundleWithAccount } from "@/lib/api";
 import { verifyAttestation, type AttestationCheck } from "@/lib/attestationVerify";
 import { fetchPlatformKeys } from "@/lib/platformKeys";
 import type { Bundle } from "@/lib/types";
 import { verifyBundle, type VerifyResult } from "@/lib/verify";
+
+// Same renderer the CLI uses for `beheld snapshot --html`. The /v/:slug
+// page on beheld.dev mirrors that local file 1-pra-1 by injecting the
+// CLI's HTML output into an iframe (preserves <head>, embedded <style>,
+// and the inline verification <script> that the design depends on).
+//
+// Module mirrored under `src/lib/cli-shared/` because the frontend
+// container can't reach `packages/cli/` over the bind mount. Keep in sync
+// with packages/cli/src/ui/snapshot-html.ts.
+import { renderSnapshotHtml, type SnapshotHtmlData } from "@/lib/cli-shared/snapshot-html";
 
 export function VerifyPublic() {
   const t = useT();
   const { id } = useParams<{ id: string }>();
 
   const [bundle, setBundle] = useState<Bundle | null>(null);
+  const [accountId, setAccountId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [attestation, setAttestation] = useState<AttestationCheck | null>(null);
@@ -23,6 +34,7 @@ export function VerifyPublic() {
     if (!id) return;
     let cancelled = false;
     setBundle(null);
+    setAccountId(null);
     setError(null);
     setResult(null);
     setAttestation(null);
@@ -30,9 +42,10 @@ export function VerifyPublic() {
 
     (async () => {
       try {
-        const b = await fetchBundle(id);
+        const { bundle: b, accountId: aid } = await fetchBundleWithAccount(id);
         if (cancelled) return;
         setBundle(b);
+        setAccountId(aid);
         const [r, keys] = await Promise.all([verifyBundle(b), fetchPlatformKeys()]);
         if (cancelled) return;
         setResult(r);
@@ -63,15 +76,211 @@ export function VerifyPublic() {
     );
   }
 
+  // Suppress lint warnings — these are computed by the verify hooks so the
+  // SPA can also expose them once we wire on-page interactions; the CLI's
+  // HTML already runs its own client-side verification.
+  void result; void verifying; void attestation;
+
   return (
-    <ProfileCard
-      bundle={bundle}
-      result={result}
-      verifying={verifying}
-      shortId={id}
-      attestation={attestation}
-    />
+    <>
+      <FloatingBack />
+      {accountId !== null && <FloatingSaveDev accountId={accountId} />}
+      <SnapshotIframe bundle={bundle} />
+    </>
   );
+}
+
+// Save-dev chip floating at the top-right, alongside the locale/theme
+// toggle box rendered by Layout.tsx. Only shown when we know the portal
+// account id (X-Beheld-Account-Id header); falls back to nothing if the
+// recruiter isn't logged in (the SaveDevButton itself handles 401).
+function FloatingSaveDev({ accountId }: { accountId: number }) {
+  return (
+    <div className="fixed z-50 flex items-center"
+         style={{
+           // Right edge of the Layout's locale/theme box is at right:20.
+           // Stack the save chip a touch above the language strip so they
+           // don't visually collide.
+           top: 64, right: 20,
+           background: "var(--bg)",
+           border: "1px solid var(--rule)",
+           padding: "7px 14px",
+         }}>
+      <SaveDevButton accountId={accountId} size="sm" />
+    </div>
+  );
+}
+
+// Floating "voltar" control. Mirrors the chrome of the locale + theme
+// toggles in `Layout.tsx` (fixed at top, var(--bg) card with hairline,
+// mono uppercase label), but pinned to the LEFT edge so it reads as
+// navigation rather than view settings. Used by /v/:slug only.
+function FloatingBack() {
+  const navigate = useNavigate();
+  // Lands at /company/dashboard — the recruiter's "home" record of their
+  // activity. If the visitor isn't authenticated, the dashboard route
+  // handles the redirect to /sessions/company/new on its own.
+  function goBack() {
+    navigate("/company/dashboard");
+  }
+  return (
+    <div className="fixed z-50 flex items-center"
+         style={{
+           top: 20, left: 20,
+           background: "var(--bg)",
+           border: "1px solid var(--rule)",
+           padding: "7px 14px",
+         }}>
+      <button
+        type="button"
+        onClick={goBack}
+        aria-label="voltar"
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+          fontSize: 10, letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          color: "var(--muted)",
+          padding: 0,
+          transition: "color 150ms ease",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
+        ← voltar
+      </button>
+    </div>
+  );
+}
+
+// Render the CLI's full HTML document inside an iframe. `srcDoc` keeps the
+// document's <head>/<style>/<script> isolated from React's tree and lets
+// Google Fonts + the inline verify script work exactly as in the local file.
+//
+// Theme sync: the SPA's ThemeToggle flips `html.dark` (and may set
+// `data-theme="light|dark"`) on the parent document. We mirror that state
+// onto the iframe's own <html> element via `data-theme`, which the CSS
+// inside snapshot-html.ts listens for. A MutationObserver keeps the iframe
+// in sync across toggle clicks without reloading the document.
+function SnapshotIframe({ bundle }: { bundle: Bundle }) {
+  const html = useMemo(() => buildSnapshotHtml(bundle), [bundle]);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [innerHeight, setInnerHeight] = useState<number>(0);
+
+  useEffect(() => {
+    function effectiveTheme(): "light" | "dark" {
+      return document.documentElement.classList.contains("dark") ? "dark" : "light";
+    }
+    function applyTheme() {
+      const innerHtml = iframeRef.current?.contentDocument?.documentElement;
+      if (!innerHtml) return;
+      innerHtml.setAttribute("data-theme", effectiveTheme());
+    }
+    function measure() {
+      const body = iframeRef.current?.contentDocument?.body;
+      if (!body) return;
+      // scrollHeight on the body gives the full rendered content height,
+      // including margins. Add a tiny buffer so reflows on hover/focus
+      // don't introduce a scrollbar.
+      setInnerHeight(Math.max(body.scrollHeight, 0) + 4);
+    }
+
+    const iframe = iframeRef.current;
+    function onLoad() {
+      applyTheme();
+      measure();
+      // After the embedded fonts paint, layout shifts — re-measure once
+      // the fonts are ready (Inter + Newsreader).
+      iframe?.contentDocument?.fonts?.ready.then(measure).catch(() => {});
+    }
+    iframe?.addEventListener("load", onLoad);
+    applyTheme();
+    measure();
+
+    // Reflect every parent theme change (auto → light, click toggle, etc.).
+    const themeObserver = new MutationObserver(applyTheme);
+    themeObserver.observe(document.documentElement, {
+      attributes:      true,
+      attributeFilter: ["class", "data-theme"],
+    });
+
+    // Resize the iframe whenever its content changes (verify toggle opens
+    // a panel, theme flip re-renders the chip, etc.). ResizeObserver on
+    // the inner <body> is the most reliable signal for srcDoc iframes.
+    let resizeObserver: ResizeObserver | null = null;
+    function attachResizeObserver() {
+      const body = iframe?.contentDocument?.body;
+      if (!body) return;
+      resizeObserver?.disconnect();
+      resizeObserver = new ResizeObserver(measure);
+      resizeObserver.observe(body);
+    }
+    iframe?.addEventListener("load", attachResizeObserver);
+    attachResizeObserver();
+
+    // Window resize affects wrap → also re-measure.
+    window.addEventListener("resize", measure);
+
+    return () => {
+      iframe?.removeEventListener("load", onLoad);
+      iframe?.removeEventListener("load", attachResizeObserver);
+      themeObserver.disconnect();
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [html]);
+
+  // Constrain to the same column width Home/Dashboard use (max ~960px,
+  // centered). The retrato's own `.page { max-width: 640px }` stays
+  // centered inside this column — recruiters get the same visual rhythm
+  // they see on landing/dashboard regardless of viewport width.
+  return (
+    <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
+      <iframe
+        ref={iframeRef}
+        title="beheld profile"
+        srcDoc={html}
+        sandbox="allow-scripts allow-popups allow-same-origin"
+        style={{
+          width:     "100%",
+          // Height fits the rendered content (measured via ResizeObserver
+          // on the iframe's body). Fall back to 100vh on first paint so
+          // there's no zero-height flash before we measure.
+          height:    innerHeight > 0 ? `${innerHeight}px` : "100vh",
+          border:    0,
+          display:   "block",
+          // Backdrop matches the parent so the iframe edges don't flash
+          // white when the theme flips before the iframe re-paints.
+          background: "var(--bg)",
+        }}
+        scrolling="no"
+      />
+    </div>
+  );
+}
+
+function buildSnapshotHtml(bundle: Bundle): string {
+  // Pull the engine-produced sub-payloads the renderer needs. v5 bundles
+  // embed signals/identity/emergent; older bundles fall back to safe defaults.
+  const p = bundle.payload as unknown as {
+    signals?: SnapshotHtmlData["signals"] | null;
+    identity?: SnapshotHtmlData["identity"] | null;
+    emergent?: SnapshotHtmlData["emergent"] | null;
+  };
+  const signals: SnapshotHtmlData["signals"] = p.signals ?? {};
+  const identity: SnapshotHtmlData["identity"] = p.identity ?? {
+    identity_long:  "Perfil em construção.",
+    identity_short: "Perfil em construção.",
+    confidence:      "low",
+    generation_path: "fallback",
+    model_used:      null,
+  };
+  const emergent: SnapshotHtmlData["emergent"] = p.emergent ?? null;
+  // Match the CLI convention: `@<github_login>` when the bundle has an
+  // attestation; otherwise let the renderer fall back to its own default.
+  const login = bundle.attestation?.payload?.github?.login;
+  const authorName = login ? `@${login}` : undefined;
+
+  return renderSnapshotHtml({ bundle, signals, identity, emergent, authorName });
 }
 
 function ErrorBox({ title, message }: { title: string; message: string }) {
