@@ -48,7 +48,7 @@ module Api
         email = params[:email].to_s.strip.downcase
         return render(json: { ok: false, reason: "missing_email" }, status: :bad_request) if email.empty?
 
-        company = Company.find_by("LOWER(email) = ?", email)
+        company = ::Company.find_by("LOWER(email) = ?", email)
         return render(json: { ok: false, reason: "not_registered" }, status: :not_found) if company.nil?
 
         MagicLink.create!(

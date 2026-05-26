@@ -12,7 +12,7 @@ module Api
       # Override the concern's HTML redirect.
       def authenticate_company!
         company_id = cookies.signed[CompanyAuthenticated::COOKIE_NAME]
-        @current_company = Company.find_by(id: company_id) if company_id.present?
+        @current_company = ::Company.find_by(id: company_id) if company_id.present?
         return if @current_company
 
         cookies.delete(CompanyAuthenticated::COOKIE_NAME) if company_id.present?

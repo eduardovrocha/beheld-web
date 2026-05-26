@@ -11,7 +11,7 @@ module Api
       MAGIC_LINK_TTL = 30.minutes
 
       def create
-        company = Company.new(company_params)
+        company = ::Company.new(company_params)
 
         if company.save
           issue_magic_link(company)
