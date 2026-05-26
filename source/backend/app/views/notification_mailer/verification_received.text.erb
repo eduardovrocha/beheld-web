@@ -1,0 +1,5 @@
+<%= @company.name %>
+<% if @verification.job_title.present? || @verification.area.present? %>
+<%= [@verification.job_title, @verification.area].compact_blank.join(" · ") %>
+<% end %>
+<%= @verification.verified_at.strftime("%d/%m/%Y às %H:%M") %>
