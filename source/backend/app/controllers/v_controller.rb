@@ -27,19 +27,19 @@ class VController < ActionController::Base
   layout "profile", only: [:show_html]
 
   def show
-    @bundle = bundle_for_id
+    @snapshot = snapshot_for_id
     respond_to do |format|
       format.html { render :show, layout: "profile" }
-      format.json { render json: @bundle.payload }
+      format.json { render json: @snapshot.payload }
     end
   end
 
   def summary
-    render json: bundle_for_id.public_view
+    render json: snapshot_for_id.public_view
   end
 
   def badge
-    b = bundle_for_id
+    b = snapshot_for_id
     score = b.payload.dig("payload", "scores", "overall").to_i
     style = (params[:style].presence || "flat").to_s
     label = params[:label].presence&.to_s || "beheld"
@@ -50,13 +50,13 @@ class VController < ActionController::Base
 
   private
 
-  # Public lookup intentionally returns expired bundles too — the view shows a
-  # warning banner and the content stays visible "para referência histórica"
+  # Public lookup intentionally returns expired snapshots too — the view shows
+  # a warning banner and the content stays visible "para referência histórica"
   # (Phase 6 / Obj 2). 404 is reserved for non-existent short_ids.
-  def bundle_for_id
-    Bundle.find_by!(short_id: params[:id])
+  def snapshot_for_id
+    Snapshot.find_by!(short_id: params[:id])
   rescue ActiveRecord::RecordNotFound
-    raise ActionController::RoutingError, "bundle not found"
+    raise ActionController::RoutingError, "snapshot not found"
   end
 
   # ── badge SVG ──────────────────────────────────────────────────────────────

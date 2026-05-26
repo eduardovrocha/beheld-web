@@ -96,7 +96,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
       expect(response).to have_http_status(:created)
       body = JSON.parse(response.body)
       expect(body["schema_version"]).to eq("v1")
-      expect(Bundle.find_by(short_id: body["id"]).schema_version).to eq("v1")
+      expect(Snapshot.find_by(short_id: body["id"]).schema_version).to eq("v1")
     end
 
     it "aceita bundle v2 válido e grava schema_version='v2'" do
@@ -106,7 +106,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
       expect(response).to have_http_status(:created)
       body = JSON.parse(response.body)
       expect(body["schema_version"]).to eq("v2")
-      expect(Bundle.find_by(short_id: body["id"]).schema_version).to eq("v2")
+      expect(Snapshot.find_by(short_id: body["id"]).schema_version).to eq("v2")
     end
 
     it "rejeita bundle com payload sem signals nem l1+l2" do
@@ -153,7 +153,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
 
   describe "GET /v/:id" do
     it "devolve payload v1 contendo signals (JSON via Accept header)" do
-      b = Bundle.create!(
+      b = Snapshot.create!(
         bundle_hash: "sha256:" + ("6" * 64),
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(v1_inner, hash_seed: "6"),
@@ -166,7 +166,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
     end
 
     it "devolve payload v2 contendo l1 e l2 separados (JSON via Accept header)" do
-      b = Bundle.create!(
+      b = Snapshot.create!(
         bundle_hash: "sha256:" + ("7" * 64),
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(v2_inner, hash_seed: "7"),
@@ -180,7 +180,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
     end
 
     it "renderiza HTML por padrão (Phase 6 / Obj 2 — SSR sem JS obrigatório)" do
-      b = Bundle.create!(
+      b = Snapshot.create!(
         bundle_hash: "sha256:" + ("0123456789abcdef" * 4),
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(v2_inner, hash_seed: "f"),
@@ -192,7 +192,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
     end
 
     it "rotula schema_version no /v/:id/summary para v1" do
-      b = Bundle.create!(
+      b = Snapshot.create!(
         bundle_hash: "sha256:" + ("8" * 64),
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(v1_inner, hash_seed: "8"),
@@ -203,7 +203,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
     end
 
     it "rotula schema_version no /v/:id/summary para v2" do
-      b = Bundle.create!(
+      b = Snapshot.create!(
         bundle_hash: "sha256:" + ("9" * 64),
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(v2_inner, hash_seed: "9"),
@@ -217,7 +217,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
     end
 
     it "preserva total_repos=0 para bootstrap não realizado (l1 vazio)" do
-      b = Bundle.create!(
+      b = Snapshot.create!(
         bundle_hash: "sha256:" + ("a" * 64),
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(l1_empty_inner, hash_seed: "a"),
@@ -235,7 +235,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
     def bundle_with_score(overall, hash_seed)
       inner = v2_inner.deep_dup
       inner["scores"]["overall"] = overall
-      Bundle.create!(
+      Snapshot.create!(
         bundle_hash: "sha256:" + (hash_seed * 64)[0, 64],
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(inner, hash_seed: hash_seed),
@@ -276,7 +276,7 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
     end
 
     it "funciona com bundle v1 (retrocompat — overall vive em scores nos dois schemas)" do
-      b = Bundle.create!(
+      b = Snapshot.create!(
         bundle_hash: "sha256:" + ("1" * 64),
         public_key: "ed25519:" + "k" * 43,
         payload: wrap(v1_inner, hash_seed: "1"),

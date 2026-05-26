@@ -10,17 +10,17 @@
 #        unrecognized schema)
 #
 # The controller accepts both v1 (signals) and v2 (l1+l2) inner payloads.
-# Identification is delegated to `Bundle.schema_version`; the persisted
+# Identification is delegated to `Snapshot.schema_version`; the persisted
 # `schema_version` column lets renderers pick the right layout.
 
-class BundlesController < ApplicationController
+class SnapshotsController < ApplicationController
   REQUIRED_TOP_LEVEL_FIELDS = %w[version payload hash signature public_key].freeze
 
   def create
     raw = request.raw_post
-    bundle_json = JSON.parse(raw)
+    snapshot_json = JSON.parse(raw)
 
-    missing = REQUIRED_TOP_LEVEL_FIELDS - bundle_json.keys
+    missing = REQUIRED_TOP_LEVEL_FIELDS - snapshot_json.keys
     if missing.any?
       return render(
         json: { error: "missing required fields", missing: missing },
@@ -28,27 +28,27 @@ class BundlesController < ApplicationController
       )
     end
 
-    inner_payload = bundle_json["payload"]
-    unless Bundle.valid_payload?(inner_payload)
+    inner_payload = snapshot_json["payload"]
+    unless Snapshot.valid_payload?(inner_payload)
       return render(
         json: {
           error: "invalid payload",
           detail: "payload must contain scores + (l1 & l2) or (signals)",
-          schema_version: Bundle.schema_version(inner_payload).to_s,
+          schema_version: Snapshot.schema_version(inner_payload).to_s,
         },
         status: :unprocessable_entity,
       )
     end
 
-    existing = Bundle.find_by(bundle_hash: bundle_json["hash"])
+    existing = Snapshot.find_by(bundle_hash: snapshot_json["hash"])
     if existing
       return render_bundle_response(existing, status: :ok, deduplicated: true)
     end
 
-    bundle = Bundle.new(
-      bundle_hash: bundle_json["hash"],
-      public_key:  bundle_json["public_key"],
-      payload:     bundle_json,
+    bundle = Snapshot.new(
+      bundle_hash: snapshot_json["hash"],
+      public_key:  snapshot_json["public_key"],
+      payload:     snapshot_json,
     )
 
     if bundle.save

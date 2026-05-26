@@ -30,7 +30,7 @@ RSpec.describe "GET /v/:id/badge.svg", type: :request do
         "sessions_analyzed" => 1, "period_days" => 30,
       },
     }
-    Bundle.create!(
+    Snapshot.create!(
       bundle_hash: "sha256:" + (hash_seed * 64)[0, 64],
       public_key: "ed25519:" + ("k" * 43),
       payload: {
@@ -75,7 +75,7 @@ RSpec.describe "GET /v/:id/badge.svg", type: :request do
     get "/v/#{b.short_id}/badge.svg?style=for-the-badge"
     expect(response).to have_http_status(:ok)
     # for-the-badge uses uppercased label and bold weight.
-    expect(response.body).to include("DEVPROFILE")
+    expect(response.body).to include("BEHELD")
     expect(response.body).to include('font-weight="bold"')
   end
 

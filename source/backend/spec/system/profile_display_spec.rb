@@ -112,7 +112,7 @@ RSpec.describe "Public profile page (/v/:id)", type: :system do
   end
 
   def create_bundle(inner, hash_seed: "a", expires_at: nil)
-    Bundle.create!(
+    Snapshot.create!(
       bundle_hash: "sha256:" + hex_seed(hash_seed),
       public_key: "ed25519:" + ("x" * 43),
       payload: wrap(inner, hash_seed: hash_seed),

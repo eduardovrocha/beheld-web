@@ -9,17 +9,17 @@
   Privacy: NEVER renders root_commit_hashes as a list, repo names, paths,
   branch names, or any free-text from the bundle.
 %>
-<% inner    = @bundle.payload["payload"] || {} %>
+<% inner    = @snapshot.payload["payload"] || {} %>
 <% scores   = inner["scores"] || {} %>
 <% l1       = inner["l1"] || {} %>
 <% l2       = inner["l2"] || inner["signals"] || {} %>
-<% is_v2    = @bundle.schema_version == "v2" %>
-<% trend    = trend_points(@bundle) %>
+<% is_v2    = @snapshot.schema_version == "v2" %>
+<% trend    = trend_points(@snapshot) %>
 <% stats    = trend_stats(trend) %>
 
-<% if bundle_expired?(@bundle) %>
+<% if bundle_expired?(@snapshot) %>
   <div class="banner banner-warn" role="alert">
-    ⚠ Este perfil expirou em <strong><%= format_expiration_date(@bundle) %></strong>.
+    ⚠ Este perfil expirou em <strong><%= format_expiration_date(@snapshot) %></strong>.
     Os dados abaixo são apenas para referência histórica.
   </div>
 <% end %>
@@ -28,10 +28,10 @@
   <%# ── header ─────────────────────────────────────────────────────────── %>
   <header class="profile-head">
     <div class="head-left">
-      <div class="avatar" aria-hidden="true"><%= short_id_initials(@bundle.short_id) %></div>
+      <div class="avatar" aria-hidden="true"><%= short_id_initials(@snapshot.short_id) %></div>
       <div>
         <h1 class="dev-name">DevProfile</h1>
-        <p class="dev-id">ID: <%= format_short_id(@bundle.short_id) %></p>
+        <p class="dev-id">ID: <%= format_short_id(@snapshot.short_id) %></p>
         <div class="verify-pill" id="verify-pill">
           <span class="pulse" aria-hidden="true"></span>
           <span id="verify-pill-text">ED25519 PROFILE</span>
@@ -314,7 +314,7 @@
   <%# ── proof footer ──────────────────────────────────────────────────── %>
   <footer class="proof">
     <div class="proof-head">
-      <span class="lbl">Proof of Authenticity (v<%= @bundle.payload["version"] %>.0)</span>
+      <span class="lbl">Proof of Authenticity (v<%= @snapshot.payload["version"] %>.0)</span>
       <span class="ok" id="sig-status">SIG_MATCH: VERIFYING…</span>
     </div>
 
@@ -326,9 +326,9 @@
       <% ed25519_svg = %(<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19H6a2 2 0 0 1-2-2v-1l9-9 3 3"/><path d="m15 10 3-3a2 2 0 1 1 3 3l-3 3"/><path d="M2 22h20"/></svg>) %>
       <% pubkey_svg = %(<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="3.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>) %>
       <% [
-        ["SHA256",  @bundle.bundle_hash,            "Hash SHA-256 do payload canônico — identifica o snapshot de forma única.",          sha256_svg],
-        ["ED25519", @bundle.payload["signature"],   "Assinatura Ed25519 sobre o hash, gerada pela chave privada do autor.",              ed25519_svg],
-        ["PUB_KEY", @bundle.public_key,             "Chave pública embutida no bundle, usada para verificar a assinatura no navegador.", pubkey_svg],
+        ["SHA256",  @snapshot.bundle_hash,            "Hash SHA-256 do payload canônico — identifica o snapshot de forma única.",          sha256_svg],
+        ["ED25519", @snapshot.payload["signature"],   "Assinatura Ed25519 sobre o hash, gerada pela chave privada do autor.",              ed25519_svg],
+        ["PUB_KEY", @snapshot.public_key,             "Chave pública embutida no bundle, usada para verificar a assinatura no navegador.", pubkey_svg],
       ].each do |label, value, desc, icon_svg| %>
         <span class="proof-chip" tabindex="0">
           <span class="proof-chip-label"><%= label %></span>
@@ -350,7 +350,7 @@
 </article>
 
 <%# Bundle JSON inlined for the in-browser verification — no extra HTTP round-trip. %>
-<script type="application/json" id="bundle-data"><%= raw @bundle.payload.to_json %></script>
+<script type="application/json" id="bundle-data"><%= raw @snapshot.payload.to_json %></script>
 
 <%= javascript_tag nonce: true do %>
   (function() {

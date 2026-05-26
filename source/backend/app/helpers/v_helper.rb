@@ -168,7 +168,7 @@ module VHelper
       }
       prev_hash = inner["previous_hash"]
       break if prev_hash.blank?
-      current = Bundle.find_by(bundle_hash: prev_hash)
+      current = Snapshot.find_by(bundle_hash: prev_hash)
     end
     chain.reverse
   end
