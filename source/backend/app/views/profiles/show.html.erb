@@ -1,0 +1,203 @@
+<%#
+  Public profile page (PP9). Server-rendered HTML — scores, signals, and the
+  verification chain are visible without JavaScript. The Ed25519 verification
+  runs progressively in the browser via inline JS (mirror of /verify).
+
+  Privacy invariant: NEVER renders email_contact / phone_contact / repo names
+  / paths / branch names. The view consumes `@bundle_data` only, never the
+  underlying Account columns.
+%>
+<%
+  inner = (@bundle_data["payload"] || {})
+  scores = inner["scores"] || {}
+  l1     = inner["l1"]     || {}
+  l2     = inner["l2"]     || inner["signals"] || {}
+  beheld_version = inner["beheld_version"]
+  bundle_created_at = inner["created_at"]
+  pt_months = %w[jan fev mar abr mai jun jul ago set out nov dez]
+  date_label =
+    if (t = Time.zone.parse(bundle_created_at.to_s) rescue nil)
+      "#{pt_months[t.month - 1].capitalize} #{t.year}"
+    else
+      @bundle.published_at&.strftime("%b %Y") || "—"
+    end
+  status_label =
+    case @status
+    when :verified then "verificado"
+    when :outdated then "desatualizado"
+    else                "indisponível"
+    end
+  status_class = @status == :verified ? "verified" : "outdated"
+  download_url = url_for(controller: "profiles", action: "download", slug: @bundle.url_slug)
+%>
+
+<article class="profile" id="profile-root"
+         data-bundle='<%= @bundle_data.to_json %>'>
+  <%# ── header ──────────────────────────────────────────────── %>
+  <header class="profile-head">
+    <div class="head-left">
+      <h1 class="dev-name"><%= @handle %></h1>
+      <p class="dev-id">profile id · <%= @bundle.url_slug %></p>
+      <p class="dev-id">bundle · <%= date_label %> · v<%= beheld_version || "?" %></p>
+    </div>
+    <div class="head-right" style="text-align: right;">
+      <span class="badge <%= status_class %>"><%= status_label %></span>
+      <div class="verify-pill" id="verify-pill" style="margin-top: 8px;">
+        <span class="pulse" aria-hidden="true"></span>
+        <span id="verify-pill-text">verificando assinatura…</span>
+      </div>
+    </div>
+  </header>
+
+  <%# ── scores ──────────────────────────────────────────────── %>
+  <% if scores.any? %>
+    <section class="card">
+      <h2>Scores</h2>
+      <div class="row">
+        <div class="info">
+          <div class="title">Overall <strong><%= scores["overall"] || "—" %></strong> / 100</div>
+          <div class="sub">
+            Prompt <%= scores["prompt_quality"] || "—" %> ·
+            Tests <%= scores["test_maturity"] || "—" %> ·
+            Breadth <%= scores["tech_breadth"] || "—" %> ·
+            Growth <%= scores["growth_rate"] || "—" %>
+          </div>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ── L1: git history ─────────────────────────────────────── %>
+  <% if l1.is_a?(Hash) && (l1["total_repos"].to_i > 0 || (l1["ecosystems"] || {}).any?) %>
+    <section class="card">
+      <h2>L1 · evidência histórica</h2>
+      <div class="row">
+        <div class="info">
+          <% if l1["total_repos"] %>
+            <div class="title"><%= l1["total_repos"] %> repos · <%= l1["total_commits"] || 0 %> commits</div>
+          <% end %>
+          <% if (l1["ecosystems"] || {}).any? %>
+            <div class="sub"><strong>Ecossistemas:</strong> <%= l1["ecosystems"].keys.join(", ") %></div>
+          <% end %>
+          <% if (l1["platforms"] || {}).any? %>
+            <div class="sub"><strong>Plataformas:</strong> <%= l1["platforms"].keys.join(", ") %></div>
+          <% end %>
+          <% if l1["avg_test_ratio"] %>
+            <div class="sub"><strong>Test ratio médio:</strong> <%= (l1["avg_test_ratio"].to_f * 100).round %>%</div>
+          <% end %>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ── L2: sessions ────────────────────────────────────────── %>
+  <% if l2.is_a?(Hash) && ((l2["sessions_analyzed"].to_i > 0) || (l2["platforms"] || {}).any?) %>
+    <section class="card">
+      <h2>L2 · sessões observadas</h2>
+      <div class="row">
+        <div class="info">
+          <% if l2["sessions_analyzed"] %>
+            <div class="title"><%= l2["sessions_analyzed"] %> sessões · <%= l2["period_days"] || "?" %> dias</div>
+          <% end %>
+          <% if (l2["platforms"] || {}).any? %>
+            <div class="sub"><strong>Plataformas:</strong> <%= l2["platforms"].keys.first(6).join(", ") %></div>
+          <% end %>
+          <% if (l2["ecosystems"] || {}).any? %>
+            <div class="sub"><strong>Ecossistemas:</strong> <%= l2["ecosystems"].keys.first(6).join(", ") %></div>
+          <% end %>
+          <% if (l2["workflow_distribution"] || {}).any? %>
+            <% top = l2["workflow_distribution"].max_by { |_, v| v.to_f } %>
+            <div class="sub"><strong>Workflow dominante:</strong> <%= top.first %> (<%= (top.last.to_f * 100).round %>%)</div>
+          <% end %>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
+  <%# ── actions ─────────────────────────────────────────────── %>
+  <section class="card" id="profile-actions">
+    <h2>Verificar este perfil</h2>
+    <div class="row">
+      <div class="info">
+        <div class="title">Verificação browser-side (Ed25519)</div>
+        <div class="sub" id="verify-detail">Aguarde — Web Crypto API verifica a assinatura.</div>
+      </div>
+      <div class="actions">
+        <a class="button" href="<%= download_url %>">Download .dpbundle</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="info">
+        <div class="title">Verificar offline (CLI)</div>
+        <div class="sub">
+          Baixe o bundle acima e execute:
+          <code>beheld verify beheld-<%= @bundle.url_slug %>.dpbundle</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ── footer ──────────────────────────────────────────────── %>
+  <footer style="margin-top: 32px; opacity: 0.6; font-size: 13px; text-align: center;">
+    <p>profile id · <%= @bundle.url_slug %></p>
+    <p>forever free for developers</p>
+  </footer>
+</article>
+
+<script>
+(function () {
+  "use strict";
+  const root = document.getElementById("profile-root");
+  const pill = document.getElementById("verify-pill-text");
+  const detail = document.getElementById("verify-detail");
+
+  function fail(msg) {
+    if (pill)   pill.textContent = "✗ assinatura inválida";
+    if (detail) detail.textContent = msg;
+  }
+  function pass() {
+    if (pill)   pill.textContent = "✓ assinatura válida";
+    if (detail) detail.textContent = "Web Crypto API confirmou a assinatura Ed25519 sobre o payload.";
+  }
+
+  function hexToBytes(hex) {
+    if (!/^[0-9a-fA-F]+$/.test(hex) || hex.length % 2 !== 0) return null;
+    const out = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+    return out;
+  }
+  function base64UrlToBytes(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/");
+    const pad = s.length % 4; if (pad) s += "=".repeat(4 - pad);
+    const bin = atob(s); const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  function canonicalize(v) {
+    if (v === null || typeof v !== "object") return JSON.stringify(v);
+    if (Array.isArray(v)) return "[" + v.map(canonicalize).join(",") + "]";
+    return "{" + Object.keys(v).sort().map(k => JSON.stringify(k) + ":" + canonicalize(v[k])).join(",") + "}";
+  }
+
+  async function verify() {
+    let bundle; try { bundle = JSON.parse(root.dataset.bundle); } catch (_) { return fail("Bundle inválido."); }
+    if (!bundle || !bundle.payload || !bundle.signature || !bundle.public_key) {
+      return fail("Estrutura incompleta no bundle.");
+    }
+    const pkBytes  = base64UrlToBytes(String(bundle.public_key).replace(/^ed25519:/, ""));
+    const sigStr   = String(bundle.signature).replace(/^ed25519:/, "");
+    const sigBytes = /^[0-9a-fA-F]+$/.test(sigStr) ? hexToBytes(sigStr) : base64UrlToBytes(sigStr);
+    const msgBytes = new TextEncoder().encode(canonicalize(bundle.payload));
+    if (!pkBytes || !sigBytes) return fail("Erro decodificando chave/assinatura.");
+    if (!window.crypto || !crypto.subtle || !crypto.subtle.importKey) return fail("Browser sem suporte a Ed25519.");
+    let key;
+    try { key = await crypto.subtle.importKey("raw", pkBytes, { name: "Ed25519" }, false, ["verify"]); }
+    catch (e) { return fail("Ed25519 indisponível: " + (e && e.message || e)); }
+    let ok;
+    try { ok = await crypto.subtle.verify("Ed25519", key, sigBytes, msgBytes); }
+    catch (e) { return fail("verify() falhou: " + (e && e.message || e)); }
+    ok ? pass() : fail("Assinatura não confere com o payload.");
+  }
+  verify();
+})();
+</script>

@@ -1,0 +1,22 @@
+<%# Revoked profile page — 404 status, no payload data rendered. %>
+<article class="profile" data-revoked="true">
+  <header class="profile-head">
+    <div class="head-left">
+      <h1 class="dev-name">Perfil indisponível</h1>
+      <p class="dev-id">ID: <%= @bundle.url_slug %></p>
+    </div>
+  </header>
+
+  <section style="margin-top: 24px; padding: 20px; border: 1px solid #d9d9d9; border-radius: 8px;">
+    <p style="margin: 0;">Este perfil foi removido pelo desenvolvedor.</p>
+  </section>
+
+  <footer style="margin-top: 32px; opacity: 0.6; font-size: 13px;">
+    <p>profile id · <%= @bundle.url_slug %></p>
+    <p>forever free for developers</p>
+  </footer>
+</article>
+
+<%# Prevent caching of revoked profiles. %>
+<% response.set_header("Cache-Control", "no-store, no-cache, must-revalidate, private") %>
+<% response.set_header("Pragma", "no-cache") %>
