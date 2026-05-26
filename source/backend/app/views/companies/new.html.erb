@@ -1,0 +1,31 @@
+<section class="card">
+  <h2>Cadastro de empresa</h2>
+
+  <% if @company.errors.any? %>
+    <div class="flash alert">
+      <ul style="margin: 0; padding-left: 16px;">
+        <% @company.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: @company, url: companies_path, class: "settings", local: true do |f| %>
+    <label>
+      Nome
+      <%= f.text_field :name, autocomplete: "organization", required: true %>
+    </label>
+    <label>
+      Email corporativo
+      <%= f.email_field :email, autocomplete: "email", required: true %>
+    </label>
+    <div>
+      <button type="submit" class="primary">Criar conta</button>
+    </div>
+  <% end %>
+
+  <p class="empty" style="margin-top: 16px;">
+    Já tem conta? <a href="<%= new_company_session_path %>">Entrar</a>
+  </p>
+</section>

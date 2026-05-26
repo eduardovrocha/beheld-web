@@ -1,0 +1,18 @@
+<section class="card">
+  <h2>Entrar como empresa</h2>
+  <p class="empty">Digite seu email corporativo. Enviaremos um link de acesso.</p>
+
+  <%= form_with url: company_sessions_path, method: :post, class: "settings", local: true do %>
+    <label>
+      Email corporativo
+      <input type="email" name="email" required autocomplete="email">
+    </label>
+    <div>
+      <button type="submit" class="primary">Enviar link</button>
+    </div>
+  <% end %>
+
+  <p class="empty" style="margin-top: 16px;">
+    Ainda não tem conta? <a href="<%= new_company_path %>">Cadastrar empresa</a>
+  </p>
+</section>

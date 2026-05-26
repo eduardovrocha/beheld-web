@@ -1,0 +1,16 @@
+<section class="card">
+  <h2>Link inválido ou expirado</h2>
+  <p>
+    <% case @reason %>
+    <% when :expired %>
+      Este link já passou da validade de 30 minutos.
+    <% when :used %>
+      Este link já foi usado. Por segurança, cada link funciona uma única vez.
+    <% else %>
+      Não encontramos esse link. Talvez tenha sido digitado incorretamente.
+    <% end %>
+  </p>
+  <p>
+    <a href="<%= new_company_session_path %>" class="button">Solicitar novo link</a>
+  </p>
+</section>

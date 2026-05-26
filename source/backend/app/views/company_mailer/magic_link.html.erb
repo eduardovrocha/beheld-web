@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; max-width: 560px; margin: 24px auto; color: #0f172a;">
+  <p>Olá<%= ", #{@company.name}" if @company.name.present? %>,</p>
+  <p>Clique no link abaixo para acessar o beheld.</p>
+  <p>
+    <a href="<%= @verify_url %>" style="display: inline-block; padding: 10px 16px; background: #059669; color: #fff; text-decoration: none; border-radius: 6px;">
+      Entrar no beheld
+    </a>
+  </p>
+  <p style="color: #64748b; font-size: 13px;">
+    Ou copie e cole no navegador:<br>
+    <code><%= @verify_url %></code>
+  </p>
+  <p style="color: #64748b; font-size: 13px;">Válido por 30 minutos. Use uma vez.</p>
+</body>
+</html>
