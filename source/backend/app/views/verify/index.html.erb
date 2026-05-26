@@ -1,0 +1,31 @@
+<section class="card">
+  <h2>Verificar bundle beheld</h2>
+  <p class="empty">Faça upload de um arquivo <code>.dpbundle</code> para verificar o perfil.</p>
+
+  <%= form_with url: verify_bundle_path, method: :post, multipart: true, class: "settings", local: true do %>
+    <label>
+      Arquivo .dpbundle
+      <input type="file" name="bundle_file" accept=".dpbundle,application/json" required>
+    </label>
+
+    <% if @company_logged_in %>
+      <label>
+        Cargo da vaga <span class="empty">(opcional)</span>
+        <input type="text" name="job_title" autocomplete="off">
+      </label>
+      <label>
+        Área de interesse <span class="empty">(opcional)</span>
+        <input type="text" name="area" autocomplete="off">
+      </label>
+    <% else %>
+      <p class="empty" style="font-size: 12px;">
+        Você está verificando como visitante. Para registrar a verificação,
+        <a href="<%= new_company_session_path %>">entre como empresa</a>.
+      </p>
+    <% end %>
+
+    <div>
+      <button type="submit" class="primary">Verificar</button>
+    </div>
+  <% end %>
+</section>

@@ -1,0 +1,187 @@
+<%
+  # Status seed for the bundle row (server-side — purely descriptive).
+  # The cryptographic verdict on the right is browser-side.
+  bundle_state =
+    if @bundle.nil?    then :no_record
+    elsif @bundle.status == :revoked  then :revoked
+    elsif @bundle.status == :outdated then :outdated
+    else                                   :verified
+    end
+
+  scores = (@bundle_data["payload"] || {})["scores"] || {}
+  signals = (@bundle_data["payload"] || {})["signals"] || (@bundle_data["payload"] || {})["l2"] || {}
+%>
+
+<section class="card" id="verify-status" data-bundle='<%= @bundle_data.to_json %>'>
+  <h2>Status da verificação</h2>
+
+  <div class="row">
+    <div class="info">
+      <div class="title">
+        Assinatura Ed25519:
+        <span id="crypto-verdict" class="badge revoked">verificando…</span>
+      </div>
+      <div class="sub" id="crypto-detail">Aguarde — a verificação roda no seu browser.</div>
+    </div>
+    <div class="info" style="text-align: right;">
+      <div class="title">
+        Bundle no portal:
+        <% if bundle_state == :verified %><span class="badge verified">verificado</span>
+        <% elsif bundle_state == :outdated %><span class="badge outdated">desatualizado</span>
+        <% elsif bundle_state == :revoked  %><span class="badge revoked">revogado</span>
+        <% elsif bundle_state == :no_record %><span class="badge revoked">sem registro público</span>
+        <% end %>
+      </div>
+      <% if @account %>
+        <div class="sub">fingerprint <code><%= @fingerprint.first(12) %>…</code></div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%# Hidden until the browser confirms the signature. %>
+<section class="card" id="verify-content" hidden>
+  <h2>Perfil</h2>
+
+  <% if scores.any? %>
+    <div class="row">
+      <div class="info">
+        <div class="title">Scores</div>
+        <div class="sub">
+          Overall <strong><%= scores["overall"] || "—" %></strong> ·
+          Prompt <%= scores["prompt_quality"] || "—" %> ·
+          Tests <%= scores["test_maturity"] || "—" %> ·
+          Breadth <%= scores["tech_breadth"] || "—" %> ·
+          Growth <%= scores["growth_rate"] || "—" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if signals.is_a?(Hash) && signals["platforms"].is_a?(Hash) && signals["platforms"].any? %>
+    <div class="row">
+      <div class="info">
+        <div class="title">Plataformas</div>
+        <div class="sub"><%= signals["platforms"].keys.join(", ") %></div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if signals.is_a?(Hash) && signals["ecosystems"].is_a?(Hash) && signals["ecosystems"].any? %>
+    <div class="row">
+      <div class="info">
+        <div class="title">Ecossistemas</div>
+        <div class="sub"><%= signals["ecosystems"].keys.join(", ") %></div>
+      </div>
+    </div>
+  <% end %>
+</section>
+
+<%# Shown only when the browser detects a tampered signature. %>
+<section class="card" id="verify-tampered" hidden style="border-color: var(--danger);">
+  <h2 style="color: var(--danger);">✗ Assinatura inválida</h2>
+  <p>Este bundle pode ter sido adulterado. Não exibiremos o conteúdo.</p>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  const root        = document.getElementById("verify-status");
+  const verdictEl   = document.getElementById("crypto-verdict");
+  const detailEl    = document.getElementById("crypto-detail");
+  const contentEl   = document.getElementById("verify-content");
+  const tamperedEl  = document.getElementById("verify-tampered");
+
+  function setInvalid(reason) {
+    verdictEl.textContent = "✗ inválida";
+    verdictEl.classList.remove("verified", "outdated");
+    verdictEl.classList.add("revoked");
+    detailEl.textContent = reason;
+    contentEl.setAttribute("hidden", "");
+    tamperedEl.removeAttribute("hidden");
+  }
+
+  function setValid() {
+    verdictEl.textContent = "✓ válida";
+    verdictEl.classList.remove("revoked", "outdated");
+    verdictEl.classList.add("verified");
+    detailEl.textContent = "Assinatura conferida no seu browser (Web Crypto API).";
+    contentEl.removeAttribute("hidden");
+    tamperedEl.setAttribute("hidden", "");
+  }
+
+  // ── helpers ────────────────────────────────────────────────────────────
+
+  function hexToBytes(hex) {
+    if (!/^[0-9a-fA-F]+$/.test(hex) || hex.length % 2 !== 0) return null;
+    const out = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+    return out;
+  }
+
+  function base64UrlToBytes(b64url) {
+    // base64url → base64
+    let s = b64url.replace(/-/g, "+").replace(/_/g, "/");
+    const pad = s.length % 4;
+    if (pad) s += "=".repeat(4 - pad);
+    const bin = atob(s);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  // Deep key-sort, compact JSON — mirror of canonical.ts and the Ruby twin.
+  function canonicalize(value) {
+    if (value === null || typeof value !== "object") return JSON.stringify(value);
+    if (Array.isArray(value)) return "[" + value.map(canonicalize).join(",") + "]";
+    const keys = Object.keys(value).sort();
+    return "{" + keys.map((k) => JSON.stringify(k) + ":" + canonicalize(value[k])).join(",") + "}";
+  }
+
+  async function verify() {
+    let bundle;
+    try {
+      bundle = JSON.parse(root.dataset.bundle);
+    } catch (_) {
+      return setInvalid("Bundle JSON inválido.");
+    }
+
+    if (!bundle || typeof bundle !== "object" || !bundle.payload || !bundle.signature || !bundle.public_key) {
+      return setInvalid("Estrutura do bundle incompleta.");
+    }
+
+    const pkRaw = String(bundle.public_key).replace(/^ed25519:/, "");
+    const sigRaw = String(bundle.signature).replace(/^ed25519:/, "");
+    const pkBytes  = base64UrlToBytes(pkRaw);
+    const sigBytes = /^[0-9a-fA-F]+$/.test(sigRaw) ? hexToBytes(sigRaw) : base64UrlToBytes(sigRaw);
+    const msgBytes = new TextEncoder().encode(canonicalize(bundle.payload));
+
+    if (!pkBytes || !sigBytes || !msgBytes) {
+      return setInvalid("Não foi possível decodificar chave/assinatura.");
+    }
+
+    if (!window.crypto || !window.crypto.subtle || !window.crypto.subtle.importKey) {
+      return setInvalid("Seu browser não suporta Web Crypto (Ed25519).");
+    }
+
+    let key;
+    try {
+      key = await crypto.subtle.importKey("raw", pkBytes, { name: "Ed25519" }, false, ["verify"]);
+    } catch (e) {
+      return setInvalid("Ed25519 não está disponível neste browser: " + (e && e.message || e));
+    }
+
+    let ok = false;
+    try {
+      ok = await crypto.subtle.verify("Ed25519", key, sigBytes, msgBytes);
+    } catch (e) {
+      return setInvalid("Falha durante verify(): " + (e && e.message || e));
+    }
+
+    ok ? setValid() : setInvalid("Assinatura não confere com o payload.");
+  }
+
+  verify();
+})();
+</script>
