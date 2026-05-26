@@ -1,0 +1,108 @@
+<%
+  # Bundle pick: each Account.bundles association is already constrained to
+  # revoked_at IS NULL by the controller; here we surface the most recent
+  # one as the "current" bundle for display.
+  portal_host = ENV.fetch("PORTAL_PUBLIC_URL", "https://beheld.dev").sub(%r{/+\z}, "")
+  pt_months = %w[jan fev mar abr mai jun jul ago set out nov dez]
+
+  display_for = ->(account) {
+    bundle = account.bundles.max_by(&:last_bundle_at)
+    payload = (bundle&.bundle_data || {})["payload"] || {}
+    l1      = payload["l1"] || {}
+    {
+      bundle:        bundle,
+      handle:        account.attestation&.github_login.presence || "dev-#{account.fingerprint.first(8)}",
+      ecosystems:    (l1["ecosystems"] || {}).keys,
+      platforms:     (l1["platforms"]  || {}).keys,
+      test_ratio:    l1["avg_test_ratio"],
+      last_activity: bundle && (pt_months[bundle.last_bundle_at.month - 1].capitalize + " " + bundle.last_bundle_at.year.to_s),
+      status:        bundle&.status,
+    }
+  }
+%>
+
+<section class="card">
+  <h2>Filtros</h2>
+  <%= form_with url: directory_path, method: :get, class: "settings", local: true do %>
+    <% if @available_ecosystems.any? %>
+      <label>
+        Ecossistemas / linguagens
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+          <% @available_ecosystems.each do |eco| %>
+            <label style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px;">
+              <input type="checkbox" name="ecosystems[]" value="<%= eco %>"
+                     <%= "checked" if @filters[:ecosystems].include?(eco) %>>
+              <%= eco %>
+            </label>
+          <% end %>
+        </div>
+      </label>
+    <% end %>
+
+    <label>
+      Test ratio mínimo (0.0 – 1.0)
+      <input type="number" name="test_ratio_min" step="0.05" min="0" max="1"
+             value="<%= @filters[:test_ratio_min] %>">
+    </label>
+    <label>
+      Test ratio máximo (0.0 – 1.0)
+      <input type="number" name="test_ratio_max" step="0.05" min="0" max="1"
+             value="<%= @filters[:test_ratio_max] %>">
+    </label>
+
+    <label>
+      Status
+      <select name="status">
+        <option value="all"      <%= "selected" if @filters[:status] == "all" %>>Todos</option>
+        <option value="verified" <%= "selected" if @filters[:status] == "verified" %>>Verificados</option>
+        <option value="outdated" <%= "selected" if @filters[:status] == "outdated" %>>Desatualizados</option>
+      </select>
+    </label>
+
+    <div>
+      <button type="submit" class="primary">Filtrar</button>
+    </div>
+  <% end %>
+</section>
+
+<section class="card">
+  <h2>Resultados <span class="empty" style="font-weight: 400;">(<%= @results.size %>)</span></h2>
+
+  <% if @results.empty? %>
+    <p class="empty">Nenhum dev encontrado com esses critérios.</p>
+  <% end %>
+
+  <% @results.each do |account| %>
+    <% d = display_for.call(account) %>
+    <% next if d[:bundle].nil? %>
+    <div class="row">
+      <div class="info">
+        <div class="title">
+          <%= d[:handle] %>
+          <% if d[:status] == :verified %><span class="badge verified">verificado</span>
+          <% elsif d[:status] == :outdated %><span class="badge outdated">desatualizado</span>
+          <% end %>
+        </div>
+        <div class="sub">
+          <% if d[:ecosystems].any? %>
+            <strong>Ecossistemas:</strong> <%= d[:ecosystems].first(3).join(", ") %>
+          <% end %>
+          <% if d[:platforms].any? %>
+            · <strong>Plataformas:</strong> <%= d[:platforms].first(3).join(", ") %>
+          <% end %>
+        </div>
+        <div class="sub">
+          <% if d[:test_ratio] %>
+            <strong>Test ratio:</strong> <%= (d[:test_ratio].to_f * 100).round %>%
+          <% end %>
+          <% if d[:last_activity] %>
+            · <strong>Última atividade:</strong> <%= d[:last_activity] %>
+          <% end %>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="button" href="<%= portal_host %>/v/<%= d[:bundle].url_slug %>">Ver perfil →</a>
+      </div>
+    </div>
+  <% end %>
+</section>
