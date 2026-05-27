@@ -8,11 +8,13 @@ import { useState, type CSSProperties } from "react";
 
 import { saveDev as apiSaveDev, CompanyAuthError } from "@/lib/companyDashboardApi";
 
-export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md" }: {
+export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md", label = "+ Salvar", variant = "chip" }: {
   accountId:     number;
   alreadySaved?: boolean;
   hidden?:       boolean;     // explicit opt-out (e.g., recruiter not logged in)
   size?:         "sm" | "md";
+  label?:        string;      // customizable copy — Directory uses "+ Salvar", /v/:slug uses "Salvar perfil"
+  variant?:      "chip" | "mono"; // "mono" matches the JetBrains Mono / uppercase chrome of FloatingBack
 }) {
   const [saved, setSaved]   = useState<boolean>(alreadySaved ?? false);
   const [busy,  setBusy]    = useState(false);
@@ -40,19 +42,23 @@ export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md" }: 
     }
   }
 
+  if (variant === "mono") {
+    return (
+      <MonoSaveButton saved={saved} busy={busy} error={error} label={label} onSave={handleSave} />
+    );
+  }
+
   if (saved) {
     return (
-      <span className="font-mono uppercase"
-            style={chipStyle(size, { background: "rgba(74,124,78,0.12)", color: "var(--ok)",
+      <span style={chipStyle(size, { background: "rgba(74,124,78,0.12)", color: "var(--ok)",
                                       border: "1px solid rgba(74,124,78,0.4)" })}>
-        salvo ✓
+        Salvo ✓
       </span>
     );
   }
 
   return (
     <button type="button" onClick={handleSave} disabled={busy}
-            className="font-mono uppercase"
             style={chipStyle(size, {
               background:  "transparent",
               color:       "var(--text)",
@@ -61,19 +67,61 @@ export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md" }: 
               opacity:     busy ? 0.5 : 1,
             })}
             title={error ?? undefined}>
-      {busy ? "salvando…" : error ?? "+ salvar"}
+      {busy ? "Salvando…" : error ?? label}
     </button>
   );
 }
 
+// Mirror of FloatingBack's "← voltar" chrome: JetBrains Mono, 10px uppercase,
+// muted → accent on hover, no border (the outer FloatingSaveDev box owns it).
+function MonoSaveButton({ saved, busy, error, label, onSave }: {
+  saved: boolean; busy: boolean; error: string | null; label: string;
+  onSave: () => Promise<void> | void;
+}) {
+  if (saved) {
+    return (
+      <span style={{ ...monoBase(), color: "var(--ok)" }}>
+        ✓ salvo
+      </span>
+    );
+  }
+  return (
+    <button type="button" onClick={() => void onSave()} disabled={busy}
+            title={error ?? undefined}
+            style={{ ...monoBase(), color: "var(--muted)", cursor: busy ? "not-allowed" : "pointer",
+                     opacity: busy ? 0.5 : 1, transition: "color 150ms ease" }}
+            onMouseEnter={(e) => { if (!busy) e.currentTarget.style.color = "var(--accent)"; }}
+            onMouseLeave={(e) => { if (!busy) e.currentTarget.style.color = "var(--muted)"; }}>
+      {busy ? "salvando…" : error ?? label}
+    </button>
+  );
+}
+
+function monoBase(): CSSProperties {
+  return {
+    background:    "none",
+    border:        "none",
+    padding:       0,
+    fontFamily:    "'JetBrains Mono', ui-monospace, monospace",
+    fontSize:      10,
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+  };
+}
+
+// Matches the linkButtonStyle used by "Ver perfil →" and "Contatar" so the
+// three controls in /directory cards (and the floating chip on /v/:slug)
+// share one visual vocabulary — same font, height, padding, border weight.
 function chipStyle(size: "sm" | "md", extra: CSSProperties): CSSProperties {
   const small = size === "sm";
   return {
-    display: "inline-block",
-    padding: small ? "2px 8px" : "4px 10px",
-    fontSize: small ? 9 : 10,
-    letterSpacing: "0.14em",
-    textTransform: "uppercase",
+    font:         "inherit",
+    display:      "inline-block",
+    padding:      small ? "5px 12px" : "6px 14px",
+    fontSize:     small ? 12 : 12.5,
+    letterSpacing: "0.02em",
+    borderRadius: 0,
+    whiteSpace:   "nowrap",
     ...extra,
   };
 }

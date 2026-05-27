@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { CompanyNav } from "@/components/company/CompanyNav";
 import { SaveDevButton } from "@/components/company/SaveDevButton";
 import {
   getDirectory,
@@ -178,7 +179,11 @@ function DirectoryHero({ company, total }: { company: string; total: number }) {
           style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
         {company}
       </h1>
-      <div className="mt-3 font-mono"
+      <div className="mt-3 flex flex-wrap items-baseline gap-3 font-mono"
+           style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
+        <CompanyNav current="directory" bare />
+      </div>
+      <div className="mt-2 font-mono"
            style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
         {total === 0 ? "nenhum perfil ativo no momento" : `${total} ${total === 1 ? "perfil ativo" : "perfis ativos"}`}
       </div>
@@ -271,15 +276,15 @@ function DevRow({ dev, first }: { dev: DevSummary; first: boolean }) {
         </div>
       </div>
       <div className="flex flex-shrink-0 items-start gap-2">
+        <SaveDevButton accountId={dev.account_id} />
+        <Link to={contactPath} style={linkButtonStyle({ primary: true })}>
+          Contatar
+        </Link>
         {profileUrl && (
           <a href={profileUrl} style={linkButtonStyle({ primary: false })}>
             Ver perfil →
           </a>
         )}
-        <SaveDevButton accountId={dev.account_id} size="sm" />
-        <Link to={contactPath} style={linkButtonStyle({ primary: true })}>
-          Contatar
-        </Link>
       </div>
     </div>
   );

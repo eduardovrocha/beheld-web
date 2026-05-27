@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
+import { FloatingBack } from "@/components/company/FloatingBack";
 import { SaveDevButton } from "@/components/company/SaveDevButton";
 import { useT } from "@/i18n/I18nProvider";
 import { fetchBundleWithAccount } from "@/lib/api";
@@ -90,64 +91,17 @@ export function VerifyPublic() {
   );
 }
 
-// Save-dev chip floating at the top-right, alongside the locale/theme
-// toggle box rendered by Layout.tsx. Only shown when we know the portal
-// account id (X-Beheld-Account-Id header); falls back to nothing if the
-// recruiter isn't logged in (the SaveDevButton itself handles 401).
+// Save-dev chip — its own bordered card, anchored alongside FloatingBack.
 function FloatingSaveDev({ accountId }: { accountId: number }) {
   return (
     <div className="fixed z-50 flex items-center"
          style={{
-           // Right edge of the Layout's locale/theme box is at right:20.
-           // Stack the save chip a touch above the language strip so they
-           // don't visually collide.
-           top: 64, right: 20,
+           top: 20, left: 150,            // ~130px to the right of FloatingBack
            background: "var(--bg)",
            border: "1px solid var(--rule)",
            padding: "7px 14px",
          }}>
-      <SaveDevButton accountId={accountId} size="sm" />
-    </div>
-  );
-}
-
-// Floating "voltar" control. Mirrors the chrome of the locale + theme
-// toggles in `Layout.tsx` (fixed at top, var(--bg) card with hairline,
-// mono uppercase label), but pinned to the LEFT edge so it reads as
-// navigation rather than view settings. Used by /v/:slug only.
-function FloatingBack() {
-  const navigate = useNavigate();
-  // Lands at /company/dashboard — the recruiter's "home" record of their
-  // activity. If the visitor isn't authenticated, the dashboard route
-  // handles the redirect to /sessions/company/new on its own.
-  function goBack() {
-    navigate("/company/dashboard");
-  }
-  return (
-    <div className="fixed z-50 flex items-center"
-         style={{
-           top: 20, left: 20,
-           background: "var(--bg)",
-           border: "1px solid var(--rule)",
-           padding: "7px 14px",
-         }}>
-      <button
-        type="button"
-        onClick={goBack}
-        aria-label="voltar"
-        style={{
-          background: "none", border: "none", cursor: "pointer",
-          fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-          fontSize: 10, letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: "var(--muted)",
-          padding: 0,
-          transition: "color 150ms ease",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
-        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
-        ← voltar
-      </button>
+      <SaveDevButton accountId={accountId} variant="mono" label="+ salvar perfil" />
     </div>
   );
 }
@@ -248,9 +202,11 @@ function SnapshotIframe({ bundle }: { bundle: Bundle }) {
           height:    innerHeight > 0 ? `${innerHeight}px` : "100vh",
           border:    0,
           display:   "block",
-          // Backdrop matches the parent so the iframe edges don't flash
-          // white when the theme flips before the iframe re-paints.
-          background: "var(--bg)",
+          // Transparent iframe so the SPA page background shows through —
+          // the recruiter sees the snapshot floating on the cream/dark
+          // canvas instead of inside an opaque card. The inner body bg is
+          // also overridden to transparent (see buildSnapshotHtml).
+          background: "transparent",
         }}
         scrolling="no"
       />
@@ -280,7 +236,17 @@ function buildSnapshotHtml(bundle: Bundle): string {
   const login = bundle.attestation?.payload?.github?.login;
   const authorName = login ? `@${login}` : undefined;
 
-  return renderSnapshotHtml({ bundle, signals, identity, emergent, authorName });
+  const html = renderSnapshotHtml({ bundle, signals, identity, emergent, authorName });
+
+  // Strip the snapshot's opaque page background so the SPA's canvas
+  // (cream in light, near-black in dark) shows through the iframe. We
+  // override here instead of forking `cli-shared/snapshot-html.ts` so the
+  // CLI's local `beheld snapshot --html` output keeps its own card-style
+  // backdrop intact for offline viewing.
+  return html.replace(
+    "</head>",
+    '<style id="beheld-portal-overrides">html,body{background:transparent !important}</style></head>',
+  );
 }
 
 function ErrorBox({ title, message }: { title: string; message: string }) {

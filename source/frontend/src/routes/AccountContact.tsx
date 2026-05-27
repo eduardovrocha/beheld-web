@@ -10,6 +10,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
+import { FloatingBack } from "@/components/company/FloatingBack";
 import {
   loadContactTarget,
   sendContact,
@@ -182,9 +183,12 @@ export function AccountContact() {
 
 function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="mx-auto" style={{ maxWidth: 720, padding: "64px 32px 96px", color: "var(--text)" }}>
-      {children}
-    </div>
+    <>
+      <FloatingBack to="/directory" />
+      <div className="mx-auto" style={{ maxWidth: 720, padding: "64px 32px 96px", color: "var(--text)" }}>
+        {children}
+      </div>
+    </>
   );
 }
 
