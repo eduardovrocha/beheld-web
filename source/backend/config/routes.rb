@@ -111,6 +111,15 @@ Rails.application.routes.draw do
         get "messages",  to: "messages#index"
         resources :saved_devs, only: %i[index create update destroy],
                   param: :account_id
+        resources :positions, only: %i[index create update destroy] do
+          # Persisted matches for a single position — Phase 2 of the matcher
+          # spec. `matches#index` is the read; `matches#recalculate` is the
+          # manual trigger ("recalcular agora" no form / detail panel).
+          get  "matches",              to: "positions#matches"
+          post "matches/recalculate",  to: "positions#recalculate"
+          # P20.3 reactivation — resets the 30-day clock and re-runs the matcher.
+          post "reactivate",           to: "positions#reactivate"
+        end
       end
     end
   end

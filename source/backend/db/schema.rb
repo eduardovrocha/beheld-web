@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_26_220000) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_27_030003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -118,6 +118,65 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_26_220000) do
     t.index ["sent_at"], name: "index_messages_on_sent_at"
   end
 
+  create_table "position_matches", force: :cascade do |t|
+    t.bigint "position_id", null: false
+    t.bigint "account_id", null: false
+    t.decimal "score", precision: 5, scale: 2, null: false
+    t.string "match_type", null: false
+    t.string "failed_signal"
+    t.datetime "calculated_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_position_matches_on_account_id"
+    t.index ["position_id", "account_id"], name: "index_position_matches_on_position_id_and_account_id", unique: true
+    t.index ["position_id", "match_type"], name: "index_position_matches_on_position_id_and_match_type"
+    t.index ["position_id", "score"], name: "index_position_matches_on_position_id_and_score", order: { score: :desc }
+    t.index ["position_id"], name: "index_position_matches_on_position_id"
+  end
+
+  create_table "position_priorities", force: :cascade do |t|
+    t.bigint "position_id", null: false
+    t.string "signal", null: false
+    t.integer "ranking", null: false
+    t.decimal "weight", precision: 4, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["position_id", "ranking"], name: "index_position_priorities_on_position_id_and_ranking", unique: true
+    t.index ["position_id", "signal"], name: "index_position_priorities_on_position_id_and_signal", unique: true
+    t.index ["position_id"], name: "index_position_priorities_on_position_id"
+  end
+
+  create_table "position_thresholds", force: :cascade do |t|
+    t.bigint "position_id", null: false
+    t.string "signal", null: false
+    t.string "operator", null: false
+    t.jsonb "value", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["position_id", "signal"], name: "index_position_thresholds_on_position_id_and_signal", unique: true
+    t.index ["position_id"], name: "index_position_thresholds_on_position_id"
+  end
+
+  create_table "positions", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "title", null: false
+    t.text "description"
+    t.string "location"
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "technologies", default: [], null: false
+    t.jsonb "sections", default: {}, null: false
+    t.string "status", default: "active", null: false
+    t.datetime "activated_at"
+    t.datetime "expires_at"
+    t.index ["company_id", "archived_at"], name: "index_positions_on_company_id_and_archived_at"
+    t.index ["company_id"], name: "index_positions_on_company_id"
+    t.index ["expires_at"], name: "index_positions_on_expires_at"
+    t.index ["status"], name: "index_positions_on_status"
+    t.index ["technologies"], name: "index_positions_on_technologies", using: :gin
+  end
+
   create_table "saved_devs", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.bigint "account_id", null: false
@@ -161,6 +220,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_26_220000) do
   add_foreign_key "magic_links", "companies"
   add_foreign_key "messages", "accounts"
   add_foreign_key "messages", "companies"
+  add_foreign_key "position_matches", "accounts"
+  add_foreign_key "position_matches", "positions"
+  add_foreign_key "position_priorities", "positions"
+  add_foreign_key "position_thresholds", "positions"
+  add_foreign_key "positions", "companies"
   add_foreign_key "saved_devs", "accounts"
   add_foreign_key "saved_devs", "companies"
   add_foreign_key "verifications", "bundles"
