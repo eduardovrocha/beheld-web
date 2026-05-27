@@ -2,17 +2,21 @@
  * Dashboard SPA route (`/dashboard`).
  *
  * Visual: same vocabulary as Home — Switzer body, monospace uppercase
- * labels with letter-spacing, numbered sections (01..04), white cards on
- * cream bg with 1px hairlines, accent gold for numerics. Tokens come from
- * index.css (--bg, --text, --muted, --rule, --card-bg, --accent, --ok,
- * --warn) so light/dark mode flips work automatically.
+ * labels with letter-spacing, white cards on cream bg with 1px hairlines,
+ * accent gold for numerics. Tokens come from index.css (--bg, --text,
+ * --muted, --rule, --card-bg, --accent, --ok, --warn) so light/dark mode
+ * flips work automatically.
  *
  * Auth: Bearer token from `?session=<...>` (issued by `beheld auth`)
  * persisted in sessionStorage; subsequent requests stay authenticated.
+ *
+ * Tabs (URL-hash synced so deep links to a specific section work):
+ *   #visao-geral, #publicacoes, #verificacoes, #mensagens, #configuracoes
  */
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+import { TabStrip, type TabDef } from "@/components/TabStrip";
 import {
   clearSessionToken,
   getDashboard,
@@ -44,14 +48,45 @@ function formatDateTime(iso: string): string {
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// ── tabs ────────────────────────────────────────────────────────────────────
+
+type TabId = "overview" | "bundles" | "verifications" | "messages" | "settings";
+
+const TABS: Array<{ id: TabId; label: string; hash: string; subtitle: string }> = [
+  { id: "overview",      label: "Visão geral",   hash: "#visao-geral",   subtitle: "fingerprint, bundles e contato" },
+  { id: "bundles",       label: "Publicações",   hash: "#publicacoes",   subtitle: "bundles ativos no portal" },
+  { id: "verifications", label: "Verificações",  hash: "#verificacoes",  subtitle: "empresas que abriram seu retrato" },
+  { id: "messages",      label: "Mensagens",     hash: "#mensagens",     subtitle: "empresas que entraram em contato" },
+  { id: "settings",      label: "Configurações", hash: "#configuracoes", subtitle: "contato, visibilidade e notificações" },
+];
+
+function tabFromHash(hash: string): TabId {
+  const found = TABS.find((t) => t.hash === hash);
+  return found?.id ?? "overview";
+}
+
 // ── route ───────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const [data, setData] = useState<DashboardPayload | null>(null);
+  const [data, setData]   = useState<DashboardPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy]   = useState(false);
+
+  const [active, setActive] = useState<TabId>(() => tabFromHash(window.location.hash));
+
+  useEffect(() => {
+    function onHash() { setActive(tabFromHash(window.location.hash)); }
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  function selectTab(id: TabId) {
+    setActive(id);
+    const tab = TABS.find((t) => t.id === id);
+    if (tab) history.replaceState(null, "", tab.hash);
+  }
 
   // Pick up `?session=<token>` and clean the URL.
   useEffect(() => {
@@ -92,14 +127,13 @@ export function Dashboard() {
   if (error) {
     return (
       <Shell>
-        <Section num="01" title="Sessão indisponível">
-          <Card>
-            <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7 }}>{error}</p>
-            <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, marginTop: 12 }}>
-              Execute <code style={{ color: "var(--accent)" }}>beheld auth</code> no terminal para obter um novo link.
-            </p>
-          </Card>
-        </Section>
+        <Hero handle="—" fingerprint="" subtitle="sessão indisponível" />
+        <Card>
+          <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7 }}>{error}</p>
+          <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, marginTop: 12 }}>
+            Execute <code style={{ color: "var(--accent)" }}>beheld auth</code> no terminal para obter um novo link.
+          </p>
+        </Card>
       </Shell>
     );
   }
@@ -113,64 +147,82 @@ export function Dashboard() {
   }
 
   const { account, bundles, notifications, messages } = data;
+  const activeTab = TABS.find((t) => t.id === active) ?? TABS[0];
 
   return (
     <Shell>
-      <DashboardHero handle={account.handle} fingerprint={account.fingerprint}
-                     bundlesCount={bundles.length} contactConfigured={account.contact_configured} />
+      <Hero handle={account.handle} fingerprint={account.fingerprint} subtitle={activeTab.subtitle} />
 
-      <Section num="01" title="Bundles publicados"
-               right={`${bundles.length} ${bundles.length === 1 ? "ativo" : "ativos"}`}>
-        {bundles.length === 0 ? (
-          <EmptyCard>
-            Você ainda não publicou nenhum bundle. Execute{" "}
-            <code style={{ color: "var(--accent)" }}>beheld share</code> no terminal.
-          </EmptyCard>
-        ) : (
-          <Card padded={false}>
-            {bundles.map((b, i) => (
-              <BundleRow key={b.id} bundle={b} busy={busy} first={i === 0}
-                         onToggle={() => refresh(() => toggleBundle(b.id))}
-                         onRevoke={() => {
-                           if (!confirm("Revogar este bundle? Esta ação é permanente.")) return;
-                           refresh(() => revokeBundle(b.id));
-                         }} />
-            ))}
-          </Card>
+      <TabStrip<TabId>
+        tabs={TABS.map((t) => ({
+          id:    t.id,
+          label: t.label,
+          badge: t.id === "bundles"       ? bundles.length
+               : t.id === "verifications" ? notifications.length
+               : t.id === "messages"      ? messages.length
+               : null,
+        })) as readonly TabDef<TabId>[]}
+        active={active}
+        onSelect={selectTab} />
+
+      <div className="pt-8">
+        {active === "overview" && (
+          <OverviewTab bundlesCount={bundles.length}
+                       contactConfigured={account.contact_configured}
+                       interest={data.interest}
+                       evolution={data.evolution} />
         )}
-      </Section>
 
-      <Section num="02" title="Notificações" emTail="· verificações registradas"
-               right={notifications.length === 0 ? "0" : String(notifications.length)}>
-        {notifications.length === 0 ? (
-          <EmptyCard>Nenhuma verificação registrada ainda.</EmptyCard>
-        ) : (
-          <Card padded={false}>
-            {notifications.map((n, i) => <NotificationRow key={n.id} v={n} first={i === 0} />)}
-          </Card>
+        {active === "bundles" && (
+          bundles.length === 0 ? (
+            <EmptyCard>
+              Você ainda não publicou nenhum bundle. Execute{" "}
+              <code style={{ color: "var(--accent)" }}>beheld share</code> no terminal.
+            </EmptyCard>
+          ) : (
+            <Card padded={false}>
+              {bundles.map((b, i) => (
+                <BundleRow key={b.id} bundle={b} busy={busy} first={i === 0}
+                           onToggle={() => refresh(() => toggleBundle(b.id))}
+                           onRevoke={() => {
+                             if (!confirm("Revogar este bundle? Esta ação é permanente.")) return;
+                             refresh(() => revokeBundle(b.id));
+                           }} />
+              ))}
+            </Card>
+          )
         )}
-      </Section>
 
-      <Section num="03" title="Mensagens" emTail="· empresas que entraram em contato"
-               right={messages.length === 0 ? "0" : String(messages.length)}>
-        {messages.length === 0 ? (
-          <EmptyCard>Nenhuma mensagem recebida ainda.</EmptyCard>
-        ) : (
-          <Card padded={false}>
-            {messages.map((m, i) => (
-              <MessageRow key={m.id} m={m} busy={busy} first={i === 0}
-                          canRespond={account.contact_configured}
-                          onRespond={() => refresh(() => respondMessage(m.id))}
-                          onIgnore={() => refresh(() => ignoreMessage(m.id))} />
-            ))}
-          </Card>
+        {active === "verifications" && (
+          notifications.length === 0 ? (
+            <EmptyCard>Nenhuma verificação registrada ainda.</EmptyCard>
+          ) : (
+            <Card padded={false}>
+              {notifications.map((n, i) => <NotificationRow key={n.id} v={n} first={i === 0} />)}
+            </Card>
+          )
         )}
-      </Section>
 
-      <Section num="04" title="Configurações" emTail="· contato e visibilidade" anchor="configuracoes">
-        <SettingsForm account={account} busy={busy}
-                      onSubmit={(patch) => refresh(() => updateSettings(patch))} />
-      </Section>
+        {active === "messages" && (
+          messages.length === 0 ? (
+            <EmptyCard>Nenhuma mensagem recebida ainda.</EmptyCard>
+          ) : (
+            <Card padded={false}>
+              {messages.map((m, i) => (
+                <MessageRow key={m.id} m={m} busy={busy} first={i === 0}
+                            canRespond={account.contact_configured}
+                            onRespond={() => refresh(() => respondMessage(m.id))}
+                            onIgnore={() => refresh(() => ignoreMessage(m.id))} />
+              ))}
+            </Card>
+          )
+        )}
+
+        {active === "settings" && (
+          <SettingsForm account={account} busy={busy}
+                        onSubmit={(patch) => refresh(() => updateSettings(patch))} />
+        )}
+      </div>
 
       <SignOutFooter handle={account.handle}
                      onSignOut={() => { clearSessionToken(); navigate("/", { replace: true }); }} />
@@ -178,7 +230,7 @@ export function Dashboard() {
   );
 }
 
-// ── shell / chrome ──────────────────────────────────────────────────────────
+// ── shell / hero ────────────────────────────────────────────────────────────
 
 function Shell({ children }: { children: ReactNode }) {
   return (
@@ -188,61 +240,11 @@ function Shell({ children }: { children: ReactNode }) {
   );
 }
 
-function Section({ num, title, emTail, right, anchor, children }: {
-  num: string; title: string; emTail?: string; right?: string;
-  anchor?: string; children: ReactNode;
+function Hero({ handle, fingerprint, subtitle }: {
+  handle: string; fingerprint: string; subtitle: string;
 }) {
   return (
-    <section id={anchor} className="py-12" style={{ borderTop: "1px solid var(--rule)" }}>
-      <div className="mb-8 flex flex-wrap items-baseline gap-6">
-        <span className="font-mono uppercase"
-              style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em" }}>
-          {num}
-        </span>
-        <h2 className="font-semibold"
-            style={{ color: "var(--text)", fontSize: 22, letterSpacing: "-0.02em" }}>
-          {title}
-          {emTail && <span style={{ color: "var(--muted)", fontWeight: 400 }}> {emTail}</span>}
-        </h2>
-        {right && (
-          <span className="ml-auto font-mono uppercase"
-                style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
-            {right}
-          </span>
-        )}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Card({ children, padded = true }: { children: ReactNode; padded?: boolean }) {
-  return (
-    <div style={{
-      background: "var(--card-bg)",
-      border: "1px solid var(--rule)",
-      padding: padded ? "24px" : 0,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-function EmptyCard({ children }: { children: ReactNode }) {
-  return (
-    <Card>
-      <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, margin: 0 }}>{children}</p>
-    </Card>
-  );
-}
-
-// ── hero (handle + fingerprint + glance) ─────────────────────────────────────
-
-function DashboardHero({ handle, fingerprint, bundlesCount, contactConfigured }: {
-  handle: string; fingerprint: string; bundlesCount: number; contactConfigured: boolean;
-}) {
-  return (
-    <header className="mb-12">
+    <header className="mb-10">
       <div className="mb-3 font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
         dashboard
@@ -252,21 +254,122 @@ function DashboardHero({ handle, fingerprint, bundlesCount, contactConfigured }:
         {handle}
         <span style={{ color: "var(--muted)", fontWeight: 400 }}> · seu retrato técnico</span>
       </h1>
-      <div className="mt-3 font-mono"
+      {fingerprint && (
+        <div className="mt-3 font-mono"
+             style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
+          fingerprint <span style={{ color: "var(--accent)" }}>{fingerprint.slice(0, 24)}…</span>
+        </div>
+      )}
+      <div className="mt-2 font-mono"
            style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
-        fingerprint <span style={{ color: "var(--accent)" }}>{fingerprint.slice(0, 24)}…</span>
+        {subtitle}
       </div>
+    </header>
+  );
+}
 
-      <div className="mt-8 grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+// ── overview tab — Glance cards + P21 interest banner + P22 evolution card ──
+
+function OverviewTab({ bundlesCount, contactConfigured, interest, evolution }: {
+  bundlesCount:       number;
+  contactConfigured:  boolean;
+  interest:           import("@/lib/dashboardApi").DashboardInterest;
+  evolution:          import("@/lib/dashboardApi").DashboardEvolution;
+}) {
+  return (
+    <div className="grid gap-4">
+      <InterestBanner companies={interest.companies} />
+      <div className="grid gap-4"
+           style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
         <Glance label="bundles" num={String(bundlesCount)}
                 note={bundlesCount === 0 ? "sem publicação" : "ativos no portal"} />
         <Glance label="contato"
                 num={contactConfigured ? "configurado" : "pendente"}
                 numColor={contactConfigured ? "var(--ok)" : "var(--warn)"}
-                note={contactConfigured ? "responder habilitado" : "configure abaixo"} />
+                note={contactConfigured ? "responder habilitado" : "configure em ajustes"} />
         <Glance label="tier" num="signature_only" note="atestação + Rekor recomendados" />
       </div>
-    </header>
+      <EvolutionCard evolution={evolution} />
+    </div>
+  );
+}
+
+// P21: anonymous interest banner. Single sentence, no metadata. Hidden
+// when the count is 0 — keeps the dashboard quiet when there's nothing
+// to communicate.
+function InterestBanner({ companies }: { companies: number }) {
+  if (companies <= 0) return null;
+  return (
+    <div style={{
+      padding: "14px 18px",
+      background: "rgba(138,111,62,0.10)",
+      border: "1px solid rgba(138,111,62,0.35)",
+      display: "grid", gridTemplateColumns: "auto 1fr", gap: 14, alignItems: "center",
+    }}>
+      <span className="font-mono"
+            style={{ color: "var(--accent)", fontSize: 26, fontWeight: 700,
+                      fontFeatureSettings: '"tnum"', lineHeight: 1 }}>
+        {companies}
+      </span>
+      <div>
+        <div style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.5 }}>
+          {companies === 1
+            ? "1 empresa tem necessidade que corresponde ao seu perfil esta semana."
+            : `${companies} empresas têm necessidades que correspondem ao seu perfil esta semana.`}
+        </div>
+        <div className="font-mono uppercase"
+             style={{ color: "var(--muted)", fontSize: 9.5, letterSpacing: "0.14em", marginTop: 4 }}>
+          contagem anônima · sem nomes, sem detalhes
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// P22.2: evolution indicator. Visual bar of filled vs unfilled dots
+// (scaled to a target of 8 — arbitrary but gives proportional feedback;
+// after 8 bundles it just stays fully filled). Below the bar: points +
+// days since last bundle + CLI hint when stale (≥ 5 days).
+function EvolutionCard({ evolution }: { evolution: import("@/lib/dashboardApi").DashboardEvolution }) {
+  const { points, days_since_last, stale_for_curve } = evolution;
+  const target = 8;
+  const filled = Math.min(points, target);
+  const dots = "█".repeat(filled) + "░".repeat(Math.max(0, target - filled));
+  return (
+    <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)", padding: "16px 20px" }}>
+      <div className="font-mono uppercase"
+           style={{ color: "var(--muted)", fontSize: 9.5, letterSpacing: "0.18em", marginBottom: 6 }}>
+        curva de evolução
+      </div>
+      <div className="font-mono" style={{
+        color: filled === 0 ? "var(--muted-soft)" : "var(--accent)",
+        fontSize: 18, letterSpacing: "0.04em", lineHeight: 1,
+      }}>
+        {dots}
+      </div>
+      <div className="mt-2" style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+        {points === 0 && <>nenhum bundle publicado ainda.</>}
+        {points === 1 && <>1 ponto · curva em construção</>}
+        {points > 1 && <>{points} pontos · curva ativa</>}
+        {days_since_last != null && (
+          <>
+            {" · "}
+            <span style={{ color: stale_for_curve ? "var(--warn)" : "var(--muted)" }}>
+              última atualização há {days_since_last === 0 ? "menos de 1 dia" : `${days_since_last}d`}
+            </span>
+          </>
+        )}
+      </div>
+      {stale_for_curve && (
+        <div style={{ marginTop: 10, color: "var(--muted)", fontSize: 12.5, lineHeight: 1.55 }}>
+          Atualize seu bundle para enriquecer a curva:
+          {" "}
+          <code style={{ color: "var(--accent)", background: "var(--rule-soft)", padding: "1px 6px" }}>
+            beheld profile generate
+          </code>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -288,7 +391,27 @@ function Glance({ label, num, note, numColor }: {
   );
 }
 
-// ── rows ────────────────────────────────────────────────────────────────────
+// ── cards / rows ────────────────────────────────────────────────────────────
+
+function Card({ children, padded = true }: { children: ReactNode; padded?: boolean }) {
+  return (
+    <div style={{
+      background: "var(--card-bg)",
+      border: "1px solid var(--rule)",
+      padding: padded ? "24px" : 0,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function EmptyCard({ children }: { children: ReactNode }) {
+  return (
+    <Card>
+      <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, margin: 0 }}>{children}</p>
+    </Card>
+  );
+}
 
 const ROW_STYLE = (first: boolean) => ({
   display: "grid",

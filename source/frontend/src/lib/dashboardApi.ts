@@ -77,11 +77,29 @@ export interface DashboardMessage {
   state:        "pending" | "responded" | "ignored";
 }
 
+// P21 — anonymous interest counter for the dev. ONLY the count of distinct
+// companies that have an active position matching this dev as `match`
+// (near-miss is intentionally excluded; no company names / position titles
+// flow through this payload).
+export interface DashboardInterest {
+  companies: number;
+}
+
+// P22.2 — evolution indicator data. Drives the "curva de evolução" card.
+export interface DashboardEvolution {
+  points:               number;        // active bundles count = curve points
+  last_bundle_at:       string | null;
+  days_since_last:      number | null;
+  stale_for_curve:      boolean;       // true when ≥ 5 days since last bundle
+}
+
 export interface DashboardPayload {
   account:       DashboardAccount;
   bundles:       DashboardBundle[];
   notifications: DashboardNotification[];
   messages:      DashboardMessage[];
+  interest:      DashboardInterest;
+  evolution:     DashboardEvolution;
 }
 
 export class DashboardAuthError extends Error {

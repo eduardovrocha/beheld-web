@@ -99,6 +99,27 @@ module Api
           bundles: bundles.map { |b| bundle_json(b) },
           notifications: notifications.map { |v| verification_json(v) },
           messages: messages.map { |m| message_json(m) },
+          # P21: anonymous interest counter. Just the integer — no company
+          # names, no position titles, no scores. The matcher persists rows
+          # in `position_matches`, and DevInterest filters to active +
+          # confirmed matches only.
+          interest: {
+            companies: ::Positions::DevInterest.count_for(current_account),
+          },
+          # P22.2: the dev's evolution curve indicator. Only test_ratio has
+          # a real trend; the dashboard card displays `points` and the days
+          # since the last bundle so the dev sees how rich their curve is.
+          evolution: build_evolution_indicator(bundles),
+        }
+      end
+
+      def build_evolution_indicator(bundles)
+        latest = bundles.first   # already ordered DESC by published_at
+        {
+          points:               bundles.size,
+          last_bundle_at:       latest&.last_bundle_at&.iso8601,
+          days_since_last:      latest ? ((Time.current - latest.last_bundle_at) / 86_400.0).round : nil,
+          stale_for_curve:      latest && ((Time.current - latest.last_bundle_at) / 86_400.0) >= 5,
         }
       end
 
