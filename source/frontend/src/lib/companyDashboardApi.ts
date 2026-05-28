@@ -35,6 +35,7 @@ export interface DashboardPayload {
 
 export interface CompanyMessage {
   id:           number;
+  account_id:   number;
   dev_handle:   string;
   bundle_slug:  string | null;
   job_title:    string | null;
@@ -42,6 +43,7 @@ export interface CompanyMessage {
   status:       "pending" | "responded" | "ignored";
   sent_at:      string;
   responded_at: string | null;
+  reply_body:   string | null;   // resposta curta do dev (F_REPLY)
 }
 
 export interface SavedDev {
@@ -61,6 +63,17 @@ export type PositionSectionKey =
   | "nice_to_have";
 
 export type PositionSections = Partial<Record<PositionSectionKey, string>>;
+
+// PF.1 — location is a jsonb hierarchy. The structured picker fills
+// region/country/state/city; rows migrated from the old free-text column
+// carry only `raw`; an empty object means "no location".
+export interface PositionLocation {
+  region?:  string;
+  country?: string;
+  state?:   string;
+  city?:    string;
+  raw?:     string;
+}
 
 export type PositionSignal = "ecosystems" | "test_ratio" | "recency";
 export type PositionStatus = "active" | "expired" | "closed";
@@ -88,7 +101,7 @@ export interface Position {
   id:           number;
   title:        string;
   description:  string | null;
-  location:     string | null;
+  location:     PositionLocation;
   technologies: string[];
   sections:     PositionSections;
   status:       PositionStatus;
@@ -159,7 +172,7 @@ export function getPositions(): Promise<Position[]> {
 export interface PositionInput {
   title:         string;
   description?:  string;
-  location?:     string;
+  location?:     PositionLocation;
   technologies?: string[];
   sections?:     PositionSections;
   thresholds?:   PositionThreshold[];
@@ -186,6 +199,11 @@ export function archivePosition(id: number) {
   return call<{ ok: true; position: Position }>(`/positions/${id}`, { method: "DELETE" });
 }
 
+// Permanent delete — only valid once a vaga is archived (backend enforces).
+export function purgePosition(id: number) {
+  return call<{ ok: true; id: number }>(`/positions/${id}/purge`, { method: "DELETE" });
+}
+
 // ── match results (P17) ─────────────────────────────────────────────────
 
 // Detail block surfaced for near-miss rows. Shape varies per failed_signal:
@@ -198,7 +216,7 @@ export interface PositionFailedDetail {
 }
 
 // Evolution curve (P19) — currently only computed for `test_ratio`.
-export type PositionCurveStatus = "available" | "building" | "none" | "unsupported";
+export type PositionCurveStatus = "available" | "building" | "none" | "not_applicable";
 
 export interface PositionCurve {
   status:       PositionCurveStatus;

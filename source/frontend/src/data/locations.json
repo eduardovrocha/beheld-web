@@ -1,0 +1,226 @@
+{
+  "regions": [
+    {
+      "key": "remote",
+      "label": "Remote",
+      "countries": []
+    },
+    {
+      "key": "south_america",
+      "label": "América do Sul",
+      "countries": [
+        {
+          "code": "BR",
+          "label": "Brasil",
+          "states": [
+            {
+              "code": "MG",
+              "label": "Minas Gerais",
+              "cities": ["Belo Horizonte", "Uberlândia", "Juiz de Fora", "Contagem"]
+            },
+            {
+              "code": "SP",
+              "label": "São Paulo",
+              "cities": ["São Paulo", "Campinas", "Santos", "Ribeirão Preto"]
+            }
+          ]
+        },
+        {
+          "code": "AR",
+          "label": "Argentina",
+          "states": [
+            {
+              "code": "BA",
+              "label": "Buenos Aires",
+              "cities": ["Buenos Aires", "La Plata", "Mar del Plata"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "north_america",
+      "label": "América do Norte",
+      "countries": [
+        {
+          "code": "US",
+          "label": "Estados Unidos",
+          "states": [
+            { "code": "CA", "label": "California", "cities": ["San Francisco", "Los Angeles", "San Diego"] },
+            { "code": "NY", "label": "New York",   "cities": ["New York City", "Buffalo", "Albany"] },
+            { "code": "TX", "label": "Texas",      "cities": ["Austin", "Houston", "Dallas"] }
+          ]
+        },
+        {
+          "code": "CA",
+          "label": "Canadá",
+          "states": [
+            { "code": "ON", "label": "Ontario",          "cities": ["Toronto", "Ottawa", "Hamilton"] },
+            { "code": "BC", "label": "British Columbia", "cities": ["Vancouver", "Victoria"] }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "western_europe",
+      "label": "Europa Ocidental",
+      "countries": [
+        {
+          "code": "DE",
+          "label": "Alemanha",
+          "states": [
+            { "code": "BY", "label": "Bavaria",     "cities": ["Munich", "Nuremberg"] },
+            { "code": "BE", "label": "Berlin",      "cities": ["Berlin"] },
+            { "code": "HH", "label": "Hamburg",     "cities": ["Hamburg"] }
+          ]
+        },
+        {
+          "code": "PT",
+          "label": "Portugal",
+          "states": [
+            { "code": "LX", "label": "Lisboa",     "cities": ["Lisboa", "Sintra", "Cascais"] },
+            { "code": "PT", "label": "Porto",       "cities": ["Porto", "Gaia", "Braga"] }
+          ]
+        },
+        {
+          "code": "ES",
+          "label": "Espanha",
+          "states": [
+            { "code": "MD", "label": "Madrid",      "cities": ["Madrid", "Alcalá de Henares"] },
+            { "code": "CT", "label": "Catalunha",   "cities": ["Barcelona", "Girona"] }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "eastern_europe",
+      "label": "Leste Europeu",
+      "countries": [
+        {
+          "code": "PL",
+          "label": "Polônia",
+          "states": [
+            { "code": "MA", "label": "Mazóvia",      "cities": ["Varsóvia", "Łódź"] },
+            { "code": "PK", "label": "Pequena Polônia", "cities": ["Cracóvia"] }
+          ]
+        },
+        {
+          "code": "UA",
+          "label": "Ucrânia",
+          "states": [
+            { "code": "KC", "label": "Kiev",         "cities": ["Kiev", "Kharkiv"] }
+          ]
+        },
+        {
+          "code": "RO",
+          "label": "Romênia",
+          "states": [
+            { "code": "B",  "label": "Bucareste",    "cities": ["Bucareste"] },
+            { "code": "CJ", "label": "Cluj",         "cities": ["Cluj-Napoca"] }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "uae",
+      "label": "Emirados Árabes Unidos",
+      "countries": [
+        {
+          "code": "AE",
+          "label": "Emirados Árabes Unidos",
+          "states": [
+            { "code": "DU", "label": "Dubai",        "cities": ["Dubai"] },
+            { "code": "AZ", "label": "Abu Dhabi",    "cities": ["Abu Dhabi"] }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "oceania",
+      "label": "Oceania",
+      "countries": [
+        {
+          "code": "AU",
+          "label": "Austrália",
+          "states": [
+            { "code": "NSW", "label": "New South Wales", "cities": ["Sydney", "Newcastle"] },
+            { "code": "VIC", "label": "Victoria",        "cities": ["Melbourne", "Geelong"] }
+          ]
+        },
+        {
+          "code": "NZ",
+          "label": "Nova Zelândia",
+          "states": [
+            { "code": "AKL", "label": "Auckland",    "cities": ["Auckland"] },
+            { "code": "WGN", "label": "Wellington",  "cities": ["Wellington"] }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "asia",
+      "label": "Ásia",
+      "countries": [
+        {
+          "code": "IN",
+          "label": "Índia",
+          "states": [
+            { "code": "MH", "label": "Maharashtra", "cities": ["Mumbai", "Pune"] },
+            { "code": "KA", "label": "Karnataka",   "cities": ["Bangalore", "Mysore"] }
+          ]
+        },
+        {
+          "code": "SG",
+          "label": "Singapura",
+          "states": [
+            { "code": "SG", "label": "Singapura",   "cities": ["Singapura"] }
+          ]
+        },
+        {
+          "code": "JP",
+          "label": "Japão",
+          "states": [
+            { "code": "TK", "label": "Tóquio",      "cities": ["Tóquio"] },
+            { "code": "OS", "label": "Osaka",        "cities": ["Osaka"] }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "central_america",
+      "label": "América Central",
+      "countries": [
+        {
+          "code": "MX",
+          "label": "México",
+          "states": [
+            { "code": "CMX", "label": "Cidade do México", "cities": ["Cidade do México"] },
+            { "code": "JAL", "label": "Jalisco",           "cities": ["Guadalajara"] }
+          ]
+        },
+        {
+          "code": "CO",
+          "label": "Colômbia",
+          "states": [
+            { "code": "CUN", "label": "Cundinamarca", "cities": ["Bogotá"] },
+            { "code": "ANT", "label": "Antioquia",    "cities": ["Medellín"] }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "africa",
+      "label": "África",
+      "countries": [
+        {
+          "code": "ZA",
+          "label": "África do Sul",
+          "states": [
+            { "code": "GP", "label": "Gauteng",      "cities": ["Joanesburgo", "Pretória"] },
+            { "code": "WC", "label": "Cabo Ocidental","cities": ["Cidade do Cabo"] }
+          ]
+        }
+      ]
+    }
+  ]
+}

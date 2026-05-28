@@ -17,6 +17,18 @@ module Api
           render json: positions.map { |p| serialize(p) }
         end
 
+        # GET /api/v1/company/positions/:id
+        # Single-position read used by clients that deep-link straight to a
+        # vaga (mailer "Vaga expirada" CTA, shareable internal links). Same
+        # serialization shape as `index`, plus a fresh expire check.
+        def show
+          position = current_company.positions
+            .includes(:thresholds, :priorities)
+            .find(params[:id])
+          position.expire_if_due!
+          render json: serialize(position)
+        end
+
         def create
           position = nil
           ActiveRecord::Base.transaction do
@@ -81,10 +93,34 @@ module Api
           render json: { ok: true, position: serialize(position) }
         end
 
+        # Permanent delete. Only allowed once the vaga is archived — the UI
+        # surfaces "Excluir" exclusively in the Arquivada tab. Children
+        # (matches/thresholds/priorities) cascade via dependent: :destroy;
+        # Message rows keep their denormalized `job_title` (no FK to positions),
+        # so deleting a vaga never orphans a sent message.
+        def purge
+          position = current_company.positions.find(params[:id])
+          unless position.archived?
+            return render json: { ok: false, error: "Só é possível excluir uma vaga arquivada." },
+                          status: :unprocessable_entity
+          end
+          position.destroy!
+          render json: { ok: true, id: position.id }
+        end
+
         private
 
         def scalar_params
-          base = params.permit(:title, :description, :location, :archived_at)
+          base = params.permit(:title, :description, :archived_at)
+          # location is now jsonb — a structured hash from the picker, or a
+          # bare string from legacy clients (wrapped into { raw: ... }).
+          loc = params[:location]
+          if loc.is_a?(ActionController::Parameters) || loc.is_a?(Hash)
+            raw = loc.respond_to?(:to_unsafe_h) ? loc.to_unsafe_h : loc
+            base[:location] = raw.deep_stringify_keys.slice(*::Position::LOCATION_KEYS)
+          elsif loc.is_a?(String)
+            base[:location] = loc.present? ? { "raw" => loc } : {}
+          end
           if params[:technologies].is_a?(Array)
             base[:technologies] = params[:technologies].map(&:to_s)
           end

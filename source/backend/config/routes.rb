@@ -106,19 +106,34 @@ Rails.application.routes.draw do
 
       # SPA company dashboard at :5173/company/dashboard — totals, recent
       # activity, message list, saved-dev bookmarks (private).
+      # P21/P22 — endpoints dedicados para o dev. DevAuthenticated parses
+      # the Bearer token issued by `beheld auth`. Privacy posture: NUNCA
+      # surface position/company metadata aqui — só os números seguros.
+      namespace :dev do
+        get "interest_count", to: "interest_count#show"
+        get "bundle_health",  to: "bundle_health#show"
+      end
+
       namespace :company do
         get "dashboard", to: "dashboard#index"
         get "messages",  to: "messages#index"
         resources :saved_devs, only: %i[index create update destroy],
                   param: :account_id
-        resources :positions, only: %i[index create update destroy] do
-          # Persisted matches for a single position — Phase 2 of the matcher
-          # spec. `matches#index` is the read; `matches#recalculate` is the
-          # manual trigger ("recalcular agora" no form / detail panel).
-          get  "matches",              to: "positions#matches"
-          post "matches/recalculate",  to: "positions#recalculate"
-          # P20.3 reactivation — resets the 30-day clock and re-runs the matcher.
-          post "reactivate",           to: "positions#reactivate"
+        resources :positions, only: %i[index show create update destroy] do
+          # Member actions on a single vaga — keyed by :id (the controller
+          # reads params[:id]). URLs stay /positions/:id/<action>.
+          member do
+            # Persisted matches for a single position — Phase 2 of the matcher
+            # spec. `matches` is the read; `matches/recalculate` is the manual
+            # trigger ("recalcular agora" no form / detail panel).
+            get  "matches",             to: "positions#matches"
+            post "matches/recalculate", to: "positions#recalculate"
+            # P20.3 reactivation — resets the 30-day clock and re-runs the matcher.
+            post "reactivate",          to: "positions#reactivate"
+            # Permanent delete — only allowed once a vaga is archived. DELETE on
+            # the member (destroy) soft-archives; this purges the row for good.
+            delete "purge",             to: "positions#purge"
+          end
         end
       end
     end

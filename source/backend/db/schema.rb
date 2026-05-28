@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_27_030003) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_28_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -113,6 +113,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_27_030003) do
     t.datetime "ignored_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "reply_body"
     t.index ["account_id"], name: "index_messages_on_account_id"
     t.index ["company_id"], name: "index_messages_on_company_id"
     t.index ["sent_at"], name: "index_messages_on_sent_at"
@@ -161,7 +162,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_27_030003) do
     t.bigint "company_id", null: false
     t.string "title", null: false
     t.text "description"
-    t.string "location"
+    t.jsonb "location", default: {}, null: false
     t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false

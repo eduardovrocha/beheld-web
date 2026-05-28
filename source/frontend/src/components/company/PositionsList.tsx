@@ -15,21 +15,22 @@
  * Soft-archive (vs hard delete) so historical Message rows that referenced
  * the position can still resolve.
  */
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
 import type {
-  Position, PositionSections, PositionSectionKey, PositionInput,
+  Position, PositionSections, PositionSectionKey, PositionInput, PositionLocation,
   PositionSignal, PositionThreshold, PositionMatchesPayload, PositionMatchRow,
 } from "@/lib/companyDashboardApi";
 import { getPositionMatches, recalculatePositionMatches } from "@/lib/companyDashboardApi";
 import {
-  parseFromFile,
   SECTION_KEYS,
   SECTION_LABELS,
   SECTION_HINTS,
   type Sections,
 } from "@/lib/positionMarkdownParser";
 import { extractTechnologies } from "@/lib/positionTechExtractor";
+import { LocationPicker, formatLocation } from "@/components/position/LocationPicker";
+import { Tooltip } from "@/components/Tooltip";
 
 type Mode =
   | { kind: "empty" }
@@ -40,38 +41,49 @@ type Mode =
 type CreateInput = PositionInput;
 type UpdateInput = Partial<PositionInput>;
 
-export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReactivate }: {
+type ListTab = "active" | "archived";
+
+export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReactivate, onPurge }: {
   positions:    Position[];
   onCreate:     (input: CreateInput) => Promise<void> | void;
   onUpdate:     (id: number, input: UpdateInput) => Promise<void> | void;
   onArchive:    (id: number) => Promise<void> | void;
   onReactivate: (id: number) => Promise<void> | void;
+  onPurge:      (id: number) => Promise<void> | void;
 }) {
   const [mode, setMode] = useState<Mode>({ kind: "empty" });
+  const [listTab, setListTab] = useState<ListTab>("active");
 
-  // When the position list reshapes (initial load, archive, new), keep the
-  // current selection valid. Falling back to the first active row mirrors
-  // common master/detail behavior (a vazio screen only when truly nothing).
-  // Keep the right-column selection in sync with the list. Two cases:
-  //   - view/edit on a position that just got archived/removed → fall back
-  //     to the first active row (or "empty" if the list is gone).
-  //   - sitting on "empty" while the list has items (e.g. just after a
-  //     successful create) → auto-select the freshest row.
-  // We include `mode` in the deps so the auto-select also fires when the
-  // form transitions back to "empty" after submit; the inner guard stops
-  // any loop.
+  const inTab = (tab: ListTab) => (p: Position) => (tab === "active" ? !p.archived : p.archived);
+  const visible = positions.filter(inTab(listTab));
+  const activeCount   = positions.filter((p) => !p.archived).length;
+  const archivedCount = positions.length - activeCount;
+
+  // Keep the right-column selection valid as the list reshapes (create,
+  // archive, purge) and when the recruiter switches list tabs. Selection is
+  // by id; we only auto-pick within the *currently visible* tab so the detail
+  // never shows a row that isn't in the list you're looking at.
   useEffect(() => {
+    const pick = positions.find(inTab(listTab));
     if (mode.kind === "view" || mode.kind === "edit") {
-      const stillThere = positions.some((p) => p.id === mode.id);
-      if (!stillThere) {
-        const first = positions.find((p) => !p.archived) ?? positions[0];
-        setMode(first ? { kind: "view", id: first.id } : { kind: "empty" });
+      if (!positions.some((p) => p.id === mode.id)) {
+        setMode(pick ? { kind: "view", id: pick.id } : { kind: "empty" });
       }
-    } else if (mode.kind === "empty" && positions.length > 0) {
-      const first = positions.find((p) => !p.archived) ?? positions[0];
-      setMode({ kind: "view", id: first.id });
+    } else if (mode.kind === "empty" && pick) {
+      setMode({ kind: "view", id: pick.id });
     }
-  }, [positions, mode]);
+  }, [positions, mode, listTab]);
+
+  // Switching tabs: keep the current selection if it lives in the new tab,
+  // otherwise jump to the first row there (or empty).
+  function selectTab(tab: ListTab) {
+    setListTab(tab);
+    const sel = (mode.kind === "view" || mode.kind === "edit")
+      ? positions.find((p) => p.id === mode.id) : null;
+    if (sel && inTab(tab)(sel)) return;
+    const first = positions.find(inTab(tab));
+    setMode(first ? { kind: "view", id: first.id } : { kind: "empty" });
+  }
 
   const selected = (mode.kind === "view" || mode.kind === "edit")
     ? positions.find((p) => p.id === mode.id) ?? null
@@ -89,18 +101,45 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
             posições
           </span>
           <button type="button"
-                  onClick={() => setMode({ kind: "new" })}
+                  onClick={() => { setListTab("active"); setMode({ kind: "new" }); }}
                   style={primaryChip(mode.kind === "new")}>
             + nova
           </button>
         </div>
-        {positions.length === 0 ? (
+
+        {/* Ativa | Arquivada */}
+        <div role="tablist" style={{ display: "flex", borderBottom: "1px solid var(--rule-soft)" }}>
+          {([["active", "Ativa", activeCount], ["archived", "Arquivada", archivedCount]] as const).map(
+            ([id, label, count]) => {
+              const on = listTab === id;
+              return (
+                <button key={id} type="button" role="tab" aria-selected={on}
+                        onClick={() => selectTab(id)}
+                        style={{
+                          flex: 1, font: "inherit", fontSize: 11.5, letterSpacing: "0.04em",
+                          padding: "8px 10px",
+                          background: "transparent",
+                          color: on ? "var(--text)" : "var(--muted)",
+                          border: "none",
+                          borderBottom: `2px solid ${on ? "var(--accent)" : "transparent"}`,
+                          marginBottom: -1, cursor: "pointer",
+                        }}>
+                  {label} <span className="font-mono" style={{ color: "var(--muted-soft)", fontSize: 10 }}>{count}</span>
+                </button>
+              );
+            },
+          )}
+        </div>
+
+        {visible.length === 0 ? (
           <p style={{ color: "var(--muted-soft)", fontSize: 12.5, lineHeight: 1.6, padding: "20px 16px" }}>
-            Nenhuma posição ainda. Use <strong style={{ color: "var(--muted)" }}>+ nova</strong> para começar.
+            {listTab === "active"
+              ? <>Nenhuma vaga ativa. Use <strong style={{ color: "var(--muted)" }}>+ nova</strong> para começar.</>
+              : "Nenhuma vaga arquivada."}
           </p>
         ) : (
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            {positions.map((p) => {
+            {visible.map((p) => {
               const active = (mode.kind === "view" || mode.kind === "edit") && mode.id === p.id;
               return (
                 <li key={p.id}>
@@ -118,7 +157,9 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
                       color: "var(--muted)", fontSize: 12, marginTop: 3, lineHeight: 1.4,
                       display: "flex", alignItems: "center", gap: 6,
                     }}>
-                      {p.location || <span style={{ color: "var(--muted-soft)" }}>sem localização</span>}
+                      {Object.keys(p.location ?? {}).length > 0
+                        ? formatLocation(p.location)
+                        : <span style={{ color: "var(--muted-soft)" }}>sem localização</span>}
                       {p.archived && (
                         <span className="font-mono uppercase"
                               style={{
@@ -142,15 +183,15 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
       {/* ── detail ───────────────────────────────────────────────────────── */}
       <section style={{ background: "var(--card-bg)", border: "1px solid var(--rule)", minHeight: 280 }}>
         {mode.kind === "empty" && (
-          <EmptyPanel onNew={() => setMode({ kind: "new" })} />
+          <EmptyPanel onNew={() => { setListTab("active"); setMode({ kind: "new" }); }} />
         )}
 
         {mode.kind === "new" && (
           <NewForm onCreate={async (input) => {
             await onCreate(input);
-            // After create we leave the user on "empty" — the hook's
-            // useEffect picks the freshly inserted row as soon as
-            // `positions` updates.
+            // After create we leave the user on "empty" — the effect picks the
+            // freshly inserted (active) row as soon as `positions` updates.
+            setListTab("active");
             setMode({ kind: "empty" });
           }}
                    onCancel={() => setMode(positions[0] ? { kind: "view", id: positions[0].id } : { kind: "empty" })} />
@@ -166,8 +207,15 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
                            onArchive={async () => {
                              if (!confirm("Arquivar esta posição? Mensagens passadas continuam visíveis.")) return;
                              await onArchive(selected.id);
+                             // Move o foco pra aba Arquivada, onde a vaga agora
+                             // vive e pode ser excluída em definitivo.
+                             setListTab("archived");
                            }}
-                           onReactivate={() => onReactivate(selected.id)} />
+                           onReactivate={() => onReactivate(selected.id)}
+                           onPurge={async () => {
+                             if (!confirm("Excluir permanentemente esta vaga? Esta ação não pode ser desfeita.")) return;
+                             await onPurge(selected.id);
+                           }} />
         )}
       </section>
     </div>
@@ -193,18 +241,25 @@ function EmptyPanel({ onNew }: { onNew: () => void }) {
   );
 }
 
-function DetailPanel({ position, onEdit, onArchive, onReactivate }: {
+function DetailPanel({ position, onEdit, onArchive, onReactivate, onPurge }: {
   position:     Position;
   onEdit:       () => void;
   onArchive:    () => void;
   onReactivate: () => void | Promise<void>;
+  onPurge:      () => void | Promise<void>;
 }) {
   return (
-    <div style={{ padding: 28, opacity: position.archived ? 0.7 : 1 }}>
-      <div className="font-mono uppercase"
-           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        vaga
-        <PositionStatusChip status={position.status} expiresAt={position.expires_at} />
+    <div style={{ padding: 28 }}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="font-mono uppercase"
+             style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
+          vaga
+          <PositionStatusChip status={position.status} expiresAt={position.expires_at} />
+        </div>
+        {/* Ações da vaga arquivada — ícones no topo direito, tooltip no hover */}
+        {position.archived && (
+          <ArchivedActions onReactivate={onReactivate} onPurge={onPurge} />
+        )}
       </div>
 
       <h3 className="font-semibold"
@@ -212,9 +267,9 @@ function DetailPanel({ position, onEdit, onArchive, onReactivate }: {
         {position.title}
       </h3>
 
-      {position.location && (
+      {Object.keys(position.location ?? {}).length > 0 && (
         <div style={{ color: "var(--muted)", fontSize: 13.5, marginTop: 4 }}>
-          {position.location}
+          {formatLocation(position.location)}
         </div>
       )}
 
@@ -245,14 +300,88 @@ function DetailPanel({ position, onEdit, onArchive, onReactivate }: {
         <SectionsView sections={position.sections} fallback={position.description} />
       </div>
 
-      <PositionActions position={position} onEdit={onEdit} onArchive={onArchive} onReactivate={onReactivate} />
+      <PositionActions position={position} onEdit={onEdit} onArchive={onArchive}
+                       onReactivate={onReactivate} />
     </div>
   );
 }
 
-// Action row keyed off `status`. Active positions can be edited/archived;
-// expired positions surface a primary "Reativar" + secondary modify/encerrar
-// (mirrors spec section 6 — "Opções: Reativar · Modificar thresholds · Encerrar").
+// Compact icon actions for an archived vaga — pinned top-right of the detail
+// panel. Each icon carries a rich Tooltip (icon · label · title · description)
+// on hover/focus. Reativar restores the vaga; Excluir deletes it permanently.
+function ArchivedActions({ onReactivate, onPurge }: {
+  onReactivate: () => void | Promise<void>;
+  onPurge:      () => void | Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  async function run(fn: () => void | Promise<void>) {
+    setBusy(true);
+    try { await fn(); } finally { setBusy(false); }
+  }
+  return (
+    <div className="flex items-center" style={{ gap: 6 }}>
+      <Tooltip
+        icon={<ReactivateIcon size={12} />}
+        label="reativar vaga"
+        title="Reabrir por mais 30 dias."
+        description="A vaga volta a ficar ativa e o matcher roda de novo contra o diretório atual.">
+        <button type="button" disabled={busy} onClick={() => run(onReactivate)}
+                aria-label="Reativar (+ 30 dias)" style={iconBtn(busy)}>
+          <ReactivateIcon />
+        </button>
+      </Tooltip>
+      <Tooltip
+        tone="danger"
+        icon={<TrashIcon size={12} />}
+        label="excluir vaga"
+        title="Remover permanentemente."
+        description="A vaga e seus critérios são apagados para sempre. Esta ação não pode ser desfeita.">
+        <button type="button" disabled={busy} onClick={() => run(onPurge)}
+                aria-label="Excluir permanentemente" style={iconBtn(busy, "danger")}>
+          <TrashIcon />
+        </button>
+      </Tooltip>
+    </div>
+  );
+}
+
+function iconBtn(busy: boolean, variant?: "danger"): React.CSSProperties {
+  return {
+    display: "inline-flex", alignItems: "center", justifyContent: "center",
+    width: 30, height: 30, padding: 0,
+    background: "transparent",
+    color: variant === "danger" ? "var(--warn)" : "var(--muted)",
+    border: "1px solid var(--rule)",
+    borderRadius: 0,
+    cursor: busy ? "not-allowed" : "pointer",
+    opacity: busy ? 0.5 : 1,
+  };
+}
+
+function ReactivateIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 12a9 9 0 1 1-3-6.7" />
+      <path d="M21 3v6h-6" />
+    </svg>
+  );
+}
+
+function TrashIcon({ size = 15 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    </svg>
+  );
+}
+
+// Action row for non-archived vagas. Active → editar/arquivar; expired →
+// Reativar + modify/encerrar (spec section 6). Archived vagas render their
+// actions as icons up top (ArchivedActions), so nothing here.
 function PositionActions({ position, onEdit, onArchive, onReactivate }: {
   position:     Position;
   onEdit:       () => void;
@@ -260,12 +389,13 @@ function PositionActions({ position, onEdit, onArchive, onReactivate }: {
   onReactivate: () => void | Promise<void>;
 }) {
   const [busy, setBusy] = useState(false);
-  if (position.status === "closed") return null;
 
   async function handleReactivate() {
     setBusy(true);
     try { await onReactivate(); } finally { setBusy(false); }
   }
+
+  if (position.archived) return null;
 
   if (position.status === "expired") {
     return (
@@ -303,29 +433,70 @@ function PositionActions({ position, onEdit, onArchive, onReactivate }: {
 
 // ── forms ──────────────────────────────────────────────────────────────────
 
+// PF.2 — the form is split into two independent tabs. State lives in the
+// parent form component so switching tabs never loses data, and the
+// Cancelar/Salvar row sits outside the tab panels so it's present on both.
+type FormTab = "description" | "match_criteria";
+
+function FormTabs({ active, onChange }: {
+  active:   FormTab;
+  onChange: (t: FormTab) => void;
+}) {
+  const tabs: Array<{ id: FormTab; label: string }> = [
+    { id: "description",    label: "Descrição" },
+    { id: "match_criteria", label: "Critérios de match" },
+  ];
+  return (
+    <div role="tablist" style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--rule)" }}>
+      {tabs.map((t) => {
+        const on = active === t.id;
+        return (
+          <button key={t.id} type="button" role="tab" aria-selected={on}
+                  onClick={() => onChange(t.id)}
+                  style={{
+                    font: "inherit", fontSize: 12,
+                    letterSpacing: "0.04em",
+                    padding: "8px 14px",
+                    background: "transparent",
+                    color: on ? "var(--text)" : "var(--muted)",
+                    border: "none",
+                    borderBottom: `2px solid ${on ? "var(--accent)" : "transparent"}`,
+                    marginBottom: -1,
+                    cursor: "pointer",
+                  }}>
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function NewForm({ onCreate, onCancel }: {
   onCreate: (input: CreateInput) => Promise<void> | void;
   onCancel: () => void;
 }) {
+  const [tab,          setTab]          = useState<FormTab>("description");
   const [title,        setTitle]        = useState("");
-  const [location,     setLocation]     = useState("");
+  const [location,     setLocation]     = useState<PositionLocation>({});
   const [sections,     setSections]     = useState<Sections>({});
   const [technologies, setTechnologies] = useState<string[]>([]);
-  const [importNote,   setImportNote]   = useState<string | null>(null);
   const [criteria,     setCriteria]     = useState<MatchCriteria>(initialCriteria());
   const [busy,         setBusy]         = useState(false);
   const [error,        setError]        = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!title.trim()) { setError("Título é obrigatório."); return; }
+    if (!title.trim()) { setError("Título é obrigatório."); setTab("description"); return; }
+    const criteriaError = validateCriteria(criteria);
+    if (criteriaError) { setError(criteriaError); setTab("match_criteria"); return; }
     setBusy(true);
     setError(null);
     try {
       const { thresholds, priorities } = buildCriteriaPayload(criteria);
       await onCreate({
         title:        title.trim(),
-        location:     location.trim() || undefined,
+        location:     Object.keys(location).length > 0 ? location : undefined,
         technologies: technologies.length > 0 ? technologies : undefined,
         sections:     sanitizeSections(sections),
         thresholds,
@@ -347,39 +518,31 @@ function NewForm({ onCreate, onCancel }: {
 
       {error && <ErrorBanner>{error}</ErrorBanner>}
 
-      <SectionsImport
-        disabled={busy}
-        note={importNote}
-        onImport={(r) => {
-          setSections((prev) => ({ ...prev, ...r.sections }));
-          // Tech extraction prefers the technical_stack section if matched;
-          // otherwise scans the entire raw markdown so we still get hints.
-          const seed = r.sections.technical_stack ?? r.raw;
-          const extracted = extractTechnologies(seed).technologies;
-          setTechnologies((prev) => uniqueOrdered([...prev, ...extracted]));
-          setImportNote(formatImportNote(r.matched.length, extracted.length, r.unmatched));
-        }}
-        onError={(msg) => setImportNote(msg)} />
+      <FormTabs active={tab} onChange={setTab} />
 
-      <Field label="Título" hint="obrigatório">
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-               required disabled={busy} placeholder="Engenheiro Backend Sênior"
-               autoFocus style={inputStyle()} />
-      </Field>
+      {tab === "description" && (
+        <div className="grid gap-4">
+          <Field label="Título" hint="obrigatório">
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+                   required disabled={busy} placeholder="Engenheiro Backend Sênior"
+                   autoFocus style={inputStyle()} />
+          </Field>
 
-      <Field label="Localização" hint="opcional">
-        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
-               disabled={busy} placeholder="Remoto, São Paulo, etc." style={inputStyle()} />
-      </Field>
+          <Field label="Localização" hint="opcional">
+            <LocationPicker value={location} disabled={busy} onChange={setLocation} />
+          </Field>
 
-      <SectionFields disabled={busy} sections={sections} onChange={setSections} />
+          <SectionFields disabled={busy} sections={sections} onChange={setSections} />
 
-      <TechEditor label="Tecnologias" disabled={busy}
-                  techs={technologies} onChange={setTechnologies}
-                  source={(sections.technical_stack ?? "") + "\n" + (sections.requirements ?? "")} />
+          <TechEditor label="Tecnologias" disabled={busy}
+                      techs={technologies} onChange={setTechnologies}
+                      source={(sections.requirements ?? "") + "\n" + (sections.responsibilities ?? "")} />
+        </div>
+      )}
 
-      <MatchCriteriaEditor disabled={busy} value={criteria} onChange={setCriteria}
-                           techSuggestions={technologies} />
+      {tab === "match_criteria" && (
+        <MatchCriteriaEditor disabled={busy} value={criteria} onChange={setCriteria} />
+      )}
 
       <div className="flex gap-2 justify-end" style={{ marginTop: 4 }}>
         <button type="button" onClick={onCancel} disabled={busy} style={secondaryBtn(busy)}>Cancelar</button>
@@ -396,28 +559,40 @@ function EditForm({ position, onSave, onCancel }: {
   onSave:   (input: UpdateInput) => Promise<void> | void;
   onCancel: () => void;
 }) {
+  const [tab,          setTab]          = useState<FormTab>("description");
   const [title,        setTitle]        = useState(position.title);
-  const [location,     setLocation]     = useState(position.location ?? "");
+  const [location,     setLocation]     = useState<PositionLocation>(position.location ?? {});
   const [sections,     setSections]     = useState<Sections>(position.sections ?? {});
-  const [technologies, setTechnologies] = useState<string[]>(position.technologies ?? []);
-  const [importNote,   setImportNote]   = useState<string | null>(null);
+  // Fusão Technical Stack → Tecnologias: positions antigas podem ter texto em
+  // sections.technical_stack. Migramos os techs reconhecidos pras tags na hora
+  // de editar (o campo technical_stack deixa de ser gravado em sanitizeSections).
+  const [technologies, setTechnologies] = useState<string[]>(() => {
+    const fromStack = extractTechnologies(position.sections?.technical_stack ?? "").technologies;
+    return uniqueOrdered([...(position.technologies ?? []), ...fromStack]);
+  });
   const [criteria,     setCriteria]     = useState<MatchCriteria>(criteriaFromPosition(position));
   const [busy,         setBusy]         = useState(false);
+  const [error,        setError]        = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim()) { setError("Título é obrigatório."); setTab("description"); return; }
+    const criteriaError = validateCriteria(criteria);
+    if (criteriaError) { setError(criteriaError); setTab("match_criteria"); return; }
     setBusy(true);
+    setError(null);
     try {
       const { thresholds, priorities } = buildCriteriaPayload(criteria);
       await onSave({
         title:        title.trim(),
-        location:     location.trim(),
+        location,
         technologies,
         sections:     sanitizeSections(sections),
         thresholds,
         priorities,
       });
+    } catch (e2) {
+      setError((e2 as Error).message || "Falha ao salvar.");
     } finally {
       setBusy(false);
     }
@@ -430,35 +605,31 @@ function EditForm({ position, onSave, onCancel }: {
         editar vaga
       </div>
 
-      <SectionsImport
-        disabled={busy}
-        note={importNote}
-        onImport={(r) => {
-          setSections((prev) => ({ ...prev, ...r.sections }));
-          const seed = r.sections.technical_stack ?? r.raw;
-          const extracted = extractTechnologies(seed).technologies;
-          setTechnologies((prev) => uniqueOrdered([...prev, ...extracted]));
-          setImportNote(formatImportNote(r.matched.length, extracted.length, r.unmatched));
-        }}
-        onError={(msg) => setImportNote(msg)} />
+      {error && <ErrorBanner>{error}</ErrorBanner>}
 
-      <Field label="Título">
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-               required disabled={busy} autoFocus style={inputStyle()} />
-      </Field>
-      <Field label="Localização">
-        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
-               disabled={busy} style={inputStyle()} />
-      </Field>
+      <FormTabs active={tab} onChange={setTab} />
 
-      <SectionFields disabled={busy} sections={sections} onChange={setSections} />
+      {tab === "description" && (
+        <div className="grid gap-4">
+          <Field label="Título">
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+                   required disabled={busy} autoFocus style={inputStyle()} />
+          </Field>
+          <Field label="Localização">
+            <LocationPicker value={location} disabled={busy} onChange={setLocation} />
+          </Field>
 
-      <TechEditor label="Tecnologias" disabled={busy}
-                  techs={technologies} onChange={setTechnologies}
-                  source={(sections.technical_stack ?? "") + "\n" + (sections.requirements ?? "")} />
+          <SectionFields disabled={busy} sections={sections} onChange={setSections} />
 
-      <MatchCriteriaEditor disabled={busy} value={criteria} onChange={setCriteria}
-                           techSuggestions={technologies} />
+          <TechEditor label="Tecnologias" disabled={busy}
+                      techs={technologies} onChange={setTechnologies}
+                      source={(sections.requirements ?? "") + "\n" + (sections.responsibilities ?? "")} />
+        </div>
+      )}
+
+      {tab === "match_criteria" && (
+        <MatchCriteriaEditor disabled={busy} value={criteria} onChange={setCriteria} />
+      )}
 
       <div className="flex gap-2 justify-end" style={{ marginTop: 4 }}>
         <button type="button" onClick={onCancel} disabled={busy} style={secondaryBtn(busy)}>Cancelar</button>
@@ -599,87 +770,22 @@ function uniqueOrdered(items: string[]): string[] {
   return out;
 }
 
-// ── markdown import widget ─────────────────────────────────────────────────
+// ── one field per canonical section ───────────────────────────────────────
 //
-// Reads a .md file, runs the section parser, and hands the structured
-// result back to the form (which slots each section into its dedicated
-// textarea + seeds the tech list from the technical_stack section).
+// Requirements / Qualifications / Nice to Have are entered item-by-item
+// (each input is one item, "+ item" adds another). They're still stored as a
+// single newline-joined string per section so the jsonb contract and the
+// backend validation stay untouched — one line === one item.
 
-function SectionsImport({ disabled, note, onImport, onError }: {
-  disabled: boolean;
-  note:     string | null;
-  onImport: (r: { raw: string; sections: Sections; matched: PositionSectionKey[]; unmatched: string[]; matchCount: number }) => void;
-  onError:  (msg: string) => void;
-}) {
-  const fileRef = useRef<HTMLInputElement | null>(null);
+const LIST_SECTION_KEYS = new Set<PositionSectionKey>([
+  "requirements", "qualifications", "nice_to_have",
+]);
 
-  async function handleFile(file: File | null) {
-    if (!file) return;
-    if (file.size > 256_000) {
-      onError("Arquivo grande demais (limite 256 KB).");
-      return;
-    }
-    try {
-      const parsed = await parseFromFile(file);
-      onImport({
-        raw:        parsed.raw,
-        sections:   parsed.sections,
-        matched:    parsed.matched as PositionSectionKey[],
-        unmatched:  parsed.unmatched,
-        matchCount: parsed.matched.length,
-      });
-    } catch (e) {
-      onError(`Falha ao ler arquivo: ${(e as Error).message}`);
-    }
-  }
-
-  return (
-    <div style={{
-      padding: 14,
-      background: "var(--surface)",
-      border: "1px dashed var(--rule)",
-    }}>
-      <div className="flex flex-wrap items-center gap-3" style={{ marginBottom: note ? 8 : 0 }}>
-        <span className="font-mono uppercase"
-              style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
-          importar descrição (.md)
-        </span>
-        <input ref={fileRef} type="file" accept=".md,text/markdown,text/plain"
-               disabled={disabled}
-               onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-               style={{ display: "none" }} />
-        <button type="button"
-                disabled={disabled}
-                onClick={() => fileRef.current?.click()}
-                style={secondaryBtn(disabled)}>
-          Escolher arquivo
-        </button>
-        <span style={{ color: "var(--muted-soft)", fontSize: 12 }}>
-          identifica Responsabilidades · Stack · Requirements · Qualifications · Nice to Have
-        </span>
-      </div>
-      {note && (
-        <div style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.5 }}>{note}</div>
-      )}
-    </div>
-  );
-}
-
-function formatImportNote(matchedCount: number, techCount: number, unmatched: string[]): string {
-  const parts: string[] = [];
-  parts.push(
-    matchedCount === 0
-      ? "Nenhuma seção reconhecida — preencha manualmente."
-      : `${matchedCount} ${matchedCount === 1 ? "seção identificada" : "seções identificadas"}.`,
-  );
-  if (techCount > 0) parts.push(`${techCount} tecnologias detectadas.`);
-  if (unmatched.length > 0) {
-    parts.push(`Não reconhecido: ${unmatched.slice(0, 3).join(", ")}${unmatched.length > 3 ? "…" : ""}`);
-  }
-  return parts.join(" ");
-}
-
-// ── 5 textareas, one per canonical section ────────────────────────────────
+// Sections shown in the form/detail. Technical Stack is intentionally omitted
+// — the "Tecnologias" tag input already captures the stack. The key stays
+// valid in the data model so any legacy data isn't rejected.
+const FORM_SECTION_KEYS = (SECTION_KEYS as readonly PositionSectionKey[])
+  .filter((k) => k !== "technical_stack");
 
 function SectionFields({ disabled, sections, onChange }: {
   disabled: boolean;
@@ -691,18 +797,89 @@ function SectionFields({ disabled, sections, onChange }: {
   }
   return (
     <>
-      {(SECTION_KEYS as readonly PositionSectionKey[]).map((key) => (
+      {FORM_SECTION_KEYS.map((key) => (
         <Field key={key} label={SECTION_LABELS[key]} hint={SECTION_HINTS[key]}>
-          <textarea
-            value={sections[key] ?? ""}
-            onChange={(e) => set(key, e.target.value)}
-            disabled={disabled}
-            rows={key === "responsibilities" || key === "qualifications" ? 5 : 4}
-            placeholder={placeholderFor(key)}
-            style={textareaStyle()} />
+          {LIST_SECTION_KEYS.has(key) ? (
+            <ItemListField
+              value={sections[key] ?? ""}
+              disabled={disabled}
+              placeholder={placeholderFor(key).replace(/^•\s*/, "")}
+              onChange={(v) => set(key, v)} />
+          ) : (
+            <textarea
+              value={sections[key] ?? ""}
+              onChange={(e) => set(key, e.target.value)}
+              disabled={disabled}
+              rows={key === "responsibilities" ? 5 : 4}
+              placeholder={placeholderFor(key)}
+              style={textareaStyle()} />
+          )}
         </Field>
       ))}
     </>
+  );
+}
+
+// Item-by-item editor backed by a newline-joined string. Each line is one
+// item; "+ item" appends a blank input, "×" removes a row. An empty value
+// still renders a single empty input so there's always somewhere to type.
+function ItemListField({ value, disabled, placeholder, onChange }: {
+  value:       string;
+  disabled:    boolean;
+  placeholder: string;
+  onChange:    (next: string) => void;
+}) {
+  const items = value.length === 0 ? [""] : value.split("\n");
+
+  function update(i: number, text: string) {
+    const next = items.map((it, idx) => (idx === i ? text : it));
+    onChange(next.join("\n"));
+  }
+  function add() {
+    onChange([...items, ""].join("\n"));
+  }
+  function remove(i: number) {
+    const next = items.filter((_, idx) => idx !== i);
+    onChange(next.join("\n"));
+  }
+
+  return (
+    <div className="grid gap-2">
+      {items.map((item, i) => (
+        <div key={i} className="flex items-center gap-2">
+          <span aria-hidden style={{ color: "var(--muted-soft)", fontSize: 13 }}>•</span>
+          <input type="text" value={item} disabled={disabled}
+                 onChange={(e) => update(i, e.target.value)}
+                 onKeyDown={(e) => {
+                   // Enter on a row adds the next item (faster bulk entry).
+                   if (e.key === "Enter") { e.preventDefault(); add(); }
+                 }}
+                 placeholder={placeholder}
+                 style={{ ...inputStyle(), flex: 1 }} />
+          <button type="button" disabled={disabled || (items.length === 1 && item === "")}
+                  onClick={() => remove(i)} aria-label="remover item"
+                  style={{
+                    font: "inherit", fontSize: 15, lineHeight: 1,
+                    width: 30, height: 30, padding: 0,
+                    background: "transparent", color: "var(--muted)",
+                    border: "1px solid var(--rule)",
+                    cursor: disabled ? "not-allowed" : "pointer",
+                  }}>×</button>
+        </div>
+      ))}
+      <div>
+        <button type="button" disabled={disabled} onClick={add}
+                style={{
+                  font: "inherit", fontSize: 11.5,
+                  padding: "4px 10px",
+                  background: "transparent", color: "var(--accent)",
+                  border: "1px dashed var(--accent)", borderRadius: 0,
+                  cursor: disabled ? "not-allowed" : "pointer",
+                }}>
+          + item
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -720,8 +897,14 @@ function placeholderFor(key: PositionSectionKey): string {
 // server gets `{}` for fully blank forms instead of `{key: ""}` noise.
 function sanitizeSections(s: Sections): PositionSections {
   const out: PositionSections = {};
-  for (const key of SECTION_KEYS as readonly PositionSectionKey[]) {
-    const v = (s[key] ?? "").trim();
+  // Iterates FORM_SECTION_KEYS (sem technical_stack) — o stack foi fundido no
+  // campo "Tecnologias", então nunca mais gravamos a seção technical_stack.
+  for (const key of FORM_SECTION_KEYS) {
+    const raw = s[key] ?? "";
+    // List sections: drop blank/whitespace-only items, one per line.
+    const v = LIST_SECTION_KEYS.has(key)
+      ? raw.split("\n").map((l) => l.trim()).filter(Boolean).join("\n")
+      : raw.trim();
     if (v) out[key] = v;
   }
   return out;
@@ -730,7 +913,7 @@ function sanitizeSections(s: Sections): PositionSections {
 // Read-only render used by the detail panel. Falls back to the legacy
 // `description` field when the position has no structured sections.
 function SectionsView({ sections, fallback }: { sections?: Sections; fallback?: string | null }) {
-  const filled = (SECTION_KEYS as readonly PositionSectionKey[])
+  const filled = FORM_SECTION_KEYS
     .filter((k) => (sections?.[k] ?? "").trim().length > 0);
 
   if (filled.length === 0) {
@@ -760,13 +943,24 @@ function SectionsView({ sections, fallback }: { sections?: Sections; fallback?: 
                style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em", marginBottom: 8 }}>
             {SECTION_LABELS[key]}
           </div>
-          <p style={{
-            color: "var(--text)", fontSize: 14.5, lineHeight: 1.7,
-            whiteSpace: "pre-wrap",
-            fontFamily: "'Newsreader', Georgia, 'Times New Roman', serif",
-          }}>
-            {sections?.[key]}
-          </p>
+          {LIST_SECTION_KEYS.has(key) ? (
+            <ul style={{
+              margin: 0, paddingLeft: 20,
+              color: "var(--text)", fontSize: 14.5, lineHeight: 1.7,
+              fontFamily: "'Newsreader', Georgia, 'Times New Roman', serif",
+            }}>
+              {(sections?.[key] ?? "").split("\n").map((l) => l.trim()).filter(Boolean)
+                .map((item, i) => <li key={i}>{item}</li>)}
+            </ul>
+          ) : (
+            <p style={{
+              color: "var(--text)", fontSize: 14.5, lineHeight: 1.7,
+              whiteSpace: "pre-wrap",
+              fontFamily: "'Newsreader', Georgia, 'Times New Roman', serif",
+            }}>
+              {sections?.[key]}
+            </p>
+          )}
         </div>
       ))}
     </div>
@@ -947,49 +1141,86 @@ function PositionMatchesPanel({ position }: { position: Position }) {
           Carregando matches…
         </p>
       ) : (
-        <div className="grid gap-5">
-          <MatchListBlock kind="match"     rows={data.matches} />
-          <MatchListBlock kind="near_miss" rows={data.near_miss} />
-        </div>
+        // key por position → reseta tab/página ao trocar de vaga
+        <MatchesTabbed key={position.id} data={data} />
       )}
     </div>
   );
 }
 
-function MatchListBlock({ kind, rows }: { kind: "match" | "near_miss"; rows: PositionMatchRow[] }) {
-  if (rows.length === 0) {
-    return (
-      <div>
-        <BlockLabel kind={kind} count={0} />
+// Match confirmado | Near-miss em tabs, com paginação de 15 por aba.
+const MATCHES_PER_PAGE = 15;
+
+function MatchesTabbed({ data }: { data: PositionMatchesPayload }) {
+  const [tab, setTab]   = useState<"match" | "near_miss">("match");
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [tab]);   // troca de aba volta pra página 1
+
+  const tabs = [
+    { id: "match"     as const, label: "Match confirmado", count: data.matches.length,   color: "var(--ok)" },
+    { id: "near_miss" as const, label: "Near-miss",        count: data.near_miss.length, color: "var(--warn)" },
+  ];
+  const rows    = tab === "match" ? data.matches : data.near_miss;
+  const pages   = Math.max(1, Math.ceil(rows.length / MATCHES_PER_PAGE));
+  const current = Math.min(page, pages);
+  const start   = (current - 1) * MATCHES_PER_PAGE;
+  const pageRows = rows.slice(start, start + MATCHES_PER_PAGE);
+
+  return (
+    <div>
+      <div role="tablist" style={{ display: "flex", borderBottom: "1px solid var(--rule)", marginBottom: 12 }}>
+        {tabs.map((t) => {
+          const on = tab === t.id;
+          return (
+            <button key={t.id} type="button" role="tab" aria-selected={on}
+                    onClick={() => setTab(t.id)}
+                    style={{
+                      font: "inherit", fontSize: 12, letterSpacing: "0.04em", padding: "8px 14px",
+                      background: "transparent", color: on ? "var(--text)" : "var(--muted)",
+                      border: "none", borderBottom: `2px solid ${on ? t.color : "transparent"}`,
+                      marginBottom: -1, cursor: "pointer",
+                    }}>
+              {t.label}{" "}
+              <span className="font-mono"
+                    style={{ color: on ? t.color : "var(--muted-soft)", fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+                {t.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {rows.length === 0 ? (
         <p style={{ color: "var(--muted-soft)", fontSize: 13, lineHeight: 1.6 }}>
-          {kind === "match"
+          {tab === "match"
             ? "Nenhum dev passou todos os thresholds hoje."
             : "Nenhum dev caiu dentro da margem de near-miss."}
         </p>
-      </div>
-    );
-  }
-  return (
-    <div>
-      <BlockLabel kind={kind} count={rows.length} />
-      <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
-        {rows.map((r, i) => <MatchRow key={r.account_id} row={r} first={i === 0} />)}
-      </div>
-    </div>
-  );
-}
-
-function BlockLabel({ kind, count }: { kind: "match" | "near_miss"; count: number }) {
-  const label = kind === "match" ? "Match confirmado" : "Near-miss";
-  const tail  = kind === "match" ? "passaram todos os thresholds" : "1 threshold dentro da margem";
-  return (
-    <div className="mb-2 flex items-baseline gap-3">
-      <span className="font-mono uppercase"
-            style={{ color: kind === "match" ? "var(--ok)" : "var(--warn)",
-                      fontSize: 11, letterSpacing: "0.16em" }}>
-        {label} · {count}
-      </span>
-      <span style={{ color: "var(--muted-soft)", fontSize: 12 }}>· {tail}</span>
+      ) : (
+        <>
+          <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
+            {pageRows.map((r, i) => <MatchRow key={r.account_id} row={r} first={i === 0} />)}
+          </div>
+          {pages > 1 && (
+            <div className="flex items-center justify-between" style={{ marginTop: 10 }}>
+              <span className="font-mono"
+                    style={{ color: "var(--muted-soft)", fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+                {start + 1}–{Math.min(start + MATCHES_PER_PAGE, rows.length)} de {rows.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <button type="button" disabled={current <= 1} onClick={() => setPage(current - 1)}
+                        style={secondaryBtn(current <= 1)}>← anterior</button>
+                <span className="font-mono"
+                      style={{ color: "var(--muted)", fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+                  {current}/{pages}
+                </span>
+                <button type="button" disabled={current >= pages} onClick={() => setPage(current + 1)}
+                        style={secondaryBtn(current >= pages)}>próxima →</button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -1023,7 +1254,7 @@ function MatchRow({ row, first }: { row: PositionMatchRow; first: boolean }) {
         )}
       </div>
       {row.bundle_slug && (
-        <a href={`/v/${row.bundle_slug}`}
+        <a href={`/v/${row.bundle_slug}`} target="_blank" rel="noopener noreferrer"
            style={{
              font: "inherit", fontSize: 11.5,
              padding: "5px 12px",
@@ -1078,7 +1309,7 @@ function NearMissDetail({ row }: { row: PositionMatchRow }) {
 }
 
 function CurveBadge({ curve }: { curve?: import("@/lib/companyDashboardApi").PositionCurve }) {
-  if (!curve || curve.status === "unsupported" || curve.status === "none") return null;
+  if (!curve || curve.status === "not_applicable" || curve.status === "none") return null;
   if (curve.status === "building") {
     return (
       <span className="font-mono" style={{
@@ -1222,6 +1453,26 @@ function criteriaFromPosition(p: Position): MatchCriteria {
   return c;
 }
 
+// PP-VAL §9.3 — hard validation antes do submit. Espelha a regra do
+// servidor ("Ao menos um threshold deve ser definido para ativar o
+// matching") + cobre o caso degenerado "ecosystems habilitado sem nenhum
+// item selecionado". Retorna a mensagem de erro a exibir ou null se OK.
+function validateCriteria(c: MatchCriteria): string | null {
+  const enabledSignals: PositionSignal[] = [];
+  if (c.ecosystems.enabled) {
+    if (c.ecosystems.items.length === 0) {
+      return "Selecione ao menos um ecosystem ou desative o critério.";
+    }
+    enabledSignals.push("ecosystems");
+  }
+  if (c.test_ratio.enabled) enabledSignals.push("test_ratio");
+  if (c.recency.enabled)    enabledSignals.push("recency");
+  if (enabledSignals.length === 0) {
+    return "Defina ao menos um critério de match (ecosystems, test ratio ou recência).";
+  }
+  return null;
+}
+
 function buildCriteriaPayload(c: MatchCriteria): {
   thresholds: PositionThreshold[];
   priorities: Array<{ signal: PositionSignal }>;
@@ -1256,11 +1507,10 @@ const SIGNAL_HINTS: Record<PositionSignal, string> = {
   recency:    "dias máximos desde o último bundle",
 };
 
-function MatchCriteriaEditor({ disabled, value, onChange, techSuggestions }: {
-  disabled:       boolean;
-  value:          MatchCriteria;
-  onChange:       (next: MatchCriteria) => void;
-  techSuggestions: string[];  // technologies are a useful seed for ecosystems
+function MatchCriteriaEditor({ disabled, value, onChange }: {
+  disabled: boolean;
+  value:    MatchCriteria;
+  onChange: (next: MatchCriteria) => void;
 }) {
   // Keep priorityOrder in sync with enabled signals. When a recruiter
   // disables a signal, drop it from the ordering. When they enable one,
@@ -1284,13 +1534,13 @@ function MatchCriteriaEditor({ disabled, value, onChange, techSuggestions }: {
     next.priorityOrder = stable;
   }
 
-  function move(signal: PositionSignal, dir: -1 | 1) {
+  // PF.9 — reorder by dropping item `from` onto slot `to`.
+  function reorder(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) return;
     const order = [...value.priorityOrder];
-    const i = order.indexOf(signal);
-    if (i < 0) return;
-    const j = i + dir;
-    if (j < 0 || j >= order.length) return;
-    [order[i], order[j]] = [order[j], order[i]];
+    if (from >= order.length || to >= order.length) return;
+    const [moved] = order.splice(from, 1);
+    order.splice(to, 0, moved);
     onChange({ ...value, priorityOrder: order });
   }
 
@@ -1299,37 +1549,38 @@ function MatchCriteriaEditor({ disabled, value, onChange, techSuggestions }: {
   return (
     <Field label="Critérios de match" hint="thresholds que o dev precisa atender + ordem de prioridade">
       <div style={{
-        background: "var(--surface)",
-        border: "1px solid var(--rule)",
         padding: 14, display: "grid", gap: 14,
       }}>
-        {/* ecosystems */}
+        {/* ecosystems — opções fixas da spec PP-VAL §9.2 */}
         <SignalRow
           signal="ecosystems"
           enabled={value.ecosystems.enabled}
           disabled={disabled}
           onToggle={(v) => setSignal("ecosystems", { enabled: v })}
         >
-          <ChipsInput
+          <EcosystemPicker
             disabled={disabled || !value.ecosystems.enabled}
             value={value.ecosystems.items}
-            suggestions={techSuggestions}
-            onChange={(items) => setSignal("ecosystems", { items })}
-            placeholder="ex: React, Rails, AWS…" />
+            onChange={(items) => setSignal("ecosystems", { items })} />
         </SignalRow>
 
-        {/* test_ratio */}
+        {/* test_ratio — PF.8 slider sincronizado com input numérico */}
         <SignalRow
           signal="test_ratio"
           enabled={value.test_ratio.enabled}
           disabled={disabled}
           onToggle={(v) => setSignal("test_ratio", { enabled: v })}
         >
-          <NumberInput
+          <RangeSlider
             disabled={disabled || !value.test_ratio.enabled}
             value={value.test_ratio.min}
-            min={0} max={100} step={1} suffix="% mínimo"
+            min={0} max={100}
             onChange={(n) => setSignal("test_ratio", { min: n })} />
+          {value.test_ratio.enabled && value.test_ratio.min > 0 && (
+            <p style={{ color: "var(--muted-soft)", fontSize: 12, lineHeight: 1.5, margin: "6px 0 0" }}>
+              Devs com test maturity score abaixo de {value.test_ratio.min} não serão incluídos nos matches.
+            </p>
+          )}
         </SignalRow>
 
         {/* recency */}
@@ -1344,49 +1595,20 @@ function MatchCriteriaEditor({ disabled, value, onChange, techSuggestions }: {
             value={value.recency.maxDays}
             min={1} max={365} step={1} suffix="dias máximo"
             onChange={(n) => setSignal("recency", { maxDays: n })} />
+          {value.recency.enabled && value.recency.maxDays > 0 && (
+            <p style={{ color: "var(--muted-soft)", fontSize: 12, lineHeight: 1.5, margin: "6px 0 0" }}>
+              Devs sem bundle publicado nos últimos {value.recency.maxDays} dias não serão incluídos nos matches.
+            </p>
+          )}
         </SignalRow>
 
-        {/* priorities */}
+        {/* priorities — PF.9 drag to rank, apenas critérios habilitados */}
         {value.priorityOrder.length > 0 && (
-          <div style={{ paddingTop: 8, borderTop: "1px dashed var(--rule)" }}>
-            <div className="font-mono uppercase"
-                 style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
-              prioridade — arraste com ↑ ↓ para reordenar
-            </div>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 4 }}>
-              {value.priorityOrder.map((signal, idx) => (
-                <li key={signal} style={{
-                  display: "grid", gridTemplateColumns: "auto 1fr auto auto",
-                  alignItems: "center", gap: 8,
-                  padding: "6px 10px",
-                  background: "var(--card-bg)",
-                  border: "1px solid var(--rule)",
-                }}>
-                  <span className="font-mono"
-                        style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.08em",
-                                  fontFeatureSettings: '"tnum"', minWidth: 14, textAlign: "center" }}>
-                    {idx + 1}º
-                  </span>
-                  <span style={{ color: "var(--text)", fontSize: 13.5 }}>
-                    {SIGNAL_LABELS[signal]}
-                  </span>
-                  <span className="font-mono"
-                        style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.04em",
-                                  fontFeatureSettings: '"tnum"' }}>
-                    peso {Math.round(weightFor(idx + 1) * 100)}%
-                  </span>
-                  <span className="flex gap-1">
-                    <button type="button" disabled={disabled || idx === 0}
-                            onClick={() => move(signal, -1)} style={miniBtn(disabled || idx === 0)}
-                            aria-label="mover para cima">↑</button>
-                    <button type="button" disabled={disabled || idx === value.priorityOrder.length - 1}
-                            onClick={() => move(signal, +1)} style={miniBtn(disabled || idx === value.priorityOrder.length - 1)}
-                            aria-label="mover para baixo">↓</button>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <PriorityRankList
+            order={value.priorityOrder}
+            disabled={disabled}
+            weightFor={weightFor}
+            onReorder={reorder} />
         )}
 
         {value.priorityOrder.length === 0 && (
@@ -1396,6 +1618,91 @@ function MatchCriteriaEditor({ disabled, value, onChange, techSuggestions }: {
         )}
       </div>
     </Field>
+  );
+}
+
+// PF.9 — HTML5 drag-to-rank list. Only enabled criteria are passed in
+// (`order`), so the list never shows a signal that isn't an active threshold.
+// Weights redistribute live as items move (1º=40%, 2º=30%, 3º=20%, 4º=10%).
+function PriorityRankList({ order, disabled, weightFor, onReorder }: {
+  order:     PositionSignal[];
+  disabled:  boolean;
+  weightFor: (rank: number) => number;
+  onReorder: (from: number, to: number) => void;
+}) {
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
+
+  return (
+    <div style={{ paddingTop: 8, borderTop: "1px dashed var(--rule)" }}>
+      <div className="font-mono uppercase"
+           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
+        prioridade — arraste para reordenar
+      </div>
+      <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 4 }}>
+        {order.map((signal, idx) => (
+          <li key={signal}
+              draggable={!disabled}
+              onDragStart={() => setDragIdx(idx)}
+              onDragOver={(e) => { e.preventDefault(); if (overIdx !== idx) setOverIdx(idx); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (dragIdx !== null) onReorder(dragIdx, idx);
+                setDragIdx(null); setOverIdx(null);
+              }}
+              onDragEnd={() => { setDragIdx(null); setOverIdx(null); }}
+              style={{
+                display: "grid", gridTemplateColumns: "auto auto 1fr auto",
+                alignItems: "center", gap: 8,
+                padding: "6px 10px",
+                background: "var(--card-bg)",
+                border: `1px solid ${overIdx === idx && dragIdx !== null ? "var(--accent)" : "var(--rule)"}`,
+                opacity: dragIdx === idx ? 0.4 : 1,
+                cursor: disabled ? "default" : "grab",
+              }}>
+            <span aria-hidden style={{ color: "var(--muted-soft)", fontSize: 13, lineHeight: 1 }}>☰</span>
+            <span className="font-mono"
+                  style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.08em",
+                            fontFeatureSettings: '"tnum"', minWidth: 14, textAlign: "center" }}>
+              {idx + 1}º
+            </span>
+            <span style={{ color: "var(--text)", fontSize: 13.5 }}>
+              {SIGNAL_LABELS[signal]}
+            </span>
+            <span className="font-mono"
+                  style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.04em",
+                            fontFeatureSettings: '"tnum"' }}>
+              peso {Math.round(weightFor(idx + 1) * 100)}%
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// PF.8 — slider + number input kept in sync; both clamp to [min, max].
+function RangeSlider({ disabled, value, min, max, onChange }: {
+  disabled: boolean;
+  value:    number;
+  min:      number;
+  max:      number;
+  onChange: (n: number) => void;
+}) {
+  const clamp = (n: number) => Math.min(max, Math.max(min, n));
+  return (
+    <div className="flex items-center gap-3" style={{ opacity: disabled ? 0.5 : 1 }}>
+      <input type="range" min={min} max={max} value={value} disabled={disabled}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))}
+             style={{ flex: 1, accentColor: "var(--accent)", cursor: disabled ? "not-allowed" : "pointer" }} />
+      <input type="number" min={min} max={max} value={value} disabled={disabled}
+             onChange={(e) => {
+               const n = Number(e.target.value);
+               if (Number.isFinite(n)) onChange(clamp(n));
+             }}
+             style={{ ...inputStyle(), width: 64 }} />
+      <span style={{ color: "var(--muted)", fontSize: 12.5 }}>%</span>
+    </div>
   );
 }
 
@@ -1424,69 +1731,53 @@ function SignalRow({ signal, enabled, disabled, onToggle, children }: {
   );
 }
 
-function ChipsInput({ disabled, value, suggestions, onChange, placeholder }: {
-  disabled:    boolean;
-  value:       string[];
-  suggestions: string[];
-  onChange:    (next: string[]) => void;
-  placeholder?: string;
+// PP-VAL §9.2 — ecosystems com opções FIXAS conforme spec. Substitui o
+// input freeform anterior por uma seleção canônica de seis ecossistemas
+// que o motor de matching consegue reconhecer no `bundle_data.payload.l1.
+// ecosystems`. Os valores armazenados são strings minúsculas (mesma forma
+// que o matcher compara).
+const ECOSYSTEM_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "rails",    label: "Rails"   },
+  { value: "node",     label: "Node"    },
+  { value: "python",   label: "Python"  },
+  { value: "flutter",  label: "Flutter" },
+  { value: "react",    label: "React"   },
+  { value: "devops",   label: "DevOps"  },
+];
+
+function EcosystemPicker({ disabled, value, onChange }: {
+  disabled: boolean;
+  value:    string[];
+  onChange: (next: string[]) => void;
 }) {
-  const [draft, setDraft] = useState("");
-  const visibleSuggestions = suggestions.filter((s) =>
-    !value.some((v) => v.toLowerCase() === s.toLowerCase()),
-  ).slice(0, 8);
-
-  function add(raw: string) {
-    const v = raw.trim();
-    if (!v || value.some((x) => x.toLowerCase() === v.toLowerCase())) { setDraft(""); return; }
-    onChange([...value, v]);
-    setDraft("");
+  function toggle(opt: string) {
+    if (value.includes(opt)) onChange(value.filter((v) => v !== opt));
+    else                     onChange([...value, opt]);
   }
-
   return (
-    <div>
-      <div style={{
-        display: "flex", flexWrap: "wrap", gap: 6,
-        padding: "6px 8px", minHeight: 36,
-        background: disabled ? "var(--surface-2)" : "var(--bg)",
-        border: "1px solid var(--rule)",
-        opacity: disabled ? 0.5 : 1,
-      }}>
-        {value.map((t) => (
-          <TechChip key={t} label={t} onRemove={disabled ? undefined : () => onChange(value.filter((x) => x !== t))} />
-        ))}
-        <input type="text" value={draft} onChange={(e) => setDraft(e.target.value)}
-               disabled={disabled}
-               onKeyDown={(e) => {
-                 if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(draft); }
-                 else if (e.key === "Backspace" && draft === "" && value.length > 0) onChange(value.slice(0, -1));
-               }}
-               onBlur={() => draft && add(draft)}
-               placeholder={value.length === 0 ? placeholder : ""}
-               style={{
-                 flex: "1 1 120px", minWidth: 100,
-                 font: "inherit", fontSize: 13,
-                 background: "transparent", border: "none", outline: "none",
-                 color: "var(--text)", padding: "2px 4px",
-               }} />
-      </div>
-      {!disabled && visibleSuggestions.length > 0 && (
-        <div className="mt-2 flex flex-wrap items-center" style={{ gap: 6 }}>
-          <span className="font-mono uppercase"
-                style={{ color: "var(--muted-soft)", fontSize: 10, letterSpacing: "0.12em" }}>
-            das tecnologias:
-          </span>
-          {visibleSuggestions.map((s) => (
-            <button key={s} type="button" onClick={() => onChange([...value, s])}
-                    style={{
-                      font: "inherit", fontSize: 11.5,
-                      padding: "2px 8px",
-                      background: "transparent", color: "var(--accent)",
-                      border: "1px dashed var(--accent)", borderRadius: 0, cursor: "pointer",
-                    }}>+ {s}</button>
-          ))}
-        </div>
-      )}
+    <div className="flex flex-wrap" style={{ gap: 6, opacity: disabled ? 0.5 : 1 }}>
+      {ECOSYSTEM_OPTIONS.map((opt) => {
+        const selected = value.includes(opt.value);
+        return (
+          <button key={opt.value}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => toggle(opt.value)}
+                  aria-pressed={selected}
+                  style={{
+                    font: "inherit", fontSize: 12.5,
+                    padding: "5px 12px",
+                    background: selected ? "var(--accent)"   : "transparent",
+                    color:      selected ? "var(--bg)"       : "var(--text)",
+                    border:     `1px solid ${selected ? "var(--accent)" : "var(--rule)"}`,
+                    borderRadius: 0,
+                    cursor: disabled ? "not-allowed" : "pointer",
+                    letterSpacing: "0.02em",
+                  }}>
+            {opt.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -1512,18 +1803,6 @@ function NumberInput({ disabled, value, min, max, step, suffix, onChange }: {
       <span style={{ color: "var(--muted)", fontSize: 12.5 }}>{suffix}</span>
     </div>
   );
-}
-
-function miniBtn(disabled: boolean): React.CSSProperties {
-  return {
-    font: "inherit", fontSize: 12,
-    width: 24, height: 24, lineHeight: 1,
-    padding: 0,
-    background: "transparent", color: "var(--text)",
-    border: "1px solid var(--rule)",
-    cursor: disabled ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.4 : 1,
-  };
 }
 
 // ── tech chip (used both in detail view + tech editor) ────────────────────
