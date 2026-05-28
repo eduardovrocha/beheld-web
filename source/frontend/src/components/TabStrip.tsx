@@ -7,6 +7,8 @@
  * Behavior is dumb — callers manage the active state + URL hash sync;
  * this component only renders the buttons and emits onSelect.
  */
+import { type ReactNode } from "react";
+
 export interface TabDef<Id extends string> {
   id:    Id;
   label: string;
@@ -14,15 +16,18 @@ export interface TabDef<Id extends string> {
 }
 
 export function TabStrip<Id extends string>({
-  tabs, active, onSelect,
+  tabs, active, onSelect, trailing,
 }: {
   tabs:     readonly TabDef<Id>[];
   active:   Id;
   onSelect: (id: Id) => void;
+  // Optional element pinned to the right end of the strip, vertically aligned
+  // with the tab titles (e.g. a legend/key icon with a tooltip).
+  trailing?: ReactNode;
 }) {
   return (
     <div role="tablist"
-         className="flex flex-wrap gap-x-0 gap-y-2"
+         className="flex flex-wrap items-stretch gap-x-0 gap-y-2"
          style={{ borderBottom: "1px solid var(--rule)" }}>
       {tabs.map((t) => {
         const isActive = t.id === active;
@@ -51,6 +56,11 @@ export function TabStrip<Id extends string>({
           </button>
         );
       })}
+      {trailing && (
+        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", paddingRight: 4 }}>
+          {trailing}
+        </span>
+      )}
     </div>
   );
 }

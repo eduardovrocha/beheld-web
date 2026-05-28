@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { FloatingBack } from "@/components/company/FloatingBack";
 import { SaveDevButton } from "@/components/company/SaveDevButton";
 import { useT } from "@/i18n/I18nProvider";
 import { fetchBundleWithAccount } from "@/lib/api";
@@ -84,19 +83,18 @@ export function VerifyPublic() {
 
   return (
     <>
-      <FloatingBack />
       {accountId !== null && <FloatingSaveDev accountId={accountId} />}
       <SnapshotIframe bundle={bundle} />
     </>
   );
 }
 
-// Save-dev chip — its own bordered card, anchored alongside FloatingBack.
+// Save-dev chip — its own bordered card, pinned top-left of the portrait.
 function FloatingSaveDev({ accountId }: { accountId: number }) {
   return (
     <div className="fixed z-50 flex items-center"
          style={{
-           top: 20, left: 150,            // ~130px to the right of FloatingBack
+           top: 20, left: 20,
            background: "var(--bg)",
            border: "1px solid var(--rule)",
            padding: "7px 14px",

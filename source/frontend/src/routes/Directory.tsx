@@ -6,9 +6,14 @@
  * numerics. Auth via signed company cookie set by
  * `POST /api/v1/sessions/company/verify`.
  */
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { TabStrip, type TabDef } from "@/components/TabStrip";
+import { Tooltip } from "@/components/Tooltip";
+import { DragScroll } from "@/components/DragScroll";
+import { Dropdown } from "@/components/Dropdown";
+import { VerifiedIcon } from "@/components/icons";
 import { CompanyNav } from "@/components/company/CompanyNav";
 import { SaveDevButton } from "@/components/company/SaveDevButton";
 import {
@@ -19,6 +24,18 @@ import {
   type DirectoryPayload,
   type DirectoryQuery,
 } from "@/lib/directoryApi";
+
+// ── tabs ──────────────────────────────────────────────────────────────────
+type DirTab = "filters" | "results";
+
+const DIR_TABS: Array<{ id: DirTab; label: string; hash: string }> = [
+  { id: "filters", label: "Filtros",    hash: "#filtros" },
+  { id: "results", label: "Resultados", hash: "#resultados" },
+];
+
+function dirTabFromHash(hash: string): DirTab {
+  return DIR_TABS.find((t) => t.hash === hash)?.id ?? "results";
+}
 
 const PT_MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
@@ -42,6 +59,19 @@ export function Directory() {
   const [draft, setDraft] = useState<DirectoryFilters>({
     ecosystems: [], test_ratio_min: "0.25", test_ratio_max: "0.50", status: "all",
   });
+
+  const [applied, setApplied] = useState(false);
+  const [tab, setTab] = useState<DirTab>(() => dirTabFromHash(window.location.hash));
+  useEffect(() => {
+    function onHash() { setTab(dirTabFromHash(window.location.hash)); }
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  function selectTab(id: DirTab) {
+    setTab(id);
+    const t = DIR_TABS.find((x) => x.id === id);
+    if (t) history.replaceState(null, "", t.hash);
+  }
 
   async function load(query: DirectoryQuery) {
     setBusy(true);
@@ -76,6 +106,9 @@ export function Directory() {
       test_ratio_max: draft.test_ratio_max,
       status:         draft.status,
     });
+    // Permanece na aba Filtros; o resultado é sinalizado ali mesmo + no
+    // badge da aba Resultados.
+    setApplied(true);
   }
 
   if (error) {
@@ -96,66 +129,116 @@ export function Directory() {
     );
   }
 
+  const activeCount = data.results.length;
+
   return (
     <Shell>
-      <DirectoryHero company={data.company.name} total={data.results.length} />
+      <DirectoryHero company={data.company.name} total={activeCount} />
 
-      <Section num="01" title="Filtros" emTail="· sinais reais, não palavras-chave">
-        <Card>
-          <form onSubmit={onSubmit} className="grid gap-5">
-            <Field label="Ecossistemas / linguagens" hint="qualquer um dos selecionados">
-              <EcosystemPicker
-                selected={draft.ecosystems}
-                available={data.available_ecosystems}
-                onChange={(next) => setDraft((d) => ({ ...d, ecosystems: next }))} />
-            </Field>
+      <TabStrip<DirTab>
+        tabs={DIR_TABS.map((t) => ({
+          id:    t.id,
+          label: t.label,
+          badge: t.id === "results" ? activeCount : null,
+        })) as readonly TabDef<DirTab>[]}
+        active={tab}
+        onSelect={selectTab}
+        trailing={
+          <Tooltip
+            tone="ok"
+            align="right"
+            icon={<VerifiedIcon size={12} />}
+            label="verificado"
+            title="Identidade verificada."
+            description="Bundle assinado com a chave do dev e publicado nos últimos 30 dias — checado offline. O selo aparece no canto dos cards verificados.">
+            <span aria-label="o que significa verificado"
+                  style={{ display: "inline-flex", alignItems: "center", color: "var(--ok)", cursor: "help" }}>
+              <VerifiedIcon size={16} />
+            </span>
+          </Tooltip>
+        } />
 
-            <Field label="Test ratio" hint="proporção de arquivos de teste por arquivo de código">
-              <DualRangeSlider
-                min={0} max={1} step={0.05}
-                lo={parseRatio(draft.test_ratio_min, 0)}
-                hi={parseRatio(draft.test_ratio_max, 1)}
-                onChange={(lo, hi) => setDraft((d) => ({
-                  ...d,
-                  test_ratio_min: lo > 0 ? lo.toFixed(2) : "",
-                  test_ratio_max: hi < 1 ? hi.toFixed(2) : "",
-                }))}
-                formatLabel={(v) => `${Math.round(v * 100)}%`} />
-            </Field>
+      <div className="pt-8">
+        {tab === "filters" && (
+          <Card>
+            <form onSubmit={onSubmit} className="grid gap-5">
+              <Field label="Ecossistemas / linguagens" hint="qualquer um dos selecionados">
+                <EcosystemPicker
+                  selected={draft.ecosystems}
+                  available={data.available_ecosystems}
+                  onChange={(next) => setDraft((d) => ({ ...d, ecosystems: next }))} />
+              </Field>
 
-            <Field label="Status do bundle">
-              <Dropdown
-                value={draft.status}
-                onChange={(v) => setDraft((d) => ({ ...d, status: v as DirectoryFilters["status"] }))}
-                options={[
-                  { value: "all",      label: "Todos" },
-                  { value: "verified", label: "Verificados (≤ 30 dias)" },
-                  { value: "outdated", label: "Desatualizados (> 30 dias)" },
-                ]} />
-            </Field>
+              <Field label="Test ratio" hint="proporção de arquivos de teste por arquivo de código">
+                <DualRangeSlider
+                  min={0} max={1} step={0.05}
+                  lo={parseRatio(draft.test_ratio_min, 0)}
+                  hi={parseRatio(draft.test_ratio_max, 1)}
+                  onChange={(lo, hi) => setDraft((d) => ({
+                    ...d,
+                    test_ratio_min: lo > 0 ? lo.toFixed(2) : "",
+                    test_ratio_max: hi < 1 ? hi.toFixed(2) : "",
+                  }))}
+                  formatLabel={(v) => `${Math.round(v * 100)}%`} />
+              </Field>
 
-            <div>
-              <PrimaryButton type="submit" disabled={busy}>
-                {busy ? "Aplicando…" : "Aplicar filtros"}
-              </PrimaryButton>
-            </div>
-          </form>
-        </Card>
-      </Section>
+              <Field label="Status do bundle">
+                <Dropdown
+                  value={draft.status}
+                  onChange={(v) => setDraft((d) => ({ ...d, status: v as DirectoryFilters["status"] }))}
+                  options={[
+                    { value: "all",      label: "Todos" },
+                    { value: "verified", label: "Verificados (≤ 30 dias)" },
+                    { value: "outdated", label: "Desatualizados (> 30 dias)" },
+                  ]} />
+              </Field>
 
-      <Section num="02" title="Resultados"
-               emTail="· devs encontráveis"
-               right={`${data.results.length} ${data.results.length === 1 ? "perfil" : "perfis"}`}>
-        {data.results.length === 0 ? (
-          <EmptyCard>Nenhum dev encontrado com esses critérios.</EmptyCard>
-        ) : (
-          <Card padded={false}>
-            {data.results.map((dev, i) => <DevRow key={dev.account_id} dev={dev} first={i === 0} />)}
+              <div className="flex flex-wrap items-center" style={{ gap: 14 }}>
+                <PrimaryButton type="submit" disabled={busy}>
+                  {busy ? "Aplicando…" : "Aplicar filtros"}
+                </PrimaryButton>
+                {applied && !busy && (
+                  <span className="font-mono" style={{ fontSize: 13, letterSpacing: "0.02em" }}>
+                    <strong style={{ color: "var(--accent)", fontFeatureSettings: '"tnum"' }}>
+                      {activeCount}
+                    </strong>
+                    <span style={{ color: "var(--muted)" }}>
+                      {" "}{activeCount === 1 ? "dev corresponde" : "devs correspondem"} ·{" "}
+                    </span>
+                    <button type="button" onClick={() => selectTab("results")} style={inlineLinkBtn()}>
+                      ver resultados
+                    </button>
+                  </span>
+                )}
+              </div>
+            </form>
           </Card>
         )}
-      </Section>
+
+        {tab === "results" && (
+          data.results.length === 0 ? (
+            <EmptyCard>
+              Nenhum dev encontrado com esses critérios. Ajuste os{" "}
+              <button type="button" onClick={() => selectTab("filters")} style={inlineLinkBtn()}>filtros</button>.
+            </EmptyCard>
+          ) : (
+            <div className="grid gap-4"
+                 style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+              {data.results.map((dev) => <DevCard key={dev.account_id} dev={dev} />)}
+            </div>
+          )
+        )}
+      </div>
     </Shell>
   );
+}
+
+function inlineLinkBtn(): React.CSSProperties {
+  return {
+    background: "none", border: "none", padding: 0, cursor: "pointer",
+    font: "inherit", color: "var(--accent)",
+    textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
+  };
 }
 
 // ── chrome ───────────────────────────────────────────────────────────────────
@@ -170,7 +253,7 @@ function Shell({ children }: { children: ReactNode }) {
 
 function DirectoryHero({ company, total }: { company: string; total: number }) {
   return (
-    <header className="mb-12">
+    <header className="mb-10">
       <div className="mb-3 font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
         empresa · diretório
@@ -238,56 +321,96 @@ function EmptyCard({ children }: { children: ReactNode }) {
   );
 }
 
-// ── dev row ─────────────────────────────────────────────────────────────────
+// ── dev card ──────────────────────────────────────────────────────────────
 
-function DevRow({ dev, first }: { dev: DevSummary; first: boolean }) {
+function DevCard({ dev }: { dev: DevSummary }) {
   const portal      = window.location.origin;
   const profileUrl  = dev.slug ? `${portal}/v/${dev.slug}` : null;
   const contactPath = `/accounts/${dev.account_id}/contact`;
 
   return (
     <div style={{
-      display: "grid", gridTemplateColumns: "1fr auto",
-      gap: 16, padding: "16px 20px",
-      borderTop: first ? "none" : "1px solid var(--rule-soft)",
-      alignItems: "start",
+      position: "relative",
+      display: "flex", flexDirection: "column",
+      background: "var(--card-bg)",
+      border: "1px solid var(--rule)",
+      padding: 18,
+      minHeight: 188,
     }}>
-      <div>
-        <div style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.6 }}>
+      {/* selo de verificação — só o ícone no canto; o significado é explicado
+          uma vez na legenda do topo (alinhada às tabs). */}
+      {dev.status === "verified" && (
+        <span aria-label="verificado"
+              style={{ position: "absolute", top: 12, right: 12, display: "inline-flex", color: "var(--ok)" }}>
+          <VerifiedIcon size={18} />
+        </span>
+      )}
+
+      {/* header: handle + status */}
+      <div className="flex flex-wrap items-center" style={{ gap: 6, paddingRight: 24 }}>
+        <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
           {dev.handle}
-          {dev.status === "verified" && <Badge kind="ok">verificado</Badge>}
-          {dev.status === "outdated" && <Badge kind="warn">desatualizado</Badge>}
-        </div>
-        <div className="mt-1" style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.75 }}>
-          {dev.ecosystems.length > 0 && (
-            <><strong style={{ color: "var(--text)" }}>Ecossistemas:</strong> {dev.ecosystems.slice(0, 3).join(", ")}</>
-          )}
-          {dev.platforms.length > 0 && (
-            <> · <strong style={{ color: "var(--text)" }}>Plataformas:</strong> {dev.platforms.slice(0, 3).join(", ")}</>
-          )}
-        </div>
-        <div className="mt-1" style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.75, fontFeatureSettings: '"tnum"' }}>
-          {typeof dev.test_ratio === "number" && (
-            <><strong style={{ color: "var(--text)" }}>Test ratio:</strong> {Math.round(dev.test_ratio * 100)}%</>
-          )}
-          {dev.last_bundle_at && (
-            <> · <strong style={{ color: "var(--text)" }}>Última publicação:</strong> {shortMonthYear(dev.last_bundle_at)}</>
-          )}
-        </div>
+        </span>
+        {dev.status === "outdated" && <Badge kind="warn">desatualizado</Badge>}
       </div>
-      <div className="flex flex-shrink-0 items-start gap-2">
+
+      {/* test ratio + última publicação (mono numerics) */}
+      <div className="mt-2 font-mono"
+           style={{ color: "var(--muted)", fontSize: 12, letterSpacing: "0.02em",
+                     fontFeatureSettings: '"tnum"', lineHeight: 1.6 }}>
+        {typeof dev.test_ratio === "number" && (
+          <span>test ratio <strong style={{ color: "var(--accent)" }}>{Math.round(dev.test_ratio * 100)}%</strong></span>
+        )}
+        {dev.last_bundle_at && (
+          <span> · pub. {shortMonthYear(dev.last_bundle_at)}</span>
+        )}
+      </div>
+
+      {/* ecosystems como chips — carrossel horizontal: quando passam da
+          largura do card, rolam (wheel/trackpad ou clicar-e-arrastar) em vez
+          de quebrar linha, então a altura do card nunca muda. */}
+      {dev.ecosystems.length > 0 && (
+        <DragScroll className="mt-3 flex" style={{ gap: 5, flexWrap: "nowrap" }}>
+          {dev.ecosystems.map((eco) => (
+            <span key={eco} style={{ ...chipStyle(), flex: "0 0 auto", whiteSpace: "nowrap" }}>{eco}</span>
+          ))}
+        </DragScroll>
+      )}
+
+      {/* plataformas em texto discreto */}
+      {dev.platforms.length > 0 && (
+        <div className="mt-2" style={{ color: "var(--muted-soft)", fontSize: 11.5, lineHeight: 1.6 }}>
+          {dev.platforms.slice(0, 4).join(" · ")}
+        </div>
+      )}
+
+      {/* ações no rodapé do card */}
+      <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
         <SaveDevButton accountId={dev.account_id} />
         <Link to={contactPath} style={linkButtonStyle({ primary: true })}>
           Contatar
         </Link>
         {profileUrl && (
-          <a href={profileUrl} style={linkButtonStyle({ primary: false })}>
+          <a href={profileUrl} target="_blank" rel="noopener noreferrer"
+             style={linkButtonStyle({ primary: false })}>
             Ver perfil →
           </a>
         )}
       </div>
     </div>
   );
+}
+
+function chipStyle(): React.CSSProperties {
+  return {
+    display: "inline-block",
+    padding: "2px 9px",
+    fontSize: 11.5,
+    letterSpacing: "0.01em",
+    background: "var(--rule-soft)",
+    color: "var(--text)",
+    border: "1px solid var(--rule)",
+  };
 }
 
 // ── primitives ─────────────────────────────────────────────────────────────
@@ -582,139 +705,6 @@ function EcosystemPicker({ selected, available, onChange }: {
             </button>
           ))}
         </div>
-      )}
-    </div>
-  );
-}
-
-// ── Dropdown — fully custom (not <select>) so the menu panel uses the same
-//    hairline + chip vocabulary as the rest of the page. Closes on outside
-//    click and Escape; arrow keys + Enter for keyboard nav. The trigger
-//    looks like an Input field with a chevron; the panel is a white card
-//    with mono uppercase options that invert on hover.
-//
-function Dropdown({ value, onChange, options }: {
-  value: string;
-  onChange: (next: string) => void;
-  options: Array<{ value: string; label: string }>;
-}) {
-  const [open, setOpen]               = useState(false);
-  const [focusIndex, setFocusIndex]   = useState(-1);
-  const containerRef                  = useRef<HTMLDivElement>(null);
-  const selected                      = options.find((o) => o.value === value) ?? options[0];
-
-  // Close on outside click + Escape.
-  useEffect(() => {
-    if (!open) return;
-    function onDocClick(e: MouseEvent) {
-      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") { setOpen(false); return; }
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setFocusIndex((i) => Math.min(options.length - 1, i + 1));
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setFocusIndex((i) => Math.max(0, i - 1));
-      }
-      if (e.key === "Enter" && focusIndex >= 0) {
-        e.preventDefault();
-        onChange(options[focusIndex].value);
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown",   onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown",   onKeyDown);
-    };
-  }, [open, focusIndex, options, onChange]);
-
-  function toggle() {
-    setOpen((v) => {
-      if (!v) setFocusIndex(Math.max(0, options.findIndex((o) => o.value === value)));
-      return !v;
-    });
-  }
-
-  return (
-    <div ref={containerRef} style={{ position: "relative", width: "100%", maxWidth: 360 }}>
-      {/* trigger */}
-      <button type="button" onClick={toggle}
-              aria-haspopup="listbox" aria-expanded={open}
-              style={{
-                font: "inherit", fontSize: 14,
-                padding: "8px 12px",
-                color: "var(--text)", background: "var(--bg)",
-                border: "1px solid var(--rule)",
-                borderRadius: 0,
-                outline: "none",
-                cursor: "pointer",
-                width: "100%",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                gap: 12,
-                letterSpacing: "0.01em",
-              }}>
-        <span style={{ color: "var(--text)" }}>{selected.label}</span>
-        <span aria-hidden="true"
-              className="font-mono"
-              style={{
-                color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em",
-                transform: open ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 120ms ease",
-                display: "inline-block",
-              }}>
-          ▾
-        </span>
-      </button>
-
-      {/* panel */}
-      {open && (
-        <ul role="listbox"
-            style={{
-              position: "absolute", top: "calc(100% - 1px)", left: 0, right: 0,
-              margin: 0, padding: 0,
-              listStyle: "none",
-              background: "var(--card-bg)",
-              border: "1px solid var(--rule)",
-              zIndex: 50,
-              boxShadow: "0 12px 28px -16px rgba(0,0,0,0.25)",
-            }}>
-          {options.map((o, i) => {
-            const isSelected = o.value === value;
-            const isFocused  = i === focusIndex;
-            return (
-              <li key={o.value}
-                  role="option" aria-selected={isSelected}
-                  onMouseEnter={() => setFocusIndex(i)}
-                  onMouseDown={(e) => { e.preventDefault(); onChange(o.value); setOpen(false); }}
-                  style={{
-                    padding: "10px 14px",
-                    cursor: "pointer",
-                    fontSize: 13.5,
-                    color:      isFocused ? "var(--bg)"   : "var(--text)",
-                    background: isFocused ? "var(--text)" : "transparent",
-                    display: "flex", alignItems: "center", gap: 10,
-                    borderTop: i === 0 ? "none" : "1px solid var(--rule-soft)",
-                  }}>
-                <span className="font-mono"
-                      style={{
-                        fontSize: 10, letterSpacing: "0.14em",
-                        color: isSelected
-                          ? (isFocused ? "var(--bg)" : "var(--accent)")
-                          : (isFocused ? "var(--bg)" : "var(--muted)"),
-                        width: 12,
-                      }}>
-                  {isSelected ? "●" : "○"}
-                </span>
-                <span style={{ flex: 1 }}>{o.label}</span>
-              </li>
-            );
-          })}
-        </ul>
       )}
     </div>
   );

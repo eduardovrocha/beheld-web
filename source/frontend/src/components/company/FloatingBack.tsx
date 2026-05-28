@@ -8,11 +8,26 @@
  * `to` defaults to /company/dashboard — the recruiter's "home" record —
  * but callers can override to wire a more natural back destination for
  * their flow (e.g. /directory from the contact form).
+ *
+ * With `back`, the chip returns to wherever the user came from (history -1)
+ * — directory, messages, dashboard, etc. — falling back to `to` only when
+ * there's no in-app history (page opened directly in a fresh tab).
  */
 import { useNavigate } from "react-router-dom";
 
-export function FloatingBack({ to = "/company/dashboard" }: { to?: string }) {
+export function FloatingBack({ to = "/company/dashboard", back = false }: { to?: string; back?: boolean }) {
   const navigate = useNavigate();
+
+  function handleBack() {
+    if (back) {
+      // react-router stamps a monotonic `idx` on history.state; > 0 means
+      // there's a previous in-app entry we can safely pop back to.
+      const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+      if (idx > 0) { navigate(-1); return; }
+    }
+    navigate(to);
+  }
+
   return (
     <div className="fixed z-50 flex items-center"
          style={{
@@ -23,7 +38,7 @@ export function FloatingBack({ to = "/company/dashboard" }: { to?: string }) {
          }}>
       <button
         type="button"
-        onClick={() => navigate(to)}
+        onClick={handleBack}
         aria-label="voltar"
         style={{
           background: "none", border: "none", cursor: "pointer",

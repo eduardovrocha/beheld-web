@@ -95,5 +95,24 @@ RSpec.describe "Contacts (recruiter → dev message)", type: :request do
 
       expect(response).to have_http_status(:not_found)
     end
+
+    it "trava a vaga: havendo mensagem pendente, a nova herda a mesma vaga" do
+      login_as(company)
+      Message.create!(company: company, account: account, job_title: "Vaga X",
+                      body: "Primeira", sent_at: 1.day.ago)
+      # tenta enviar uma segunda escolhendo "Vaga Y" — deve ser ignorada
+      post "/accounts/#{account.id}/contact",
+           params: { job_title: "Vaga Y", body: "Segunda mensagem" }
+      expect(Message.last.job_title).to eq("Vaga X")
+    end
+
+    it "permite nova vaga quando a anterior já foi respondida" do
+      login_as(company)
+      Message.create!(company: company, account: account, job_title: "Vaga X",
+                      body: "Primeira", sent_at: 2.days.ago, responded_at: 1.day.ago)
+      post "/accounts/#{account.id}/contact",
+           params: { job_title: "Vaga Z", body: "Nova abordagem" }
+      expect(Message.last.job_title).to eq("Vaga Z")
+    end
   end
 end

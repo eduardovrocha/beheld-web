@@ -13,9 +13,28 @@ export class ContactUnavailableError extends Error {
   constructor() { super("Perfil indisponível."); }
 }
 
+export interface ContactPreviousMessage {
+  id:           number;
+  job_title:    string | null;
+  body:         string;
+  reply_body:   string | null;
+  sent_at:      string;
+  responded_at: string | null;
+  status:       "pending" | "responded" | "ignored";
+}
+
 export interface ContactTarget {
   ok:      true;
-  account: { id: number; handle: string };
+  account: {
+    id:              number;
+    handle:          string;
+    bundle_slug?:    string | null;
+    status?:         string | null;
+    ecosystems?:     string[];
+    test_ratio?:     number | null;
+    last_bundle_at?: string | null;
+  };
+  previous_messages?: ContactPreviousMessage[];
 }
 
 export interface ContactSendError {

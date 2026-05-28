@@ -32,6 +32,13 @@ class ContactsController < ActionController::Base
     job_title = params[:job_title].to_s.strip.presence
     body      = params[:body].to_s.strip.presence
 
+    # Contato atrelado à vaga: havendo mensagem pendente (sem resposta) a este
+    # dev, a nova herda a MESMA vaga — não dá pra trocar a vaga em aberto.
+    pending = current_company.messages
+                .where(account: @account, responded_at: nil, ignored_at: nil)
+                .order(sent_at: :desc).first
+    job_title = pending.job_title if pending
+
     if job_title.nil? && body.nil?
       flash.now[:alert] = "Inclua um cargo ou uma mensagem."
       @bundle = @account.bundles.active.last

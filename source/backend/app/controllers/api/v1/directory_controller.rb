@@ -126,7 +126,10 @@ module Api
           account_id:     account.id,
           handle:         account.display_handle,
           slug:           bundle&.url_slug,
-          ecosystems:     (l1["ecosystems"] || {}).keys.first(5),
+          # Devolve todos os ecossistemas (cap alto de segurança). O card do
+          # diretório rola o excedente no carrossel horizontal, então não há
+          # motivo pra truncar em 5 e perder sinais técnicos.
+          ecosystems:     (l1["ecosystems"] || {}).keys.first(24),
           platforms:      (l1["platforms"]  || {}).keys.first(5),
           test_ratio:     l1["avg_test_ratio"],
           last_bundle_at: bundle&.last_bundle_at&.iso8601,
