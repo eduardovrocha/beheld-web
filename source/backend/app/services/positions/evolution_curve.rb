@@ -13,14 +13,14 @@
 #   "available" — ≥ 2 bundles, trend computed
 #   "building"  — exactly 1 bundle, current value but no trend yet
 #   "none"      — no eligible bundles
-#   "unsupported" — caller asked for a signal we don't track
+#   "not_applicable" — caller asked for a signal we don't track
 
 module Positions
   class EvolutionCurve
     SUPPORTED_SIGNALS = %w[test_ratio].freeze
 
     def self.for(account, signal)
-      return { "status" => "unsupported" } unless SUPPORTED_SIGNALS.include?(signal)
+      return { "status" => "not_applicable" } unless SUPPORTED_SIGNALS.include?(signal)
 
       bundles = account.bundles.active.where(visible: true).order(:published_at).to_a
       points  = bundles.map { |b| extract(b, signal) }.compact
@@ -53,14 +53,17 @@ module Positions
       }
     end
 
+    # Usa a mesma camada de normalização do matcher para garantir que o
+    # ponto da curva e o valor que entra no score sejam idênticos em unidade
+    # (test_ratio sempre 0–100). `BundleSignals#test_ratio` devolve 0.0 para
+    # bundles sem o sinal; aqui tratamos 0.0 como ponto válido apenas se o
+    # bundle de fato carrega `avg_test_ratio` — caso contrário, nil (não
+    # poluir a curva com zeros artificiais).
     def self.extract(bundle, signal)
-      case signal
-      when "test_ratio"
-        v = bundle.bundle_data&.dig("payload", "l1", "avg_test_ratio")
-        v ? (v.to_f * 100).round(1) : nil
-      else
-        nil
-      end
+      return nil unless signal == "test_ratio"
+      raw = bundle.bundle_data&.dig("payload", "l1", "avg_test_ratio")
+      return nil unless raw.is_a?(Numeric)
+      BundleSignals.from(bundle).test_ratio
     end
   end
 end

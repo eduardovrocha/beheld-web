@@ -54,4 +54,25 @@ RSpec.describe Positions::DevInterest do
     add_match(add_position, account)
     expect(described_class.count_for(account)).to eq(2)
   end
+
+  describe "janela 'esta semana' (P21 spec section 7)" do
+    it "ignora matches calculados há mais de 7 dias" do
+      m = add_match(add_position, account)
+      m.update_column(:calculated_at, 8.days.ago)
+      expect(described_class.count_for(account)).to eq(0)
+    end
+
+    it "conta matches calculados há 6 dias (dentro da janela)" do
+      m = add_match(add_position, account)
+      m.update_column(:calculated_at, 6.days.ago)
+      expect(described_class.count_for(account)).to eq(1)
+    end
+
+    it "trata edge: calculated_at exatamente 7 dias atrás continua dentro" do
+      now = Time.current
+      m = add_match(add_position, account)
+      m.update_column(:calculated_at, now - 7.days + 1.minute)
+      expect(described_class.count_for(account, now: now)).to eq(1)
+    end
+  end
 end

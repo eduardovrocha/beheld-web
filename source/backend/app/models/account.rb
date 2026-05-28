@@ -39,12 +39,14 @@ class Account < ApplicationRecord
   #      the right handle without us also storing the attestation server-
   #      side. Verification of the embedded attestation is browser-side
   #      (snapshot-html.ts) and at publish time we trust the bundle sig.
-  #   3. `dev-<fingerprint>` fallback when neither identity is bound.
+  #   3. `@dev-<fingerprint>` fallback when neither identity is bound — sempre
+  #      prefixado com `@` para tratar o stub anônimo como um handle de
+  #      primeira classe na UI.
   #
   # Never returns the dev's contact email or recovery email.
   def display_handle
     login = attestation&.github_login.presence || latest_bundle_github_login
-    login ? "@#{login}" : "dev-#{fingerprint.first(8)}"
+    login ? "@#{login}" : "@dev-#{fingerprint.first(8)}"
   end
 
   # Alias used by company-facing endpoints (PP12). Same semantics —

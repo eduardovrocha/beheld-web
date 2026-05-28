@@ -17,13 +17,20 @@
 
 module Positions
   class DevInterest
-    def self.count_for(account)
+    # Window from spec section 7: "Atualizado semanalmente / esta semana".
+    # Filtra matches calculados nos últimos 7 dias — assim recrutadores que
+    # rodam o matching uma vez por mês não atingem o contador, mas reativações
+    # (que sempre recalculam) renovam o sinal em segundos.
+    WINDOW = 1.week
+
+    def self.count_for(account, now: Time.current)
       PositionMatch
         .where(account_id: account.id, match_type: "match")
+        .where("position_matches.calculated_at >= ?", now - WINDOW)
         .joins(:position)
         .where(positions: { status: "active" })
         .distinct
-        .count("positions.company_id")   # distinct companies, not positions
+        .count("positions.company_id")
     end
   end
 end

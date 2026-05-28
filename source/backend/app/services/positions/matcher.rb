@@ -80,26 +80,12 @@ module Positions
 
     # ── signal extraction ──────────────────────────────────────────────────
 
+    # Delega para a camada de normalização tipada. Mantém o retorno como
+    # hash (`{ ecosystems:, test_ratio:, recency: }`) para não tocar os
+    # loops de threshold/score abaixo — toda a lógica de schema vive em
+    # Positions::BundleSignals.
     def self.extract_signals(bundle)
-      data = bundle.bundle_data || {}
-
-      eco_hash = data.dig("payload", "l1", "ecosystems")
-      ecos =
-        if eco_hash.is_a?(Hash)
-          eco_hash.select { |_, v| v == true || v == "true" }.keys.map { |k| k.to_s.downcase }
-        else
-          []
-        end
-
-      ratio    = data.dig("payload", "l1", "avg_test_ratio")
-      test_pct = ratio ? (ratio.to_f * 100).round(1) : 0.0
-
-      days_since =
-        if bundle.last_bundle_at
-          ((Time.current - bundle.last_bundle_at) / 86_400.0).round(1)
-        end
-
-      { ecosystems: ecos, test_ratio: test_pct, recency: days_since }
+      BundleSignals.from(bundle).to_h
     end
 
     # ── threshold evaluation ──────────────────────────────────────────────

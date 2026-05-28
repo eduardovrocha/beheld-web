@@ -63,14 +63,14 @@ RSpec.describe Positions::EvolutionCurve do
   end
 
   describe "sinais não suportados" do
-    it "retorna unsupported para ecosystems" do
+    it "retorna not_applicable para ecosystems" do
       add_bundle(test_ratio: 0.5, days_ago: 1)
-      expect(described_class.for(account, "ecosystems")["status"]).to eq("unsupported")
+      expect(described_class.for(account, "ecosystems")["status"]).to eq("not_applicable")
     end
 
-    it "retorna unsupported para recency" do
+    it "retorna not_applicable para recency" do
       add_bundle(test_ratio: 0.5, days_ago: 1)
-      expect(described_class.for(account, "recency")["status"]).to eq("unsupported")
+      expect(described_class.for(account, "recency")["status"]).to eq("not_applicable")
     end
   end
 end
