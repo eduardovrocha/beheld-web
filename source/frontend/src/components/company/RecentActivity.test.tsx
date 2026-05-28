@@ -40,8 +40,8 @@ describe("RecentActivity", () => {
       },
     ]);
 
-    expect(screen.getByText("↗")).toBeInTheDocument();
-    expect(screen.getByText("✉")).toBeInTheDocument();
+    expect(screen.getByText(/↗ verificação/)).toBeInTheDocument();
+    expect(screen.getByText(/✉ mensagem/)).toBeInTheDocument();
     expect(screen.getByText("@alice")).toBeInTheDocument();
     expect(screen.getByText("@bob")).toBeInTheDocument();
     expect(screen.getByText(/Eng Sênior/)).toBeInTheDocument();

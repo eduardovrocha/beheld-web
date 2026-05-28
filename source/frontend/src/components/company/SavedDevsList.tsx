@@ -11,6 +11,20 @@ const BUNDLE_STATUS_LABEL: Record<NonNullable<SavedDev["bundle_status"]>, string
   verified: "verificado", outdated: "desatualizado", revoked: "revogado",
 };
 
+// Ícone por status do bundle — substitui o rótulo textual no chip. O texto
+// continua acessível via title + aria-label.
+const BUNDLE_STATUS_ICON: Record<NonNullable<SavedDev["bundle_status"]>, string> = {
+  verified: "✓",   // verificado
+  outdated: "◷",   // desatualizado
+  revoked:  "✕",   // revogado
+};
+
+const BUNDLE_STATUS_PALETTE: Record<NonNullable<SavedDev["bundle_status"]>, { fg: string; bg: string; bd: string }> = {
+  verified: { fg: "var(--ok)",    bg: "rgba(74,124,78,0.12)", bd: "rgba(74,124,78,0.4)" },
+  outdated: { fg: "var(--warn)",  bg: "rgba(181,97,53,0.12)", bd: "rgba(181,97,53,0.4)" },
+  revoked:  { fg: "var(--muted)", bg: "var(--rule-soft)",     bd: "var(--rule)" },
+};
+
 export function SavedDevsList({ savedDevs, onUpdateNote, onRemove }: {
   savedDevs:    SavedDev[];
   onUpdateNote: (accountId: number, note: string) => Promise<void> | void;
@@ -25,17 +39,18 @@ export function SavedDevsList({ savedDevs, onUpdateNote, onRemove }: {
   }
 
   return (
-    <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
-      {savedDevs.map((s, i) => (
-        <SavedDevItem key={s.account_id} dev={s} first={i === 0}
+    <div className="grid gap-4"
+         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+      {savedDevs.map((s) => (
+        <SavedDevCard key={s.account_id} dev={s}
                       onUpdateNote={onUpdateNote} onRemove={onRemove} />
       ))}
     </div>
   );
 }
 
-function SavedDevItem({ dev, first, onUpdateNote, onRemove }: {
-  dev: SavedDev; first: boolean;
+function SavedDevCard({ dev, onUpdateNote, onRemove }: {
+  dev: SavedDev;
   onUpdateNote: (accountId: number, note: string) => Promise<void> | void;
   onRemove:     (accountId: number)               => Promise<void> | void;
 }) {
@@ -57,90 +72,81 @@ function SavedDevItem({ dev, first, onUpdateNote, onRemove }: {
 
   return (
     <div style={{
-      padding: "14px 16px",
-      borderTop: first ? "none" : "1px solid var(--rule-soft)",
-      display: "grid", gridTemplateColumns: "1fr auto", gap: 16, alignItems: "start",
+      display: "flex", flexDirection: "column",
+      background: "var(--card-bg)", border: "1px solid var(--rule)",
+      padding: 18, minHeight: 196,
     }}>
-      <div>
-        <div style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.55 }}>
-          {dev.bundle_slug
-            ? <a href={`/v/${dev.bundle_slug}`}
-                 style={{ color: "var(--accent)", textDecoration: "underline",
-                          textDecorationColor: "var(--rule)", textUnderlineOffset: 3 }}>
-                {dev.dev_handle}
-              </a>
-            : <span>{dev.dev_handle}</span>}
-          {dev.bundle_status && (
-            <span className="font-mono uppercase"
-                  style={{
-                    marginLeft: 8, padding: "2px 8px",
-                    fontSize: 9, letterSpacing: "0.12em",
-                    background: "var(--rule-soft)", color: "var(--muted)",
-                    border: "1px solid var(--rule)",
-                  }}>
-              {BUNDLE_STATUS_LABEL[dev.bundle_status]}
-            </span>
-          )}
-        </div>
-
-        {editing ? (
-          <div className="mt-2 grid gap-2">
-            <textarea value={draft} onChange={(e) => setDraft(e.target.value)}
-                      rows={3} placeholder="nota privada — só você vê"
-                      style={{
-                        font: "inherit", fontSize: 13,
-                        padding: "8px 10px",
-                        color: "var(--text)", background: "var(--bg)",
-                        border: "1px solid var(--rule)",
-                        borderRadius: 0, outline: "none",
-                        resize: "vertical",
-                        fontFamily: "'Newsreader', Georgia, 'Times New Roman', serif",
-                        lineHeight: 1.55,
-                      }} />
-            <div className="flex gap-2">
-              <button type="button" onClick={save} disabled={busy}
-                      style={primaryBtn(busy)}>
-                Salvar nota
-              </button>
-              <button type="button" onClick={() => { setDraft(dev.note ?? ""); setEditing(false); }}
-                      disabled={busy}
-                      style={secondaryBtn(busy)}>
-                Cancelar
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-2">
-            <p style={{ color: dev.note ? "var(--text)" : "var(--muted-soft)",
-                         fontSize: 13.5, lineHeight: 1.55,
-                         fontFamily: dev.note ? "'Newsreader', Georgia, serif" : "inherit",
-                         fontStyle: dev.note ? "normal" : "italic" }}>
-              {dev.note || "sem nota"}
-            </p>
-            <button type="button" onClick={() => setEditing(true)}
-                    className="font-mono uppercase"
-                    style={{
-                      marginTop: 6,
-                      background: "none", border: "none", padding: 0,
-                      cursor: "pointer",
-                      fontSize: 10, letterSpacing: "0.14em",
-                      color: "var(--muted)",
-                      textDecoration: "underline", textDecorationColor: "var(--rule)",
-                      textUnderlineOffset: 3,
-                    }}>
-              editar nota
-            </button>
-          </div>
+      {/* header: handle + status */}
+      <div className="flex flex-wrap items-center" style={{ gap: 6 }}>
+        {dev.bundle_slug
+          ? <a href={`/v/${dev.bundle_slug}`} target="_blank" rel="noopener noreferrer"
+               style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em",
+                        textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3 }}>
+              {dev.dev_handle}
+            </a>
+          : <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
+              {dev.dev_handle}
+            </span>}
+        {dev.bundle_status && (
+          <span title={BUNDLE_STATUS_LABEL[dev.bundle_status]}
+                aria-label={BUNDLE_STATUS_LABEL[dev.bundle_status]}
+                style={{
+                  marginLeft: "auto",
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 30, height: 30, fontSize: 17, lineHeight: 1,
+                  color: BUNDLE_STATUS_PALETTE[dev.bundle_status].fg,
+                }}>
+            {BUNDLE_STATUS_ICON[dev.bundle_status]}
+          </span>
         )}
-
-        <div className="font-mono"
-             style={{ color: "var(--muted-soft)", fontSize: 11, marginTop: 8,
-                       letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
-          salvo {formatDate(dev.saved_at)}
-        </div>
       </div>
 
-      <div className="flex flex-col gap-2 flex-shrink-0">
+      {/* nota: inline editável */}
+      {editing ? (
+        <div className="mt-3 grid gap-2">
+          <textarea value={draft} onChange={(e) => setDraft(e.target.value)}
+                    rows={3} placeholder="nota privada — só você vê"
+                    style={{
+                      font: "inherit", fontSize: 13, padding: "8px 10px",
+                      color: "var(--text)", background: "var(--bg)",
+                      border: "1px solid var(--rule)", borderRadius: 0, outline: "none",
+                      resize: "vertical",
+                      fontFamily: "'Newsreader', Georgia, 'Times New Roman', serif", lineHeight: 1.55,
+                    }} />
+          <div className="flex gap-2">
+            <button type="button" onClick={save} disabled={busy} style={primaryBtn(busy)}>Salvar nota</button>
+            <button type="button" onClick={() => { setDraft(dev.note ?? ""); setEditing(false); }}
+                    disabled={busy} style={secondaryBtn(busy)}>Cancelar</button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3">
+          <p style={{ color: dev.note ? "var(--text)" : "var(--muted-soft)",
+                       fontSize: 13.5, lineHeight: 1.55,
+                       fontFamily: dev.note ? "'Newsreader', Georgia, serif" : "inherit",
+                       fontStyle: dev.note ? "normal" : "italic" }}>
+            {dev.note || "sem nota"}
+          </p>
+          <button type="button" onClick={() => setEditing(true)}
+                  className="font-mono uppercase"
+                  style={{
+                    marginTop: 6, background: "none", border: "none", padding: 0, cursor: "pointer",
+                    fontSize: 10, letterSpacing: "0.14em", color: "var(--muted)",
+                    textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
+                  }}>
+            editar nota
+          </button>
+        </div>
+      )}
+
+      <div className="font-mono"
+           style={{ color: "var(--muted-soft)", fontSize: 11, marginTop: 8,
+                     letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
+        salvo {formatDate(dev.saved_at)}
+      </div>
+
+      {/* ações ancoradas no rodapé */}
+      <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
         <Link to={`/accounts/${dev.account_id}/contact`} style={primaryLinkStyle()}>
           enviar mensagem →
         </Link>

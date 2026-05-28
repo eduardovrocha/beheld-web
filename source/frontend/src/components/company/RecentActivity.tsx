@@ -22,49 +22,61 @@ export function RecentActivity({ events }: { events: ActivityEvent[] }) {
   }
 
   return (
-    <ul style={{ listStyle: "none", margin: 0, padding: 0,
-                 background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
+    <div className="grid gap-4"
+         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
       {events.map((e, i) => (
-        <li key={`${e.type}-${e.at}-${i}`} style={rowStyle(i === 0)}>
-          <span aria-hidden="true" style={{ color: "var(--accent)", fontSize: 14, width: 16, display: "inline-block" }}>
-            {e.type === "verification" ? "↗" : "✉"}
-          </span>
-          <div className="flex-1 min-w-0">
-            <div style={{ color: "var(--text)", fontSize: 14, lineHeight: 1.5 }}>
-              {e.bundle_slug ? (
-                <a href={`/v/${e.bundle_slug}`} style={inlineLink()}>{e.dev_handle ?? "—"}</a>
-              ) : (
-                <span>{e.dev_handle ?? "—"}</span>
-              )}
-              {e.job_title && (
-                <span style={{ color: "var(--muted)" }}> · {e.job_title}</span>
-              )}
-              {e.status && (
-                <span className="font-mono uppercase"
-                      style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.12em", marginLeft: 8 }}>
-                  · {STATUS_LABEL[e.status]}
-                </span>
-              )}
-            </div>
-          </div>
-          <span style={{ color: "var(--muted-soft)", fontSize: 12, fontFeatureSettings: '"tnum"' }}>
-            {formatDateTime(e.at)}
-          </span>
-        </li>
+        <ActivityCard key={`${e.type}-${e.at}-${i}`} event={e} />
       ))}
-    </ul>
+    </div>
   );
 }
 
-function rowStyle(first: boolean): React.CSSProperties {
-  return {
-    display: "grid",
-    gridTemplateColumns: "20px 1fr auto",
-    alignItems: "baseline",
-    gap: 12,
-    padding: "12px 16px",
-    borderTop: first ? "none" : "1px solid var(--rule-soft)",
-  };
+function ActivityCard({ event: e }: { event: ActivityEvent }) {
+  const isVerification = e.type === "verification";
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column",
+      background: "var(--card-bg)", border: "1px solid var(--rule)",
+      padding: 16,
+    }}>
+      {/* tipo + timestamp */}
+      <div className="flex items-center justify-between">
+        <span className="font-mono uppercase"
+              style={{ color: "var(--accent)", fontSize: 9, letterSpacing: "0.14em" }}>
+          {isVerification ? "↗ verificação" : "✉ mensagem"}
+        </span>
+        <span className="font-mono"
+              style={{ color: "var(--muted-soft)", fontSize: 11, fontFeatureSettings: '"tnum"' }}>
+          {formatDateTime(e.at)}
+        </span>
+      </div>
+
+      {/* dev handle */}
+      <div className="mt-2" style={{ color: "var(--text)", fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>
+        {e.bundle_slug ? (
+          <a href={`/v/${e.bundle_slug}`} target="_blank" rel="noopener noreferrer" style={inlineLink()}>
+            {e.dev_handle ?? "—"}
+          </a>
+        ) : (
+          <span>{e.dev_handle ?? "—"}</span>
+        )}
+      </div>
+
+      {/* job title + status */}
+      {(e.job_title || e.status) && (
+        <div className="mt-1 flex flex-wrap items-center" style={{ gap: 8 }}>
+          {e.job_title && <span style={{ color: "var(--muted)", fontSize: 13 }}>{e.job_title}</span>}
+          {e.status && (
+            <span className="font-mono uppercase"
+                  style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.12em",
+                            padding: "2px 8px", background: "var(--rule-soft)", border: "1px solid var(--rule)" }}>
+              {STATUS_LABEL[e.status]}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function inlineLink(): React.CSSProperties {

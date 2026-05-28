@@ -42,7 +42,7 @@ describe("SavedDevsList", () => {
 
   it("rotula o status do bundle em PT", () => {
     setup([dev({ bundle_status: "outdated" })]);
-    expect(screen.getByText(/desatualizado/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/desatualizado/i)).toBeInTheDocument();
   });
 
   it("permite editar e salvar a nota", async () => {
