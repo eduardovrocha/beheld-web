@@ -17,6 +17,7 @@ import {
   updatePosition as apiUpdatePosition,
   archivePosition as apiArchivePosition,
   reactivatePosition as apiReactivatePosition,
+  purgePosition as apiPurgePosition,
   CompanyAuthError,
   type DashboardStats,
   type ActivityEvent,
@@ -44,6 +45,8 @@ export interface CompanyDashboardState {
   updatePosition:  (id: number, input: Partial<PositionInput>) => Promise<void>;
   archivePosition:    (id: number) => Promise<void>;
   reactivatePosition: (id: number) => Promise<void>;
+  purgePosition:      (id: number) => Promise<void>;
+  reloadMessages:     () => Promise<void>;
 }
 
 export function useCompanyDashboard(): CompanyDashboardState {
@@ -82,6 +85,17 @@ export function useCompanyDashboard(): CompanyDashboardState {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // Refaz só o fetch de mensagens — usado pelo auto-refresh da aba Mensagens
+  // (foco/visibilidade + polling), pra refletir respostas dos devs sem reload.
+  async function reloadMessages(): Promise<void> {
+    try {
+      setMessages(await getMessages());
+    } catch (e) {
+      if (e instanceof CompanyAuthError) setAuthRequired(true);
+      else                                setError((e as Error).message);
+    }
+  }
 
   async function saveDev(accountId: number, note?: string): Promise<void> {
     try {
@@ -157,10 +171,21 @@ export function useCompanyDashboard(): CompanyDashboardState {
     }
   }
 
+  async function purgePosition(id: number): Promise<void> {
+    try {
+      await apiPurgePosition(id);
+      setPositions((prev) => prev.filter((p) => p.id !== id));
+    } catch (e) {
+      if (e instanceof CompanyAuthError) setAuthRequired(true);
+      else                                setError((e as Error).message);
+    }
+  }
+
   return {
     stats, recentActivity, messages, savedDevs, positions,
     loading, error, authRequired,
     saveDev, updateNote, removeSavedDev,
-    createPosition, updatePosition, archivePosition, reactivatePosition,
+    createPosition, updatePosition, archivePosition, reactivatePosition, purgePosition,
+    reloadMessages,
   };
 }

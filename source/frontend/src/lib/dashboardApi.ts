@@ -71,6 +71,7 @@ export interface DashboardMessage {
   company:      string;
   job_title:    string | null;
   body:         string;
+  reply_body:   string | null;
   sent_at:      string;
   responded_at: string | null;
   ignored_at:   string | null;
@@ -146,8 +147,11 @@ export function toggleBundle(id: string): Promise<DashboardPayload> {
   return call(`/dashboard/bundles/${encodeURIComponent(id)}/toggle`, { method: "PATCH" });
 }
 
-export function respondMessage(id: string): Promise<DashboardPayload> {
-  return call(`/dashboard/messages/${encodeURIComponent(id)}/respond`, { method: "POST" });
+export function respondMessage(id: string, replyBody?: string): Promise<DashboardPayload> {
+  return call(`/dashboard/messages/${encodeURIComponent(id)}/respond`, {
+    method: "POST",
+    ...(replyBody != null ? { body: JSON.stringify({ reply_body: replyBody }) } : {}),
+  });
 }
 
 export function ignoreMessage(id: string): Promise<DashboardPayload> {

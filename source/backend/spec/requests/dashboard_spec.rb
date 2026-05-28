@@ -147,6 +147,20 @@ RSpec.describe "Dashboard", type: :request do
         post "/dashboard/messages/#{message.id}/respond", headers: auth_header
       }.to have_enqueued_job(RespondContactJob).with(message.id)
     end
+
+    it "persiste o reply_body quando o dev responde com texto (F_REPLY)" do
+      post "/dashboard/messages/#{message.id}/respond",
+           params: { reply_body: "  Tenho interesse, podem mandar detalhes!  " }, headers: auth_header
+      expect(message.reload.responded_at).to be_present
+      expect(message.reply_body).to eq("Tenho interesse, podem mandar detalhes!") # trimmed
+    end
+
+    it "deixa reply_body nil quando responde sem texto" do
+      post "/dashboard/messages/#{message.id}/respond",
+           params: { reply_body: "   " }, headers: auth_header
+      expect(message.reload.responded_at).to be_present
+      expect(message.reply_body).to be_nil
+    end
   end
 
   describe "POST /dashboard/messages/:id/ignore" do

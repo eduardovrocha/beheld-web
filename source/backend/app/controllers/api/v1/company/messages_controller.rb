@@ -19,6 +19,7 @@ module Api
         def serialize(m)
           {
             id:           m.id,
+            account_id:   m.account_id,
             dev_handle:   m.account.handle_or_fingerprint,
             bundle_slug:  m.account.bundles.active.last&.url_slug,
             job_title:    m.job_title,
@@ -26,6 +27,7 @@ module Api
             status:       message_status(m),
             sent_at:      m.sent_at.iso8601,
             responded_at: m.responded_at&.iso8601,
+            reply_body:   m.reply_body,
           }
         end
       end

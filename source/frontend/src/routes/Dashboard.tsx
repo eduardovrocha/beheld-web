@@ -211,7 +211,7 @@ export function Dashboard() {
               {messages.map((m, i) => (
                 <MessageRow key={m.id} m={m} busy={busy} first={i === 0}
                             canRespond={account.contact_configured}
-                            onRespond={() => refresh(() => respondMessage(m.id))}
+                            onRespond={(reply) => refresh(() => respondMessage(m.id, reply))}
                             onIgnore={() => refresh(() => ignoreMessage(m.id))} />
               ))}
             </Card>
@@ -494,8 +494,17 @@ function NotificationRow({ v, first }: { v: DashboardNotification; first: boolea
 
 function MessageRow({ m, busy, first, canRespond, onRespond, onIgnore }: {
   m: DashboardMessage; busy: boolean; first: boolean; canRespond: boolean;
-  onRespond: () => void; onIgnore: () => void;
+  onRespond: (reply: string) => void; onIgnore: () => void;
 }) {
+  const [composing, setComposing] = useState(false);
+  const [reply, setReply] = useState("");
+
+  function send() {
+    onRespond(reply.trim());
+    setComposing(false);
+    setReply("");
+  }
+
   return (
     <div style={ROW_STYLE(first)}>
       <div>
@@ -510,16 +519,47 @@ function MessageRow({ m, busy, first, canRespond, onRespond, onIgnore }: {
         )}
         <div className="mt-2" style={{
           color: "var(--text)", fontSize: 13.5, lineHeight: 1.7,
-          background: "var(--surface)", padding: "10px 12px",
-          border: "1px solid var(--rule-soft)", whiteSpace: "pre-wrap", wordBreak: "break-word",
+          padding: "10px 12px",
+          whiteSpace: "pre-wrap", wordBreak: "break-word",
         }}>
           {m.body.length > 240 ? m.body.slice(0, 240) + "…" : m.body}
         </div>
+
+        {/* compositor da resposta (F_REPLY) — texto curto e opcional */}
+        {composing && m.state === "pending" && (
+          <div className="mt-2">
+            <textarea value={reply} onChange={(e) => setReply(e.target.value)}
+                      disabled={busy} rows={3} autoFocus maxLength={2000}
+                      placeholder="Escreva uma resposta curta (opcional)…"
+                      style={{
+                        width: "100%", font: "inherit", fontSize: 13.5, lineHeight: 1.6,
+                        padding: "8px 10px", color: "var(--text)", background: "var(--bg)",
+                        border: "1px solid var(--rule)", borderRadius: 0, outline: "none",
+                        resize: "vertical",
+                      }} />
+            <div className="mt-2 flex gap-2">
+              <PrimaryButton disabled={busy} onClick={send}>Enviar resposta</PrimaryButton>
+              <SecondaryButton disabled={busy} onClick={() => { setComposing(false); setReply(""); }}>Cancelar</SecondaryButton>
+            </div>
+          </div>
+        )}
+
+        {/* resposta enviada — o dev vê o próprio texto */}
+        {m.state === "responded" && m.reply_body && (
+          <div className="mt-2" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
+            <div className="font-mono uppercase" style={{ color: "var(--ok)", fontSize: 9, letterSpacing: "0.14em", marginBottom: 3 }}>
+              sua resposta
+            </div>
+            <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+              {m.reply_body}
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex flex-shrink-0 items-start gap-2">
-        {m.state === "pending" && (
+        {m.state === "pending" && !composing && (
           <>
-            <PrimaryButton disabled={busy || !canRespond} onClick={onRespond}>Responder</PrimaryButton>
+            <PrimaryButton disabled={busy || !canRespond} onClick={() => setComposing(true)}>Responder</PrimaryButton>
             <SecondaryButton disabled={busy} onClick={onIgnore}>Ignorar</SecondaryButton>
           </>
         )}

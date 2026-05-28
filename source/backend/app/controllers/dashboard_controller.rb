@@ -64,7 +64,8 @@ class DashboardController < ActionController::Base
       flash[:alert] = "Configure email e telefone de contato antes de responder."
       return render plain: flash[:alert], status: :unprocessable_entity
     end
-    msg.update!(responded_at: Time.current)
+    reply = params[:reply_body].to_s.strip
+    msg.update!(responded_at: Time.current, reply_body: reply.presence)
     RespondContactJob.perform_later(msg.id)
     redirect_to dashboard_path, notice: "Seus contatos foram compartilhados."
   end

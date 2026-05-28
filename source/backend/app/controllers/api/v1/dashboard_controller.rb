@@ -38,12 +38,15 @@ module Api
       end
 
       # POST /api/v1/dashboard/messages/:id/respond
+      # Aceita um `reply_body` opcional — o texto curto que o dev escreve ao
+      # responder. Em branco mantém o comportamento antigo (só status).
       def respond_message
         msg = current_account.messages.find(params[:id])
         unless current_account.contact_configured?
           return render json: { error: "contact_not_configured" }, status: :unprocessable_entity
         end
-        msg.update!(responded_at: Time.current)
+        reply = params[:reply_body].to_s.strip
+        msg.update!(responded_at: Time.current, reply_body: reply.presence)
         RespondContactJob.perform_later(msg.id)
         render json: dashboard_payload
       end
@@ -151,6 +154,7 @@ module Api
           company:      m.company.name,
           job_title:    m.job_title,
           body:         m.body,
+          reply_body:   m.reply_body,
           sent_at:      m.sent_at.iso8601,
           responded_at: m.responded_at&.iso8601,
           ignored_at:   m.ignored_at&.iso8601,
