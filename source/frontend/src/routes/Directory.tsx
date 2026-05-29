@@ -386,7 +386,7 @@ function DevCard({ dev }: { dev: DevSummary }) {
 
       {/* ações no rodapé do card */}
       <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
-        <SaveDevButton accountId={dev.account_id} />
+        <SaveDevButton accountId={dev.account_id} size="sm" />
         <Link to={contactPath} style={linkButtonStyle({ primary: true })}>
           {t("directory.card.contact")}
         </Link>
@@ -476,8 +476,8 @@ function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
 
 function linkButtonStyle({ primary }: { primary: boolean }): React.CSSProperties {
   return {
-    font: "inherit", fontSize: 12.5,
-    padding: "6px 14px",
+    font: "inherit", fontSize: 12,
+    padding: "5px 12px",
     background:  primary ? "var(--text)" : "transparent",
     color:       primary ? "var(--bg)"   : "var(--text)",
     border:      `1px solid ${primary ? "var(--text)" : "var(--rule)"}`,
