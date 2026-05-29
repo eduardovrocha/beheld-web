@@ -491,7 +491,7 @@ function NewForm({ onCreate, onCancel }: {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) { setError(t("company.positions.form.title_required")); setTab("description"); return; }
-    const criteriaError = validateCriteria(criteria);
+    const criteriaError = validateCriteria(criteria, t);
     if (criteriaError) { setError(criteriaError); setTab("match_criteria"); return; }
     setBusy(true);
     setError(null);
@@ -581,7 +581,7 @@ function EditForm({ position, onSave, onCancel }: {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) { setError(t("company.positions.form.title_required")); setTab("description"); return; }
-    const criteriaError = validateCriteria(criteria);
+    const criteriaError = validateCriteria(criteria, t);
     if (criteriaError) { setError(criteriaError); setTab("match_criteria"); return; }
     setBusy(true);
     setError(null);
@@ -969,6 +969,7 @@ function TechEditor({ label, disabled, techs, onChange, source }: {
   onChange: (next: string[]) => void;
   source:   string;   // current description; used to derive "+ sugeridas"
 }) {
+  const t = useT();
   const [input, setInput] = useState("");
 
   // Suggestions = extracted from source that aren't already chips. Recompute
@@ -1002,7 +1003,7 @@ function TechEditor({ label, disabled, techs, onChange, source }: {
   }
 
   return (
-    <Field label={label} hint="enter ou vírgula para adicionar — clique × para remover">
+    <Field label={label} hint={t("company.positions.tech.hint")}>
       <div style={{
         display: "flex", flexWrap: "wrap", gap: 6,
         padding: "8px 10px",
@@ -1017,7 +1018,7 @@ function TechEditor({ label, disabled, techs, onChange, source }: {
                onKeyDown={handleKey}
                onBlur={() => input && add(input)}
                disabled={disabled}
-               placeholder={techs.length === 0 ? "ex: React, PostgreSQL, AWS…" : ""}
+               placeholder={techs.length === 0 ? t("company.positions.tech.placeholder") : ""}
                style={{
                  flex: "1 1 140px", minWidth: 120,
                  font: "inherit", fontSize: 13.5,
@@ -1032,7 +1033,7 @@ function TechEditor({ label, disabled, techs, onChange, source }: {
         <div className="mt-2 flex flex-wrap items-center" style={{ gap: 6 }}>
           <span className="font-mono uppercase"
                 style={{ color: "var(--muted-soft)", fontSize: 10, letterSpacing: "0.12em" }}>
-            sugeridas da descrição:
+            {t("company.positions.tech.suggested")}
           </span>
           {suggested.map((s) => (
             <button key={s} type="button" disabled={disabled}
@@ -1065,6 +1066,8 @@ function TechEditor({ label, disabled, techs, onChange, source }: {
 // the local state with the fresh payload.
 
 function PositionMatchesPanel({ position }: { position: Position }) {
+  const t = useT();
+  const fmt = useFmt();
   const [data,  setData]  = useState<PositionMatchesPayload | null>(null);
   const [busy,  setBusy]  = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1111,18 +1114,18 @@ function PositionMatchesPanel({ position }: { position: Position }) {
       <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
         <div className="font-mono uppercase"
              style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
-          devs que correspondem
+          {t("company.positions.matches.heading")}
         </div>
         <div className="flex items-center gap-3">
           {data?.calculated_at && (
             <span className="font-mono"
                   style={{ color: "var(--muted-soft)", fontSize: 11, letterSpacing: "0.04em",
                             fontFeatureSettings: '"tnum"' }}>
-              calculado {formatDateTimeShort(data.calculated_at)}
+              {t("company.positions.matches.calculated", { datetime: `${fmt.date(data.calculated_at, { day: "2-digit", month: "2-digit" })} ${fmt.time(data.calculated_at)}` })}
             </span>
           )}
           <button type="button" onClick={recalc} disabled={busy} style={secondaryBtn(busy)}>
-            {busy ? "Recalculando…" : "Recalcular"}
+            {busy ? t("company.positions.matches.recalc_busy") : t("company.positions.matches.recalc")}
           </button>
         </div>
       </div>
@@ -1131,7 +1134,7 @@ function PositionMatchesPanel({ position }: { position: Position }) {
 
       {!data ? (
         <p style={{ color: "var(--muted-soft)", fontSize: 13, lineHeight: 1.7 }}>
-          Carregando matches…
+          {t("company.positions.matches.loading")}
         </p>
       ) : (
         // key por position → reseta tab/página ao trocar de vaga
@@ -1145,13 +1148,14 @@ function PositionMatchesPanel({ position }: { position: Position }) {
 const MATCHES_PER_PAGE = 15;
 
 function MatchesTabbed({ data }: { data: PositionMatchesPayload }) {
+  const t = useT();
   const [tab, setTab]   = useState<"match" | "near_miss">("match");
   const [page, setPage] = useState(1);
   useEffect(() => { setPage(1); }, [tab]);   // troca de aba volta pra página 1
 
   const tabs = [
-    { id: "match"     as const, label: "Match confirmado", count: data.matches.length,   color: "var(--ok)" },
-    { id: "near_miss" as const, label: "Near-miss",        count: data.near_miss.length, color: "var(--warn)" },
+    { id: "match"     as const, label: t("company.positions.matches.tab.match"),     count: data.matches.length,   color: "var(--ok)" },
+    { id: "near_miss" as const, label: t("company.positions.matches.tab.near_miss"), count: data.near_miss.length, color: "var(--warn)" },
   ];
   const rows    = tab === "match" ? data.matches : data.near_miss;
   const pages   = Math.max(1, Math.ceil(rows.length / MATCHES_PER_PAGE));
@@ -1186,8 +1190,8 @@ function MatchesTabbed({ data }: { data: PositionMatchesPayload }) {
       {rows.length === 0 ? (
         <p style={{ color: "var(--muted-soft)", fontSize: 13, lineHeight: 1.6 }}>
           {tab === "match"
-            ? "Nenhum dev passou todos os thresholds hoje."
-            : "Nenhum dev caiu dentro da margem de near-miss."}
+            ? t("company.positions.matches.empty.match")
+            : t("company.positions.matches.empty.near_miss")}
         </p>
       ) : (
         <>
@@ -1198,17 +1202,17 @@ function MatchesTabbed({ data }: { data: PositionMatchesPayload }) {
             <div className="flex items-center justify-between" style={{ marginTop: 10 }}>
               <span className="font-mono"
                     style={{ color: "var(--muted-soft)", fontSize: 11, fontFeatureSettings: '"tnum"' }}>
-                {start + 1}–{Math.min(start + MATCHES_PER_PAGE, rows.length)} de {rows.length}
+                {t("company.positions.matches.range", { start: start + 1, end: Math.min(start + MATCHES_PER_PAGE, rows.length), total: rows.length })}
               </span>
               <div className="flex items-center gap-2">
                 <button type="button" disabled={current <= 1} onClick={() => setPage(current - 1)}
-                        style={secondaryBtn(current <= 1)}>← anterior</button>
+                        style={secondaryBtn(current <= 1)}>{t("company.positions.matches.prev")}</button>
                 <span className="font-mono"
                       style={{ color: "var(--muted)", fontSize: 11, fontFeatureSettings: '"tnum"' }}>
                   {current}/{pages}
                 </span>
                 <button type="button" disabled={current >= pages} onClick={() => setPage(current + 1)}
-                        style={secondaryBtn(current >= pages)}>próxima →</button>
+                        style={secondaryBtn(current >= pages)}>{t("company.positions.matches.next")}</button>
               </div>
             </div>
           )}
@@ -1219,6 +1223,7 @@ function MatchesTabbed({ data }: { data: PositionMatchesPayload }) {
 }
 
 function MatchRow({ row, first }: { row: PositionMatchRow; first: boolean }) {
+  const t = useT();
   return (
     <div style={{
       display: "grid",
@@ -1255,7 +1260,7 @@ function MatchRow({ row, first }: { row: PositionMatchRow; first: boolean }) {
              border: "1px solid var(--rule)",
              textDecoration: "none", whiteSpace: "nowrap",
            }}>
-          Ver perfil →
+          {t("company.positions.matches.view_profile")}
         </a>
       )}
       <a href={`/accounts/${row.account_id}/contact`}
@@ -1266,7 +1271,7 @@ function MatchRow({ row, first }: { row: PositionMatchRow; first: boolean }) {
            border: "1px solid var(--text)",
            textDecoration: "none", whiteSpace: "nowrap",
          }}>
-        Contatar
+        {t("company.positions.matches.contact")}
       </a>
     </div>
   );
@@ -1276,24 +1281,25 @@ function MatchRow({ row, first }: { row: PositionMatchRow; first: boolean }) {
 // evolution curve when the failed signal is `test_ratio` (the only signal
 // the backend tracks a curve for, per spec section 11).
 function NearMissDetail({ row }: { row: PositionMatchRow }) {
+  const t = useT();
   const signal = row.failed_signal!;
   const detail = row.failed_detail ?? {};
   return (
     <div style={{ color: "var(--muted)", fontSize: 12.5, marginTop: 2, lineHeight: 1.55 }}>
-      falhou: <strong style={{ color: "var(--warn)" }}>{SIGNAL_LABELS[signal]}</strong>
+      {t("company.positions.near_miss.failed")} <strong style={{ color: "var(--warn)" }}>{t(`company.positions.signal.${signal}.label`)}</strong>
       {signal === "test_ratio" && detail.current != null && detail.threshold != null && (
         <span style={{ marginLeft: 6, fontFeatureSettings: '"tnum"' }}>
-          ({detail.current}% · exigido: {detail.threshold}%)
+          {t("company.positions.near_miss.test_ratio", { current: detail.current, threshold: detail.threshold })}
         </span>
       )}
       {signal === "recency" && detail.current != null && detail.threshold != null && (
         <span style={{ marginLeft: 6, fontFeatureSettings: '"tnum"' }}>
-          ({Math.round(detail.current)}d · exigido: ≤ {detail.threshold}d)
+          {t("company.positions.near_miss.recency", { current: Math.round(detail.current), threshold: detail.threshold })}
         </span>
       )}
       {signal === "ecosystems" && detail.missing_items && detail.missing_items.length > 0 && (
         <span style={{ marginLeft: 6 }}>
-          (ausente: {detail.missing_items.join(", ")})
+          {t("company.positions.near_miss.ecosystems", { items: detail.missing_items.join(", ") })}
         </span>
       )}
       <CurveBadge curve={row.curve} />
@@ -1302,6 +1308,7 @@ function NearMissDetail({ row }: { row: PositionMatchRow }) {
 }
 
 function CurveBadge({ curve }: { curve?: import("@/lib/companyDashboardApi").PositionCurve }) {
+  const t = useT();
   if (!curve || curve.status === "not_applicable" || curve.status === "none") return null;
   if (curve.status === "building") {
     return (
@@ -1309,7 +1316,7 @@ function CurveBadge({ curve }: { curve?: import("@/lib/companyDashboardApi").Pos
         marginLeft: 10, color: "var(--muted-soft)",
         fontSize: 11, letterSpacing: "0.04em", fontFeatureSettings: '"tnum"',
       }}>
-        · curva: em construção ({curve.points ?? 1} ponto)
+        {t("company.positions.curve.building", { points: curve.points ?? 1 })}
       </span>
     );
   }
@@ -1323,16 +1330,9 @@ function CurveBadge({ curve }: { curve?: import("@/lib/companyDashboardApi").Pos
       marginLeft: 10, color, fontSize: 11, letterSpacing: "0.04em",
       fontFeatureSettings: '"tnum"',
     }}>
-      · curva: {arrow} {sign}{curve.delta}% em {curve.period_days}d ({curve.points} bundles)
+      {t("company.positions.curve.trend", { arrow, sign, delta: curve.delta ?? 0, period: curve.period_days ?? 0, points: curve.points ?? 0 })}
     </span>
   );
-}
-
-function formatDateTimeShort(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 // ── status chip ────────────────────────────────────────────────────────────
@@ -1365,6 +1365,7 @@ function PositionStatusChip({ status, expiresAt }: { status: Position["status"];
 // ── match criteria read-only view (detail panel) ───────────────────────────
 
 function MatchCriteriaView({ position }: { position: Position }) {
+  const tr = useT();
   const thresholds = position.thresholds ?? [];
   const priorities = (position.priorities ?? []).slice().sort((a, b) => a.ranking - b.ranking);
   if (thresholds.length === 0 && priorities.length === 0) return null;
@@ -1372,27 +1373,27 @@ function MatchCriteriaView({ position }: { position: Position }) {
     <div style={{ marginTop: 16 }}>
       <div className="font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
-        critérios de match
+        {tr("company.positions.criteria_view.title")}
       </div>
       <div style={{ display: "grid", gap: 6 }}>
         {thresholds.map((t) => (
           <div key={t.signal} style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55 }}>
-            <strong style={{ fontWeight: 600 }}>{SIGNAL_LABELS[t.signal as PositionSignal]}</strong>
+            <strong style={{ fontWeight: 600 }}>{tr(`company.positions.signal.${t.signal}.label`)}</strong>
             <span style={{ color: "var(--muted)" }}>{" — "}</span>
             {t.signal === "ecosystems" && "items" in t.value && (
-              <span>inclui {t.value.items.join(", ")}</span>
+              <span>{tr("company.positions.criteria_view.includes", { items: t.value.items.join(", ") })}</span>
             )}
             {t.signal === "test_ratio" && "number" in t.value && (
-              <span>≥ {t.value.number}%</span>
+              <span>{tr("company.positions.criteria_view.gte", { n: t.value.number })}</span>
             )}
             {t.signal === "recency" && "number" in t.value && (
-              <span>≤ {t.value.number} dias</span>
+              <span>{tr("company.positions.criteria_view.lte", { n: t.value.number })}</span>
             )}
             {priorityFor(priorities, t.signal as PositionSignal) && (
               <span className="font-mono"
                     style={{ marginLeft: 8, color: "var(--accent)", fontSize: 11,
                               letterSpacing: "0.06em", fontFeatureSettings: '"tnum"' }}>
-                · {priorityFor(priorities, t.signal as PositionSignal)}º · peso {Math.round((priorities.find((p) => p.signal === t.signal)?.weight ?? 0) * 100)}%
+                · {tr("company.positions.criteria_view.priority", { rank: priorityFor(priorities, t.signal as PositionSignal) ?? 0, weight: Math.round((priorities.find((p) => p.signal === t.signal)?.weight ?? 0) * 100) })}
               </span>
             )}
           </div>
@@ -1451,18 +1452,18 @@ function criteriaFromPosition(p: Position): MatchCriteria {
 // servidor ("Ao menos um threshold deve ser definido para ativar o
 // matching") + cobre o caso degenerado "ecosystems habilitado sem nenhum
 // item selecionado". Retorna a mensagem de erro a exibir ou null se OK.
-function validateCriteria(c: MatchCriteria): string | null {
+function validateCriteria(c: MatchCriteria, t: (k: string) => string): string | null {
   const enabledSignals: PositionSignal[] = [];
   if (c.ecosystems.enabled) {
     if (c.ecosystems.items.length === 0) {
-      return "Selecione ao menos um ecosystem ou desative o critério.";
+      return t("company.positions.criteria.err_ecosystem");
     }
     enabledSignals.push("ecosystems");
   }
   if (c.test_ratio.enabled) enabledSignals.push("test_ratio");
   if (c.recency.enabled)    enabledSignals.push("recency");
   if (enabledSignals.length === 0) {
-    return "Defina ao menos um critério de match (ecosystems, test ratio ou recência).";
+    return t("company.positions.criteria.err_none");
   }
   return null;
 }
@@ -1490,22 +1491,12 @@ function buildCriteriaPayload(c: MatchCriteria): {
   return { thresholds, priorities };
 }
 
-const SIGNAL_LABELS: Record<PositionSignal, string> = {
-  ecosystems: "Ecosystems",
-  test_ratio: "Test ratio",
-  recency:    "Recência",
-};
-const SIGNAL_HINTS: Record<PositionSignal, string> = {
-  ecosystems: "ecossistemas que o dev deve ter publicado",
-  test_ratio: "proporção mínima de testes (0–100%)",
-  recency:    "dias máximos desde o último bundle",
-};
-
 function MatchCriteriaEditor({ disabled, value, onChange }: {
   disabled: boolean;
   value:    MatchCriteria;
   onChange: (next: MatchCriteria) => void;
 }) {
+  const t = useT();
   // Keep priorityOrder in sync with enabled signals. When a recruiter
   // disables a signal, drop it from the ordering. When they enable one,
   // append at the end (lowest priority by default).
@@ -1541,7 +1532,7 @@ function MatchCriteriaEditor({ disabled, value, onChange }: {
   const weightFor = (rank: number) => [0.40, 0.30, 0.20, 0.10][rank - 1] ?? 0;
 
   return (
-    <Field label="Critérios de match" hint="thresholds que o dev precisa atender + ordem de prioridade">
+    <Field label={t("company.positions.criteria.field_label")} hint={t("company.positions.criteria.field_hint")}>
       <div style={{
         padding: 14, display: "grid", gap: 14,
       }}>
@@ -1572,7 +1563,7 @@ function MatchCriteriaEditor({ disabled, value, onChange }: {
             onChange={(n) => setSignal("test_ratio", { min: n })} />
           {value.test_ratio.enabled && value.test_ratio.min > 0 && (
             <p style={{ color: "var(--muted-soft)", fontSize: 12, lineHeight: 1.5, margin: "6px 0 0" }}>
-              Devs com test maturity score abaixo de {value.test_ratio.min} não serão incluídos nos matches.
+              {t("company.positions.criteria.test_ratio_help", { n: value.test_ratio.min })}
             </p>
           )}
         </SignalRow>
@@ -1587,11 +1578,11 @@ function MatchCriteriaEditor({ disabled, value, onChange }: {
           <NumberInput
             disabled={disabled || !value.recency.enabled}
             value={value.recency.maxDays}
-            min={1} max={365} step={1} suffix="dias máximo"
+            min={1} max={365} step={1} suffix={t("company.positions.criteria.recency_suffix")}
             onChange={(n) => setSignal("recency", { maxDays: n })} />
           {value.recency.enabled && value.recency.maxDays > 0 && (
             <p style={{ color: "var(--muted-soft)", fontSize: 12, lineHeight: 1.5, margin: "6px 0 0" }}>
-              Devs sem bundle publicado nos últimos {value.recency.maxDays} dias não serão incluídos nos matches.
+              {t("company.positions.criteria.recency_help", { n: value.recency.maxDays })}
             </p>
           )}
         </SignalRow>
@@ -1607,7 +1598,7 @@ function MatchCriteriaEditor({ disabled, value, onChange }: {
 
         {value.priorityOrder.length === 0 && (
           <p style={{ color: "var(--muted-soft)", fontSize: 12.5, lineHeight: 1.5, margin: 0 }}>
-            Ative pelo menos um sinal acima para definir a prioridade do matching.
+            {t("company.positions.criteria.priority_empty")}
           </p>
         )}
       </div>
@@ -1624,6 +1615,7 @@ function PriorityRankList({ order, disabled, weightFor, onReorder }: {
   weightFor: (rank: number) => number;
   onReorder: (from: number, to: number) => void;
 }) {
+  const t = useT();
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
 
@@ -1631,7 +1623,7 @@ function PriorityRankList({ order, disabled, weightFor, onReorder }: {
     <div style={{ paddingTop: 8, borderTop: "1px dashed var(--rule)" }}>
       <div className="font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
-        prioridade — arraste para reordenar
+        {t("company.positions.criteria.priority_title")}
       </div>
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 4 }}>
         {order.map((signal, idx) => (
@@ -1661,12 +1653,12 @@ function PriorityRankList({ order, disabled, weightFor, onReorder }: {
               {idx + 1}º
             </span>
             <span style={{ color: "var(--text)", fontSize: 13.5 }}>
-              {SIGNAL_LABELS[signal]}
+              {t(`company.positions.signal.${signal}.label`)}
             </span>
             <span className="font-mono"
                   style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.04em",
                             fontFeatureSettings: '"tnum"' }}>
-              peso {Math.round(weightFor(idx + 1) * 100)}%
+              {t("company.positions.criteria.priority_weight", { pct: Math.round(weightFor(idx + 1) * 100) })}
             </span>
           </li>
         ))}
@@ -1707,6 +1699,7 @@ function SignalRow({ signal, enabled, disabled, onToggle, children }: {
   onToggle: (next: boolean) => void;
   children: ReactNode;
 }) {
+  const t = useT();
   return (
     <div style={{ display: "grid", gap: 6 }}>
       <label className="flex items-center gap-2"
@@ -1716,9 +1709,9 @@ function SignalRow({ signal, enabled, disabled, onToggle, children }: {
                style={{ width: 14, height: 14, accentColor: "var(--accent)" }} />
         <span className="font-mono uppercase"
               style={{ color: "var(--text)", fontSize: 11, letterSpacing: "0.14em" }}>
-          {SIGNAL_LABELS[signal]}
+          {t(`company.positions.signal.${signal}.label`)}
         </span>
-        <span style={{ color: "var(--muted-soft)", fontSize: 12 }}>· {SIGNAL_HINTS[signal]}</span>
+        <span style={{ color: "var(--muted-soft)", fontSize: 12 }}>· {t(`company.positions.signal.${signal}.hint`)}</span>
       </label>
       <div style={{ marginLeft: 22 }}>{children}</div>
     </div>
@@ -1802,6 +1795,7 @@ function NumberInput({ disabled, value, min, max, step, suffix, onChange }: {
 // ── tech chip (used both in detail view + tech editor) ────────────────────
 
 function TechChip({ label, onRemove }: { label: string; onRemove?: () => void }) {
+  const t = useT();
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 4,
@@ -1815,7 +1809,7 @@ function TechChip({ label, onRemove }: { label: string; onRemove?: () => void })
       {label}
       {onRemove && (
         <button type="button" onClick={onRemove}
-                aria-label={`remover ${label}`}
+                aria-label={t("company.positions.tech.remove", { label })}
                 style={{
                   background: "none", border: "none", padding: 0,
                   color: "var(--muted)", cursor: "pointer", fontSize: 13,
