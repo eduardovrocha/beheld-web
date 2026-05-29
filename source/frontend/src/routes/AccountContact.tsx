@@ -24,6 +24,7 @@ import {
 } from "@/lib/contactsApi";
 import { getPositions, type Position } from "@/lib/companyDashboardApi";
 import { Dropdown } from "@/components/Dropdown";
+import { useT, useFmt } from "@/i18n/I18nProvider";
 
 type Phase =
   | { kind: "loading" }
@@ -33,6 +34,7 @@ type Phase =
   | { kind: "sent"; handle: string };
 
 export function AccountContact() {
+  const t = useT();
   const { account_id } = useParams<{ account_id: string }>();
   const navigate = useNavigate();
 
@@ -53,9 +55,9 @@ export function AccountContact() {
     if (!account_id) { setPhase({ kind: "unavailable" }); return; }
     (async () => {
       try {
-        const t = await loadContactTarget(account_id);
-        setPhase({ kind: "ready", target: t.account });
-        const prev = t.previous_messages ?? [];
+        const ct = await loadContactTarget(account_id);
+        setPhase({ kind: "ready", target: ct.account });
+        const prev = ct.previous_messages ?? [];
         setPrevMessages(prev);
         // Se já há uma mensagem PENDENTE, o contato fica atrelado à vaga dela —
         // fixamos o jobTitle e travamos o seletor (ver `vagaLocked` no render).
@@ -100,7 +102,7 @@ export function AccountContact() {
   if (phase.kind === "loading") {
     return (
       <Shell>
-        <Header title="Carregando…" />
+        <Header title={t("contact.loading")} />
       </Shell>
     );
   }
@@ -108,13 +110,13 @@ export function AccountContact() {
   if (phase.kind === "unavailable") {
     return (
       <Shell>
-        <Header title="Perfil indisponível" emTail="· não encontrável no momento" />
+        <Header title={t("contact.unavailable.title")} emTail={t("contact.unavailable.em_tail")} />
         <Card>
           <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7 }}>
-            Este dev pode ter saído do diretório, removido o bundle ou ainda não publicou.
+            {t("contact.unavailable.body")}
           </p>
           <div style={{ marginTop: 16 }}>
-            <Link to="/directory" style={linkStyle()}>← voltar ao diretório</Link>
+            <Link to="/directory" style={linkStyle()}>{t("contact.unavailable.back")}</Link>
           </div>
         </Card>
       </Shell>
@@ -124,17 +126,16 @@ export function AccountContact() {
   if (phase.kind === "sent") {
     return (
       <Shell>
-        <Header title="Mensagem enviada" emTail="· aguardando resposta do dev" />
+        <Header title={t("contact.sent.title")} emTail={t("contact.sent.em_tail")} />
         <Card>
           <p style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.7 }}>
-            ✓ Sua mensagem chegou ao dashboard de <strong style={{ color: "var(--accent)" }}>{phase.handle}</strong>.
+            {t("contact.sent.body_prefix")}<strong style={{ color: "var(--accent)" }}>{phase.handle}</strong>{t("contact.sent.body_suffix")}
           </p>
           <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, marginTop: 12 }}>
-            Se o dev clicar <span style={{ color: "var(--text)" }}>Responder</span>, beheld encaminha
-            o email + telefone dele direto para o seu email cadastrado.
+            {t("contact.sent.note_prefix")}<span style={{ color: "var(--text)" }}>{t("contact.action_respond")}</span>{t("contact.sent.note_suffix")}
           </p>
           <div style={{ marginTop: 24, display: "flex", gap: 12 }}>
-            <Link to="/directory" style={primaryLinkStyle()}>voltar ao diretório</Link>
+            <Link to="/directory" style={primaryLinkStyle()}>{t("contact.sent.back")}</Link>
           </div>
         </Card>
       </Shell>
@@ -149,8 +150,8 @@ export function AccountContact() {
 
   return (
     <Shell>
-      <Header title="Entrar em contato"
-              emTail={`· enviando para ${target.handle}`}
+      <Header title={t("contact.title")}
+              emTail={t("contact.em_tail", { handle: target.handle })}
               meta={<CompanyNav bare />} />
 
       <div className="grid gap-6"
@@ -173,15 +174,15 @@ export function AccountContact() {
               </div>
             )}
 
-            <Field label="Cargo da vaga"
-                   hint={vagaLocked ? "fixada — já há uma mensagem pendente para esta vaga" : "opcional"}>
+            <Field label={t("contact.form.job_title_label")}
+                   hint={vagaLocked ? t("contact.form.job_title_hint_locked") : t("contact.form.job_title_hint")}>
               {vagaLocked ? (
                 <div style={{
                   font: "inherit", fontSize: 14, padding: "10px 12px",
                   color: "var(--muted)", background: "var(--surface)",
                   border: "1px solid var(--rule)", cursor: "not-allowed",
                 }}>
-                  {jobTitle || "— sem vaga —"}
+                  {jobTitle || t("contact.form.no_position")}
                 </div>
               ) : openPositions.length > 0 ? (
                 <Dropdown
@@ -189,7 +190,7 @@ export function AccountContact() {
                   onChange={setJobTitle}
                   disabled={sending}
                   options={[
-                    { value: "", label: "— selecione uma vaga —" },
+                    { value: "", label: t("contact.form.select_position") },
                     ...openPositions.map((p) => ({ value: p.title, label: p.title })),
                   ]} />
               ) : (
@@ -198,7 +199,7 @@ export function AccountContact() {
               )}
             </Field>
 
-            <Field label="Mensagem" hint="o dev verá no dashboard antes de aceitar">
+            <Field label={t("contact.form.message_label")} hint={t("contact.form.message_hint")}>
               <textarea value={body} onChange={(e) => setBody(e.target.value)}
                         required disabled={sending}
                         rows={8}
@@ -215,9 +216,9 @@ export function AccountContact() {
             </Field>
 
             <div className="flex items-center justify-between gap-4 pt-2">
-              <Link to="/directory" style={linkStyle()}>← voltar</Link>
+              <Link to="/directory" style={linkStyle()}>{t("contact.form.back")}</Link>
               <PrimaryButton type="submit" disabled={sending}>
-                {sending ? "Enviando…" : "Enviar mensagem"}
+                {sending ? t("contact.form.submitting") : t("contact.form.submit")}
               </PrimaryButton>
             </div>
           </form>
@@ -231,6 +232,8 @@ export function AccountContact() {
 // (handle, status, test ratio, ecosystems, link pro retrato) + a nota de
 // privacidade. Nunca email/telefone.
 function ProfilePanel({ target }: { target: ContactTarget["account"] }) {
+  const t = useT();
+  const fmt = useFmt();
   const slug = target.bundle_slug;
   return (
     <aside style={{
@@ -244,10 +247,10 @@ function ProfilePanel({ target }: { target: ContactTarget["account"] }) {
             tone="ok"
             align="right"
             icon={<VerifiedIcon size={12} />}
-            label="verificado"
-            title="Identidade verificada."
-            description="Bundle assinado com a chave do dev e publicado nos últimos 30 dias — checado offline.">
-            <span aria-label="verificado"
+            label={t("common.verified.label")}
+            title={t("common.verified.title")}
+            description={t("contact.profile.verified_desc")}>
+            <span aria-label={t("common.verified.aria")}
                   style={{ display: "inline-flex", alignItems: "center", color: "var(--ok)", cursor: "help" }}>
               <VerifiedIcon size={18} />
             </span>
@@ -257,14 +260,14 @@ function ProfilePanel({ target }: { target: ContactTarget["account"] }) {
 
       <div className="font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        perfil
+        {t("contact.profile.eyebrow")}
       </div>
 
       <div className="mt-2 flex flex-wrap items-center" style={{ gap: 6, paddingRight: 24 }}>
         <span style={{ color: "var(--text)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>
           {target.handle}
         </span>
-        {target.status === "outdated" && <StatusBadge kind="warn">desatualizado</StatusBadge>}
+        {target.status === "outdated" && <StatusBadge kind="warn">{t("common.bundle_status.outdated")}</StatusBadge>}
       </div>
 
       {(typeof target.test_ratio === "number" || target.last_bundle_at) && (
@@ -272,9 +275,9 @@ function ProfilePanel({ target }: { target: ContactTarget["account"] }) {
              style={{ color: "var(--muted)", fontSize: 12, letterSpacing: "0.02em",
                        fontFeatureSettings: '"tnum"', lineHeight: 1.6 }}>
           {typeof target.test_ratio === "number" && (
-            <span>test ratio <strong style={{ color: "var(--accent)" }}>{Math.round(target.test_ratio)}%</strong></span>
+            <span>{t("directory.card.test_ratio_label")} <strong style={{ color: "var(--accent)" }}>{Math.round(target.test_ratio)}%</strong></span>
           )}
-          {target.last_bundle_at && <span> · pub. {monthYear(target.last_bundle_at)}</span>}
+          {target.last_bundle_at && <span> · {t("directory.card.published", { date: fmt.date(target.last_bundle_at, { month: "short", year: "numeric" }) })}</span>}
         </div>
       )}
 
@@ -297,15 +300,14 @@ function ProfilePanel({ target }: { target: ContactTarget["account"] }) {
                color: "var(--text)", textDecoration: "none",
                border: "1px solid var(--rule)", padding: "6px 12px", display: "inline-block",
              }}>
-            Ver perfil completo →
+            {t("contact.profile.view_full")}
           </a>
         </div>
       )}
 
       <p style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--rule-soft)",
                   color: "var(--muted)", fontSize: 12, lineHeight: 1.65 }}>
-        beheld não compartilha email ou telefone de <span style={{ color: "var(--text)" }}>{target.handle}</span> até
-        que ele clique <span style={{ color: "var(--text)" }}>Responder</span> na sua mensagem.
+        {t("contact.profile.privacy_prefix")}<span style={{ color: "var(--text)" }}>{target.handle}</span>{t("contact.profile.privacy_mid")}<span style={{ color: "var(--text)" }}>{t("contact.action_respond")}</span>{t("contact.profile.privacy_suffix")}
       </p>
     </aside>
   );
@@ -324,12 +326,6 @@ function StatusBadge({ kind, children }: { kind: "ok" | "warn"; children: ReactN
   );
 }
 
-function monthYear(iso: string): string {
-  const m = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : `${m[d.getMonth()]} ${d.getFullYear()}`;
-}
-
 // ── shell + primitives (kept local to keep this route self-contained) ──────
 
 function Shell({ children }: { children: ReactNode }) {
@@ -344,11 +340,12 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 function Header({ title, emTail, meta }: { title: string; emTail?: string; meta?: ReactNode }) {
+  const t = useT();
   return (
     <header className="mb-10">
       <div className="mb-3 font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        empresa · contato
+        {t("contact.eyebrow")}
       </div>
       <h1 className="font-semibold"
           style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
@@ -369,17 +366,18 @@ function Header({ title, emTail, meta }: { title: string; emTail?: string; meta?
 // outra. As pendentes (sem resposta) ganham destaque; as respondidas mostram
 // a resposta do dev.
 function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
+  const t = useT();
+  const fmtI18n = useFmt();
   const fmt = (iso: string) => {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return iso;
-    const p = (n: number) => String(n).padStart(2, "0");
-    return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()}`;
+    return fmtI18n.date(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
   };
   return (
     <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid var(--rule-soft)" }}>
       <div className="font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 10 }}>
-        já enviadas · {items.length}
+        {t("contact.prev.heading")} · {items.length}
       </div>
       <div className="grid" style={{ gap: 12 }}>
         {items.map((m) => {
@@ -391,10 +389,10 @@ function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
               <div className="font-mono"
                    style={{ color: "var(--muted-soft)", fontSize: 11, letterSpacing: "0.04em", marginBottom: 3,
                             fontFeatureSettings: '"tnum"' }}>
-                {m.job_title ? `${m.job_title} · ` : ""}enviada {fmt(m.sent_at)}
+                {m.job_title ? `${m.job_title} · ` : ""}{t("contact.prev.sent", { date: fmt(m.sent_at) })}
                 {" · "}
                 <span style={{ color: pending ? "var(--muted)" : m.status === "responded" ? "var(--ok)" : "var(--warn)" }}>
-                  {pending ? "aguardando resposta" : m.status === "responded" ? "respondida" : "ignorada"}
+                  {pending ? t("contact.prev.status_pending") : m.status === "responded" ? t("contact.prev.status_responded") : t("contact.prev.status_ignored")}
                 </span>
               </div>
               <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55,
@@ -404,7 +402,7 @@ function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
               {m.reply_body && (
                 <div className="mt-2" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
                   <div className="font-mono uppercase" style={{ color: "var(--ok)", fontSize: 9, letterSpacing: "0.14em", marginBottom: 2 }}>
-                    resposta do dev
+                    {t("contact.prev.reply_heading")}
                   </div>
                   <div style={{ color: "var(--text)", fontSize: 13, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                     {m.reply_body}
