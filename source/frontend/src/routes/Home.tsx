@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { useT } from "@/i18n/I18nProvider";
+
 const INSTALL_CMD = "curl beheld.dev/install | sh";
 const GITHUB_URL = "https://github.com/eduardovrocha/beheld";
 
@@ -83,6 +85,7 @@ function SectionHead({
 // ── Terminal demo (mirrors mock right column of hero) ───────────────────────
 
 function TerminalDemo() {
+  const t = useT();
   return (
     <div
       className="overflow-hidden rounded-md font-mono"
@@ -122,7 +125,7 @@ function TerminalDemo() {
           className="mb-2 mt-3.5 font-mono uppercase"
           style={{ color: "var(--term-muted)", fontSize: 10, letterSpacing: "0.12em" }}
         >
-          sinais observados · últimos 90d
+          {t("home.term.observed")}
         </div>
         <TermBar label="stack ratio (py/ts)" pct={87} value="87%" />
         <TermBar label="test ratio" pct={38} value="38%" />
@@ -130,11 +133,11 @@ function TerminalDemo() {
 
         <div className="my-2.5 border-t border-dashed" style={{ borderColor: "var(--term-rule)" }} />
 
-        <TermSummary k="sessões 90d" v="87" delta="8 repos em L1" />
-        <TermSummary k="trajetória L1" v="7 anos" delta="contínua desde 2017" />
+        <TermSummary k={t("home.term.sessions_90d")} v="87" delta={t("home.term.sessions_delta")} />
+        <TermSummary k={t("home.term.trajectory")} v={t("home.term.trajectory_value")} delta={t("home.term.trajectory_delta")} />
 
         <div className="mt-3" style={{ color: "var(--term-muted)", fontSize: 10.5 }}>
-          → test ratio é <span style={{ color: "var(--term-accent)" }}>4.2×</span> mediana global · bundle ed25519 · rev. 47
+          {t("home.term.footnote")}
         </div>
       </div>
     </div>
@@ -205,6 +208,7 @@ function TermSummary({ k, v, delta }: { k: string; v: string; delta?: string }) 
 // ── Install block (hero left column) ────────────────────────────────────────
 
 function InstallBlock() {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const onCopy = async () => {
     try {
@@ -225,7 +229,7 @@ function InstallBlock() {
           className="mb-2.5 font-mono uppercase"
           style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.18em" }}
         >
-          instale em uma linha
+          {t("home.install.label")}
         </div>
         <div className="flex items-center gap-2.5 font-mono" style={{ color: "var(--text)", fontSize: 13 }}>
           <span className="font-medium" style={{ color: "var(--accent)" }}>
@@ -245,7 +249,7 @@ function InstallBlock() {
               background: "transparent",
             }}
           >
-            {copied ? "copiado" : "copiar"}
+            {copied ? t("home.install.copied") : t("home.install.copy")}
           </button>
         </div>
       </div>
@@ -253,7 +257,7 @@ function InstallBlock() {
         className="mb-6 font-mono"
         style={{ color: "var(--muted-soft)", fontSize: 10, letterSpacing: "0.08em" }}
       >
-        macOS e Linux · zero dependências · daemon local
+        {t("home.install.platforms")}
       </div>
 
       <div className="inline-flex items-center gap-2">
@@ -261,14 +265,14 @@ function InstallBlock() {
           className="font-mono uppercase"
           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}
         >
-          produto
+          {t("home.install.product")}
         </span>
         <span style={{ color: "var(--rule)" }}>·</span>
         <span
           className="font-mono uppercase"
           style={{ color: "var(--accent)", fontSize: 10, letterSpacing: "0.14em" }}
         >
-          forever free for developers
+          {t("home.forever_free")}
         </span>
       </div>
     </>
@@ -456,6 +460,7 @@ function ChainRow({
 // ── Main page ───────────────────────────────────────────────────────────────
 
 export function Home() {
+  const t = useT();
   return (
     <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
       {/* ═══ DOC HEAD ═══════════════════════════════════════════════════ */}
@@ -489,8 +494,8 @@ export function Home() {
             className="mt-6 font-mono uppercase"
             style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
           >
-            daemon local <span style={{ color: "var(--accent)" }}>·</span> sessões reais{" "}
-            <span style={{ color: "var(--accent)" }}>·</span> open source
+            {t("home.head.daemon")} <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.real_sessions")}{" "}
+            <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.open_source")}
           </div>
         </div>
 
@@ -505,22 +510,21 @@ export function Home() {
 
       {/* ═══ LETTER ═════════════════════════════════════════════════════ */}
       <section className="py-20" style={{ borderBottom: "1px solid var(--rule)" }}>
-        <Eyebrow>— sobre o produto</Eyebrow>
+        <Eyebrow>{t("home.letter.eyebrow")}</Eyebrow>
         <div className="mt-5" style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.95 }}>
-          O LinkedIn não viu você trabalhar. O recrutador não sabe que você escreveu aquele test antes do
-          código. O gerente que te rejeitou não sabe que seu{" "}
+          {t("home.letter.body_p1")}
           <span style={{ color: "var(--accent)", fontWeight: 500 }}>
-            test ratio é quatro vezes a mediana global
+            {t("home.letter.body_em")}
           </span>
-          . O beheld sabe. E pode mostrar — se você deixar.
+          {t("home.letter.body_p2")}
         </div>
         <div
           className="mt-6 font-mono uppercase"
           style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
         >
-          isso é o trabalho real. não o linkedin. o trabalho.{" "}
+          {t("home.letter.footnote")}{" "}
           <span style={{ color: "var(--accent)" }}>·</span>{" "}
-          <span style={{ color: "var(--accent)", fontWeight: 500 }}>forever free for developers</span>
+          <span style={{ color: "var(--accent)", fontWeight: 500 }}>{t("home.forever_free")}</span>
         </div>
       </section>
 
@@ -528,39 +532,38 @@ export function Home() {
       <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="01"
-          title="O que o daemon"
-          emTail="captura"
-          right="sem setup extra"
+          title={t("home.s01.title")}
+          emTail={t("home.s01.em_tail")}
+          right={t("home.s01.right")}
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <GlanceCard
-            label="daemon"
-            num="local"
-            note={<>sem cloud · nada sai sem você assinar</>}
+            label={t("home.s01.card1.label")}
+            num={t("home.s01.card1.num")}
+            note={t("home.s01.card1.note")}
           />
           <GlanceCard
-            label="sinais"
-            num="L1 + L2"
-            note={<>git histórico + sessões Claude Code</>}
+            label={t("home.s01.card2.label")}
+            num={t("home.s01.card2.num")}
+            note={t("home.s01.card2.note")}
           />
           <GlanceCard
-            label="bundle"
-            num="Ed25519"
+            label={t("home.s01.card3.label")}
+            num={t("home.s01.card3.num")}
             note={
               <>
-                <strong style={{ color: "var(--accent)", fontWeight: 500 }}>assinado offline</strong> ·
-                verificável sem o beheld
+                <strong style={{ color: "var(--accent)", fontWeight: 500 }}>{t("home.s01.card3.note_em")}</strong>{t("home.s01.card3.note_suffix")}
               </>
             }
           />
           <GlanceCard
-            label="custo pro dev"
-            num="$0"
+            label={t("home.s01.card4.label")}
+            num={t("home.s01.card4.num")}
             numColor="var(--ok)"
             note={
               <>
-                para sempre ·{" "}
-                <strong style={{ color: "var(--accent)", fontWeight: 500 }}>contrato público</strong>
+                {t("home.s01.card4.note_prefix")}
+                <strong style={{ color: "var(--accent)", fontWeight: 500 }}>{t("home.s01.card4.note_em")}</strong>
               </>
             }
           />
@@ -571,40 +574,39 @@ export function Home() {
       <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="02"
-          title="Claimed vs Demonstrated"
-          emTail="· o delta verificável"
-          right="3 estados possíveis"
+          title={t("home.s02.title")}
+          emTail={t("home.s02.em_tail")}
+          right={t("home.s02.right")}
         />
         <p
           className="mb-7"
           style={{ color: "var(--muted)", fontSize: 14.5, lineHeight: 1.9 }}
         >
-          O dev declara o que é. O daemon mostra o que{" "}
+          {t("home.s02.intro_p1")}
           <strong style={{ color: "var(--text)", fontWeight: 500 }}>
-            de fato aparece nas sessões e no git
+            {t("home.s02.intro_em")}
           </strong>
-          . Onde os dois se encontram, o sinal é confirmado. Onde divergem, o sinal é limitado — e isso
-          também é informação.
+          {t("home.s02.intro_p2")}
         </p>
 
         <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
           <ClaimRow
             status="ok"
-            title="Stack principal"
-            role="Python, TypeScript"
-            obs="Confirmado. 87% das sessões em Python/TS nos últimos 90 dias. 8 repositórios em L1."
+            title={t("home.s02.claim1.title")}
+            role={t("home.s02.claim1.role")}
+            obs={t("home.s02.claim1.obs")}
           />
           <ClaimRow
             status="ok"
-            title="Senioridade"
-            role="8+ anos backend engineer"
-            obs="Confirmado. L1 mostra atividade contínua desde 2017. Test ratio médio: 38% — 4.2× mediana global."
+            title={t("home.s02.claim2.title")}
+            role={t("home.s02.claim2.role")}
+            obs={t("home.s02.claim2.obs")}
           />
           <ClaimRow
             status="warn"
-            title="Especialização"
-            role="Senior React Engineer"
-            obs="Sinal limitado. React em 2 de 87 sessões. Nenhum repositório React em L1. Trajetória recente: Python/FastAPI."
+            title={t("home.s02.claim3.title")}
+            role={t("home.s02.claim3.role")}
+            obs={t("home.s02.claim3.obs")}
           />
         </div>
 
@@ -616,7 +618,7 @@ export function Home() {
             className="mb-4 font-mono uppercase"
             style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.16em" }}
           >
-            self-declared · não verificado pelo beheld
+            {t("home.s02.self_declared_label")}
           </div>
           <div className="mb-4 grid gap-5 sm:grid-cols-2">
             <div>
@@ -624,12 +626,12 @@ export function Home() {
                 className="mb-1.5 font-mono uppercase"
                 style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.18em" }}
               >
-                emprego autodeclarado
+                {t("home.s02.employment_label")}
               </div>
               <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.95 }}>
-                Stripe (2020–2022)
+                {t("home.s02.employment_l1")}
                 <br />
-                Stack Overflow (2018–2020)
+                {t("home.s02.employment_l2")}
               </div>
             </div>
             <div>
@@ -637,12 +639,12 @@ export function Home() {
                 className="mb-1.5 font-mono uppercase"
                 style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.18em" }}
               >
-                formação autodeclarada
+                {t("home.s02.education_label")}
               </div>
               <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.95 }}>
-                Mestrado em Computação
+                {t("home.s02.education_l1")}
                 <br />
-                USP, 2017
+                {t("home.s02.education_l2")}
               </div>
             </div>
           </div>
@@ -655,8 +657,7 @@ export function Home() {
               borderTop: "1px solid var(--rule-soft)",
             }}
           >
-            O beheld não verifica histórico de empregadores nem formação. Apresenta como o dev declarou,
-            sem confirmação externa.
+            {t("home.s02.self_declared_note")}
           </div>
         </div>
       </section>
@@ -665,46 +666,46 @@ export function Home() {
       <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="03"
-          title="Como funciona"
-          emTail="· três passos"
-          right="setup único"
+          title={t("home.s03.title")}
+          emTail={t("home.s03.em_tail")}
+          right={t("home.s03.right")}
         />
         <div className="grid gap-4 md:grid-cols-2">
           <SignalCard
-            title="L1 · Git histórico"
-            meta="instalação única"
+            title={t("home.s03.card1.title")}
+            meta={t("home.s03.card1.meta")}
             rows={[
               {
-                key: "Instalar",
+                key: t("home.s03.card1.row1_key"),
                 val: (
                   <>
                     <span style={{ color: "var(--accent)", fontWeight: 500 }}>$</span> beheld init
                   </>
                 ),
               },
-              { key: "Daemon", val: <>background · SQLite local</> },
-              { key: "Chave Ed25519", val: <>gerada offline · sua</> },
-              { key: "L1 importado", val: <>git log automático</> },
+              { key: t("home.s03.card1.row2_key"), val: <>{t("home.s03.card1.row2_val")}</> },
+              { key: t("home.s03.card1.row3_key"), val: <>{t("home.s03.card1.row3_val")}</> },
+              { key: t("home.s03.card1.row4_key"), val: <>{t("home.s03.card1.row4_val")}</> },
             ]}
           />
           <SignalCard
-            title="L2 · Trajetória"
-            meta="contínuo"
+            title={t("home.s03.card2.title")}
+            meta={t("home.s03.card2.meta")}
             rows={[
-              { key: "Observação", val: <>cada sessão Claude Code</> },
+              { key: t("home.s03.card2.row1_key"), val: <>{t("home.s03.card2.row1_val")}</> },
               {
-                key: "Conteúdo",
-                val: <span style={{ color: "var(--accent)" }}>nunca registrado</span>,
+                key: t("home.s03.card2.row2_key"),
+                val: <span style={{ color: "var(--accent)" }}>{t("home.s03.card2.row2_val")}</span>,
               },
               {
-                key: "Gerar bundle",
+                key: t("home.s03.card2.row3_key"),
                 val: (
                   <>
                     <span style={{ color: "var(--accent)", fontWeight: 500 }}>$</span> beheld snapshot
                   </>
                 ),
               },
-              { key: "Resultado", val: <>URL pública verificável</> },
+              { key: t("home.s03.card2.row4_key"), val: <>{t("home.s03.card2.row4_val")}</> },
             ]}
           />
         </div>
@@ -714,34 +715,34 @@ export function Home() {
       <section className="py-16">
         <SectionHead
           num="04"
-          title="Cadeia de verificação"
-          emTail="· cinco camadas"
-          right="Tier · fully_verifiable"
+          title={t("home.s04.title")}
+          emTail={t("home.s04.em_tail")}
+          right={t("home.s04.right")}
         />
         <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
           <ChainRow
-            name="Assinatura Ed25519"
-            desc="Chave do dev assina o bundle. Verificável offline, sem depender do beheld."
+            name={t("home.s04.chain1.name")}
+            desc={t("home.s04.chain1.desc")}
             detail="signature_only"
           />
           <ChainRow
-            name="Chain hash"
-            desc="Cada bundle referencia o anterior. Reescrever um quebra toda a cadeia."
+            name={t("home.s04.chain2.name")}
+            desc={t("home.s04.chain2.desc")}
             detail="chain_intact"
           />
           <ChainRow
-            name="Identidade GitHub"
-            desc="OAuth vincula a chave pública do dev a um usuário GitHub verificado."
+            name={t("home.s04.chain3.name")}
+            desc={t("home.s04.chain3.desc")}
             detail="identity_verified"
           />
           <ChainRow
-            name="Engine version"
-            desc="Hash do binário conferido contra build reproducível publicado."
+            name={t("home.s04.chain4.name")}
+            desc={t("home.s04.chain4.desc")}
             detail="engine_verified"
           />
           <ChainRow
-            name="Sigstore Rekor"
-            desc="Hash registrado em log público append-only. Impede backdating."
+            name={t("home.s04.chain5.name")}
+            desc={t("home.s04.chain5.desc")}
             detail="fully_verifiable"
             last
           />
@@ -760,7 +761,7 @@ export function Home() {
           className="text-right font-mono uppercase"
           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", lineHeight: 2 }}
         >
-          <div style={{ color: "var(--accent)", fontWeight: 500 }}>forever free for developers</div>
+          <div style={{ color: "var(--accent)", fontWeight: 500 }}>{t("home.forever_free")}</div>
           <div className="space-x-1">
             <a
               href={GITHUB_URL}
@@ -773,11 +774,11 @@ export function Home() {
             </a>
             <span>·</span>
             <a href="#" className="hover:underline" style={{ color: "var(--muted)" }}>
-              Docs
+              {t("home.footer.docs")}
             </a>
             <span>·</span>
             <a href="#" className="hover:underline" style={{ color: "var(--muted)" }}>
-              Manifesto
+              {t("home.footer.manifesto")}
             </a>
           </div>
         </div>
