@@ -213,5 +213,16 @@
   "company.dashboard.tabs.devs.label": "Saved devs",
   "company.dashboard.tabs.devs.subtitle": "your company's private bookmarks",
   "company.dashboard.tabs.positions.label": "Open positions",
-  "company.dashboard.tabs.positions.subtitle": "vacancies open for sourcing"
+  "company.dashboard.tabs.positions.subtitle": "vacancies open for sourcing",
+  "company.positions.master.title": "positions",
+  "company.positions.master.new": "+ new",
+  "company.positions.tab.active": "Active",
+  "company.positions.tab.archived": "Archived",
+  "company.positions.empty.active_prefix": "No active positions yet. Use ",
+  "company.positions.empty.active_suffix": " to get started.",
+  "company.positions.empty.archived": "No archived positions.",
+  "company.positions.badge.archived": "archived",
+  "company.positions.no_location": "no location",
+  "company.positions.archive_confirm": "Archive this position? Past messages stay visible.",
+  "company.positions.purge_confirm": "Permanently delete this position? This cannot be undone."
 }

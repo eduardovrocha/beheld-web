@@ -213,5 +213,16 @@
   "company.dashboard.tabs.devs.label": "Devs guardados",
   "company.dashboard.tabs.devs.subtitle": "marcadores privados de la empresa",
   "company.dashboard.tabs.positions.label": "Posiciones disponibles",
-  "company.dashboard.tabs.positions.subtitle": "vacantes abiertas para captación"
+  "company.dashboard.tabs.positions.subtitle": "vacantes abiertas para captación",
+  "company.positions.master.title": "posiciones",
+  "company.positions.master.new": "+ nueva",
+  "company.positions.tab.active": "Activa",
+  "company.positions.tab.archived": "Archivada",
+  "company.positions.empty.active_prefix": "Sin posiciones activas todavía. Usa ",
+  "company.positions.empty.active_suffix": " para empezar.",
+  "company.positions.empty.archived": "Sin posiciones archivadas.",
+  "company.positions.badge.archived": "archivada",
+  "company.positions.no_location": "sin ubicación",
+  "company.positions.archive_confirm": "¿Archivar esta posición? Los mensajes pasados siguen visibles.",
+  "company.positions.purge_confirm": "¿Eliminar esta posición de forma permanente? No se puede deshacer."
 }

@@ -31,6 +31,7 @@ import {
 import { extractTechnologies } from "@/lib/positionTechExtractor";
 import { LocationPicker, formatLocation } from "@/components/position/LocationPicker";
 import { Tooltip } from "@/components/Tooltip";
+import { useT } from "@/i18n/I18nProvider";
 
 type Mode =
   | { kind: "empty" }
@@ -51,6 +52,7 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
   onReactivate: (id: number) => Promise<void> | void;
   onPurge:      (id: number) => Promise<void> | void;
 }) {
+  const t = useT();
   const [mode, setMode] = useState<Mode>({ kind: "empty" });
   const [listTab, setListTab] = useState<ListTab>("active");
 
@@ -98,18 +100,18 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
              style={{ padding: "12px 16px", borderBottom: "1px solid var(--rule-soft)" }}>
           <span className="font-mono uppercase"
                 style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
-            posições
+            {t("company.positions.master.title")}
           </span>
           <button type="button"
                   onClick={() => { setListTab("active"); setMode({ kind: "new" }); }}
                   style={primaryChip(mode.kind === "new")}>
-            + nova
+            {t("company.positions.master.new")}
           </button>
         </div>
 
         {/* Ativa | Arquivada */}
         <div role="tablist" style={{ display: "flex", borderBottom: "1px solid var(--rule-soft)" }}>
-          {([["active", "Ativa", activeCount], ["archived", "Arquivada", archivedCount]] as const).map(
+          {([["active", t("company.positions.tab.active"), activeCount], ["archived", t("company.positions.tab.archived"), archivedCount]] as const).map(
             ([id, label, count]) => {
               const on = listTab === id;
               return (
@@ -134,8 +136,8 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
         {visible.length === 0 ? (
           <p style={{ color: "var(--muted-soft)", fontSize: 12.5, lineHeight: 1.6, padding: "20px 16px" }}>
             {listTab === "active"
-              ? <>Nenhuma vaga ativa. Use <strong style={{ color: "var(--muted)" }}>+ nova</strong> para começar.</>
-              : "Nenhuma vaga arquivada."}
+              ? <>{t("company.positions.empty.active_prefix")}<strong style={{ color: "var(--muted)" }}>{t("company.positions.master.new")}</strong>{t("company.positions.empty.active_suffix")}</>
+              : t("company.positions.empty.archived")}
           </p>
         ) : (
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
@@ -159,7 +161,7 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
                     }}>
                       {Object.keys(p.location ?? {}).length > 0
                         ? formatLocation(p.location)
-                        : <span style={{ color: "var(--muted-soft)" }}>sem localização</span>}
+                        : <span style={{ color: "var(--muted-soft)" }}>{t("company.positions.no_location")}</span>}
                       {p.archived && (
                         <span className="font-mono uppercase"
                               style={{
@@ -168,7 +170,7 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
                                 background: "var(--rule-soft)", color: "var(--muted)",
                                 border: "1px solid var(--rule)",
                               }}>
-                          arquivada
+                          {t("company.positions.badge.archived")}
                         </span>
                       )}
                     </div>
@@ -205,7 +207,7 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
             : <DetailPanel position={selected}
                            onEdit={() => setMode({ kind: "edit", id: selected.id })}
                            onArchive={async () => {
-                             if (!confirm("Arquivar esta posição? Mensagens passadas continuam visíveis.")) return;
+                             if (!confirm(t("company.positions.archive_confirm"))) return;
                              await onArchive(selected.id);
                              // Move o foco pra aba Arquivada, onde a vaga agora
                              // vive e pode ser excluída em definitivo.
@@ -213,7 +215,7 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
                            }}
                            onReactivate={() => onReactivate(selected.id)}
                            onPurge={async () => {
-                             if (!confirm("Excluir permanentemente esta vaga? Esta ação não pode ser desfeita.")) return;
+                             if (!confirm(t("company.positions.purge_confirm"))) return;
                              await onPurge(selected.id);
                            }} />
         )}

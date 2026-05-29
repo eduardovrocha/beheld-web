@@ -213,5 +213,16 @@
   "company.dashboard.tabs.devs.label": "Devs salvos",
   "company.dashboard.tabs.devs.subtitle": "bookmarks privados da empresa",
   "company.dashboard.tabs.positions.label": "Posições disponíveis",
-  "company.dashboard.tabs.positions.subtitle": "vagas abertas para captação"
+  "company.dashboard.tabs.positions.subtitle": "vagas abertas para captação",
+  "company.positions.master.title": "posições",
+  "company.positions.master.new": "+ nova",
+  "company.positions.tab.active": "Ativa",
+  "company.positions.tab.archived": "Arquivada",
+  "company.positions.empty.active_prefix": "Nenhuma vaga ativa. Use ",
+  "company.positions.empty.active_suffix": " para começar.",
+  "company.positions.empty.archived": "Nenhuma vaga arquivada.",
+  "company.positions.badge.archived": "arquivada",
+  "company.positions.no_location": "sem localização",
+  "company.positions.archive_confirm": "Arquivar esta posição? Mensagens passadas continuam visíveis.",
+  "company.positions.purge_confirm": "Excluir permanentemente esta vaga? Esta ação não pode ser desfeita."
 }
