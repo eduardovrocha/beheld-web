@@ -11,6 +11,9 @@
 import type { Bundle, BundleL1Section, BundleL2Section, BundlePayloadV1 } from "@/lib/types";
 import type { AttestationCheck } from "@/lib/attestationVerify";
 import type { VerifyResult } from "@/lib/verify";
+import { useT, useFmt } from "@/i18n/I18nProvider";
+import type { TKey } from "@/i18n/dict";
+import type { Formatters } from "@/i18n/format";
 
 interface Props {
   bundle: Bundle;
@@ -29,8 +32,8 @@ function parseIso(value: string | null | undefined): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-function formatNumber(n: number): string {
-  return new Intl.NumberFormat("pt-BR").format(n);
+function formatNumber(fmt: Formatters, n: number): string {
+  return fmt.number(n);
 }
 
 function formatIsoDate(iso: string | null | undefined): string {
@@ -106,16 +109,16 @@ function classifyTier(
   return "signed_only";
 }
 
-function tierLabel(tier: Tier): string {
+function tierLabelKey(tier: Tier): TKey {
   switch (tier) {
     case "fully_verifiable":
-      return "fully verifiable";
+      return "profile.tier.fully_verifiable";
     case "signed_only":
-      return "signed only";
+      return "profile.tier.signed_only";
     case "incomplete":
-      return "incomplete";
+      return "profile.tier.incomplete";
     case "checking":
-      return "checking…";
+      return "profile.tier.checking";
   }
 }
 
@@ -379,6 +382,8 @@ export function ProfileCard({
   banner,
   attestation,
 }: Props) {
+  const t = useT();
+  const fmt = useFmt();
   const { l1, l2 } = readSections(bundle);
   const github = bundle.attestation?.payload?.github ?? null;
   const tier = classifyTier(verifying, result, attestation);
@@ -415,7 +420,11 @@ export function ProfileCard({
 
   // Pre-computed strings
   const handle = github?.login ?? "anonymous";
-  const observationLine = `Bundle assinado · ${formatIsoDate(bundle.payload.created_at)} · engine v${bundle.payload.beheld_version} · janela de ${periodDays} dias de observação`;
+  const observationLine = t("profile.observation_line", {
+    date: formatIsoDate(bundle.payload.created_at),
+    version: bundle.payload.beheld_version,
+    days: periodDays,
+  });
 
   return (
     <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
@@ -461,15 +470,15 @@ export function ProfileCard({
         >
           {attestation?.present && attestation.signature_valid ? (
             <>
-              Identidade verificada{" "}
+              {t("profile.identity.verified")}{" "}
               <span style={{ color: "var(--accent)" }}>·</span>{" "}
-              <span style={{ color: "var(--text)", fontWeight: 500 }}>GitHub OAuth</span>
+              <span style={{ color: "var(--text)", fontWeight: 500 }}>{t("profile.identity.via_github")}</span>
             </>
           ) : (
             <>
-              Identidade não verificada{" "}
+              {t("profile.identity.unverified")}{" "}
               <span style={{ color: "var(--warn)" }}>·</span>{" "}
-              <span style={{ color: "var(--warn)", fontWeight: 500 }}>sem attestation</span>
+              <span style={{ color: "var(--warn)", fontWeight: 500 }}>{t("profile.identity.no_attestation")}</span>
             </>
           )}
         </div>
@@ -494,7 +503,7 @@ export function ProfileCard({
             className="font-mono uppercase"
             style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
           >
-            Trust tier
+            {t("profile.trust_tier")}
           </span>
           <span style={{ color: "var(--rule)" }}>·</span>
           <span
@@ -505,7 +514,7 @@ export function ProfileCard({
               letterSpacing: "0.14em",
             }}
           >
-            {tierLabel(tier)}
+            {t(tierLabelKey(tier))}
           </span>
         </div>
       </div>
@@ -516,22 +525,23 @@ export function ProfileCard({
           className="mb-5 font-mono uppercase"
           style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em" }}
         >
-          — Observação do Beheld
+          {t("profile.letter.eyebrow")}
         </div>
         <div style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.95, maxWidth: 760 }}>
-          Nos últimos {periodDays} dias, <strong style={{ color: "var(--accent)", fontWeight: 500 }}>@{handle}</strong>{" "}
-          trabalhou em{" "}
+          {t("profile.letter.last_days", { days: periodDays })}
+          <strong style={{ color: "var(--accent)", fontWeight: 500 }}>@{handle}</strong>
+          {t("profile.letter.worked_in")}
           <span className="font-mono" style={{ color: "var(--text)" }}>
-            {formatNumber(sessions)}
-          </span>{" "}
-          sessões em{" "}
+            {formatNumber(fmt, sessions)}
+          </span>
+          {sessions === 1 ? t("profile.letter.sessions_in.one") : t("profile.letter.sessions_in.other")}
           <span className="font-mono" style={{ color: "var(--text)" }}>
             {allEcosystems.length}
           </span>{" "}
-          {allEcosystems.length === 1 ? "ecosystem" : "ecosystems"}.
+          {allEcosystems.length === 1 ? t("profile.ecosystem.one") : t("profile.ecosystem.other")}.
           {testRatioPct > 0 ? (
             <>
-              {" "}Test ratio:{" "}
+              {t("profile.letter.test_ratio_prefix")}
               <span style={{ color: "var(--accent)", fontWeight: 500 }}>
                 {testRatioPct}%
               </span>
@@ -540,7 +550,7 @@ export function ProfileCard({
           ) : null}
           {topWorkflow ? (
             <>
-              {" "}Workflow predominante:{" "}
+              {t("profile.letter.workflow_prefix")}
               <span style={{ color: "var(--accent)", fontWeight: 500 }}>
                 {humanizeWorkflow(topWorkflow[0])}
               </span>{" "}
@@ -549,15 +559,15 @@ export function ProfileCard({
           ) : null}
           {totalRepos > 0 && earliestYear ? (
             <>
-              {" "}Histórico git:{" "}
+              {t("profile.letter.git_prefix")}
               <span className="font-mono" style={{ color: "var(--text)" }}>
-                {formatNumber(totalCommits)}
-              </span>{" "}
-              commits em{" "}
+                {formatNumber(fmt, totalCommits)}
+              </span>
+              {t("profile.letter.git_commits_in")}
               <span className="font-mono" style={{ color: "var(--text)" }}>
                 {totalRepos}
-              </span>{" "}
-              repositórios desde{" "}
+              </span>
+              {t("profile.letter.git_repos_since")}
               <span className="font-mono" style={{ color: "var(--text)" }}>
                 {earliestYear}
               </span>
@@ -569,9 +579,9 @@ export function ProfileCard({
           className="mt-6 font-mono uppercase"
           style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
         >
-          Esse é o trabalho dele. Não o LinkedIn dele. O trabalho.{" "}
+          {t("profile.letter.footnote")}{" "}
           <span style={{ color: "var(--accent)" }}>·</span>{" "}
-          <span style={{ color: "var(--accent)", fontWeight: 500 }}>signed Ed25519</span>
+          <span style={{ color: "var(--accent)", fontWeight: 500 }}>{t("profile.letter.signed")}</span>
         </div>
       </section>
 
@@ -579,60 +589,59 @@ export function ProfileCard({
       <section className="py-12" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="01"
-          title="Visão geral"
-          emTail={`· últimos ${periodDays} dias`}
-          right="Combined L1 + L2"
+          title={t("profile.s01.title")}
+          emTail={t("profile.s01.em_tail", { days: periodDays })}
+          right={t("profile.s01.right")}
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <GlanceCard
-            label="Sessões"
-            num={formatNumber(sessions)}
+            label={t("profile.s01.sessions_label")}
+            num={formatNumber(fmt, sessions)}
             note={
               <>
-                across{" "}
+                {t("profile.s01.sessions_across")}
                 <strong style={{ color: "var(--accent)", fontWeight: 500 }}>
                   {allEcosystems.length}
                 </strong>{" "}
-                {allEcosystems.length === 1 ? "ecosystem" : "ecosystems"}
+                {allEcosystems.length === 1 ? t("profile.ecosystem.one") : t("profile.ecosystem.other")}
               </>
             }
           />
           <GlanceCard
-            label="Test ratio"
+            label={t("profile.s01.test_ratio_label")}
             num={String(testRatioPct)}
             suffix="%"
             note={
               testRatioPct >= 30 ? (
                 <>
-                  <strong style={{ color: "var(--accent)", fontWeight: 500 }}>acima</strong> da
-                  mediana global
+                  <strong style={{ color: "var(--accent)", fontWeight: 500 }}>{t("profile.s01.test_ratio_above_em")}</strong>{t("profile.s01.test_ratio_above_suffix")}
                 </>
               ) : (
-                <>cobertura ainda em desenvolvimento</>
+                <>{t("profile.s01.test_ratio_below")}</>
               )
             }
           />
           <GlanceCard
-            label="L1 repositories"
-            num={formatNumber(totalRepos)}
+            label={t("profile.s01.repos_label")}
+            num={formatNumber(fmt, totalRepos)}
             note={
               <>
-                {formatNumber(totalCommits)} commits
-                {earliestYear ? ` desde ${earliestYear}` : ""}
+                {formatNumber(fmt, totalCommits)} commits
+                {earliestYear ? t("profile.s01.since", { year: earliestYear }) : ""}
               </>
             }
           />
           <GlanceCard
-            label="Workflow"
+            label={t("profile.s01.workflow_label")}
             num={topWorkflow ? humanizeWorkflow(topWorkflow[0]) : "—"}
             note={
               topWorkflow ? (
                 <>
-                  {topWorkflowPct}% sessões{" "}
-                  <span style={{ color: "var(--muted-soft)" }}>· dominante</span>
+                  {topWorkflowPct}% {t("profile.s01.workflow_sessions")}{" "}
+                  <span style={{ color: "var(--muted-soft)" }}>· {t("profile.s01.workflow_dominant")}</span>
                 </>
               ) : (
-                <>sem distribuição observada</>
+                <>{t("profile.s01.workflow_none")}</>
               )
             }
           />
@@ -643,39 +652,39 @@ export function ProfileCard({
       <section className="py-12" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="02"
-          title="Sinais técnicos"
-          emTail="· detalhe"
-          right="L1 git · L2 sessions"
+          title={t("profile.s02.title")}
+          emTail={t("profile.s02.em_tail")}
+          right={t("profile.s02.right")}
         />
         <div className="grid gap-4 md:grid-cols-2">
           <SignalCard
-            title="L1 · Histórico Git"
-            meta={`Base · ${totalRepos} ${totalRepos === 1 ? "repo" : "repos"}`}
+            title={t("profile.s02.l1_title")}
+            meta={`${t("profile.s02.base")} · ${totalRepos} ${totalRepos === 1 ? t("profile.repo.one") : t("profile.repo.other")}`}
             rows={[
-              { key: "Total de commits", val: formatNumber(totalCommits) },
-              { key: "Commit mais antigo", val: formatIsoDate(l1?.earliest_commit) },
-              { key: "Commit mais recente", val: formatIsoDate(l1?.latest_commit) },
+              { key: t("profile.s02.row.total_commits"), val: formatNumber(fmt, totalCommits) },
+              { key: t("profile.s02.row.earliest_commit"), val: formatIsoDate(l1?.earliest_commit) },
+              { key: t("profile.s02.row.latest_commit"), val: formatIsoDate(l1?.latest_commit) },
               {
-                key: "Ecosystems detectados",
+                key: t("profile.s02.row.ecosystems_detected"),
                 val: ecosystemsL1.length > 0 ? ecosystemsL1.slice(0, 5).join(" · ") : "—",
               },
-              { key: "Test ratio médio", val: `${testRatioPct}%`, accent: true },
+              { key: t("profile.s02.row.avg_test_ratio"), val: `${testRatioPct}%`, accent: true },
               {
-                key: "Janela de atividade",
+                key: t("profile.s02.row.activity_window"),
                 val:
                   earliestDate && latestDate
-                    ? `${yearsActive} anos`
+                    ? t("profile.s02.years", { years: yearsActive })
                     : "—",
               },
             ]}
           />
           <SignalCard
-            title="L2 · Trajetória Claude Code"
-            meta={`Recent · ${periodDays} days`}
+            title={t("profile.s02.l2_title")}
+            meta={t("profile.s02.l2_meta", { days: periodDays })}
             rows={[
-              { key: "Total de sessões", val: formatNumber(sessions) },
+              { key: t("profile.s02.row.total_sessions"), val: formatNumber(fmt, sessions) },
               {
-                key: "Workflow predominante",
+                key: t("profile.s02.row.top_workflow"),
                 val: topWorkflow
                   ? `${humanizeWorkflow(topWorkflow[0])} · ${topWorkflowPct}%`
                   : "—",
@@ -686,7 +695,7 @@ export function ProfileCard({
                 val: `${Math.round(v * 100)}%`,
               })),
               {
-                key: "Ecosystems (top)",
+                key: t("profile.s02.row.ecosystems_top"),
                 val: ecosystemsL2.length > 0 ? ecosystemsL2.slice(0, 3).join(" · ") : "—",
               },
             ]}
@@ -698,68 +707,68 @@ export function ProfileCard({
       <section className="py-12" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="03"
-          title="Qualidade do sinal"
-          emTail="· honestidade radical"
-          right="Self-disclosed limits"
+          title={t("profile.s03.title")}
+          emTail={t("profile.s03.em_tail")}
+          right={t("profile.s03.right")}
         />
         <div
           className="p-8"
           style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}
         >
           <QualityRow
-            qk="Janela de observação"
-            qv={`${periodDays} dias · L2 contínuo`}
+            qk={t("profile.s03.obs_window_label")}
+            qv={t("profile.s03.obs_window_value", { days: periodDays })}
           />
           <QualityRow
-            qk="Volume de dados"
+            qk={t("profile.s03.volume_label")}
             qv={
               <>
-                {formatNumber(sessions)} sessões · {totalRepos}{" "}
-                {totalRepos === 1 ? "repo" : "repos"} ·{" "}
+                {formatNumber(fmt, sessions)} {t("profile.s03.sessions_word")} · {totalRepos}{" "}
+                {totalRepos === 1 ? t("profile.repo.one") : t("profile.repo.other")} ·{" "}
                 {sessions >= 30 && totalRepos >= 1 ? (
-                  <span style={{ color: "var(--ok)" }}>suficiente</span>
+                  <span style={{ color: "var(--ok)" }}>{t("profile.s03.sufficient")}</span>
                 ) : (
-                  <span style={{ color: "var(--warn)" }}>abaixo do mínimo</span>
+                  <span style={{ color: "var(--warn)" }}>{t("profile.s03.below_min")}</span>
                 )}{" "}
                 <span style={{ color: "var(--muted)" }}>
-                  (mínimo: 30 sessões + 1 repo)
+                  {t("profile.s03.min_note")}
                 </span>
               </>
             }
           />
           <QualityRow
-            qk="Schema do bundle"
+            qk={t("profile.s03.schema_label")}
             qv={
               <>
                 v{bundle.payload.beheld_version}{" "}
                 <span className="font-mono" style={{ color: "var(--muted)" }}>
-                  · {schemaOk ? "válido" : "warning"}
+                  · {schemaOk ? t("profile.s03.schema_valid") : t("profile.s03.schema_warning")}
                 </span>
               </>
             }
           />
           <QualityRow
-            qk="Warnings"
+            qk={t("profile.s03.warnings_label")}
             qv={
               result?.warnings && result.warnings.length > 0 ? (
                 <span style={{ color: "var(--warn)" }}>
                   {result.warnings.join(" · ")}
                 </span>
               ) : (
-                <span style={{ color: "var(--ok)" }}>nenhum</span>
+                <span style={{ color: "var(--ok)" }}>{t("profile.s03.warnings_none")}</span>
               )
             }
           />
           <QualityRow
-            qk="Confiabilidade"
+            qk={t("profile.s03.reliability_label")}
             qv={
               tier === "fully_verifiable"
-                ? "Alta · todas as camadas técnicas válidas"
+                ? t("profile.s03.reliability_high")
                 : tier === "signed_only"
-                ? "Média · assinatura válida sem identidade GitHub atestada"
+                ? t("profile.s03.reliability_med")
                 : tier === "incomplete"
-                ? "Baixa · verificação incompleta — ver chain abaixo"
-                : "Verificando…"
+                ? t("profile.s03.reliability_low")
+                : t("profile.s03.reliability_checking")
             }
           />
         </div>
@@ -769,25 +778,25 @@ export function ProfileCard({
       <section className="py-12">
         <SectionHead
           num="04"
-          title="Cadeia de verificação"
-          emTail={`· tier ${tier}`}
-          right={tierLabel(tier)}
+          title={t("profile.s04.title")}
+          emTail={t("profile.s04.em_tail", { tier })}
+          right={t(tierLabelKey(tier))}
         />
         <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
           <ChainRow
             ok={sigOk && hashOk}
-            name="Assinatura Ed25519"
-            desc="Bundle assinado com a chave do dev. Verificado offline via crypto.subtle."
+            name={t("profile.s04.chain1.name")}
+            desc={t("profile.s04.chain1.desc")}
             detail="fingerprint"
             detailValue={sigFp}
           />
           <ChainRow
             ok={true}
-            name="Chain hash"
+            name={t("profile.s04.chain2.name")}
             desc={
               bundle.payload.previous_hash
-                ? "Snapshot anterior referenciado. Cadeia contínua desde genesis."
-                : "Snapshot genesis (primeiro da cadeia)."
+                ? t("profile.s04.chain2.desc_continuous")
+                : t("profile.s04.chain2.desc_genesis")
             }
             detail={bundle.payload.previous_hash ? "continuous" : "genesis"}
             detailValue={
@@ -798,11 +807,11 @@ export function ProfileCard({
           />
           <ChainRow
             ok={attOk}
-            name="Identidade GitHub"
+            name={t("profile.s04.chain3.name")}
             desc={
               attOk
-                ? `Public key vinculada a @${github?.login} via OAuth. Plataforma assinou.`
-                : "Sem attestation OAuth — identidade não verificada."
+                ? t("profile.s04.chain3.desc_ok", { login: github?.login ?? "" })
+                : t("profile.s04.chain3.desc_missing")
             }
             detail={
               attestation?.platform_key_id
@@ -813,8 +822,8 @@ export function ProfileCard({
           />
           <ChainRow
             ok={true}
-            name="Engine version"
-            desc="Build do engine que produziu este bundle."
+            name={t("profile.s04.chain4.name")}
+            desc={t("profile.s04.chain4.desc")}
             detail="version"
             detailValue={`v${bundle.payload.beheld_version}`}
             last
@@ -831,10 +840,7 @@ export function ProfileCard({
             lineHeight: 1.75,
           }}
         >
-          <strong style={{ color: "var(--text)", fontWeight: 500 }}>Importante.</strong> Beheld
-          nunca afirma "esse dev é confiável" — apenas relata que estas camadas técnicas estão
-          válidas neste momento. A interpretação dos sinais fica com quem está contratando.
-          Beheld é testemunha. O juiz é quem precisa do trabalhador.
+          <strong style={{ color: "var(--text)", fontWeight: 500 }}>{t("profile.s04.important_label")}</strong>{t("profile.s04.important_body")}
         </div>
       </section>
 
@@ -853,7 +859,7 @@ export function ProfileCard({
             textDecoration: "none",
           }}
         >
-          Download .beheld bundle
+          {t("profile.actions.download")}
         </a>
         <a
           href={`/v/${profileId}`}
@@ -867,7 +873,7 @@ export function ProfileCard({
             textDecoration: "none",
           }}
         >
-          View raw JSON
+          {t("profile.actions.view_json")}
         </a>
         <a
           href="https://github.com/eduardovrocha/beheld#verify"
@@ -881,7 +887,7 @@ export function ProfileCard({
             textDecoration: "none",
           }}
         >
-          Verify offline (CLI)
+          {t("profile.actions.verify_cli")}
         </a>
       </div>
 
@@ -896,18 +902,18 @@ export function ProfileCard({
           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", lineHeight: 1.7 }}
         >
           <div>
-            profile id ·{" "}
+            {t("profile.foot.profile_id")} ·{" "}
             <strong style={{ color: "var(--accent)", fontWeight: 500 }}>{profileId}</strong>
           </div>
           <div>
-            bundle hash ·{" "}
+            {t("profile.foot.bundle_hash")} ·{" "}
             <span className="font-mono" style={{ color: "var(--muted-soft)" }}>
               {bundle.hash.replace(/^sha256:/, "").slice(0, 16)}…
             </span>
           </div>
           <div>
             <span style={{ color: "var(--accent)", fontWeight: 500 }}>
-              forever free for developers
+              {t("home.forever_free")}
             </span>
           </div>
         </div>
@@ -918,7 +924,7 @@ export function ProfileCard({
         className="pb-8 text-center font-mono"
         style={{ color: "var(--muted-soft)", fontSize: 9, letterSpacing: "0.08em" }}
       >
-        bundle created at {formatIsoZ(bundle.payload.created_at)}
+        {t("profile.foot.created_at", { ts: formatIsoZ(bundle.payload.created_at) })}
       </div>
     </div>
   );
