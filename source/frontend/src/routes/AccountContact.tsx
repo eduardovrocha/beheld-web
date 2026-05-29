@@ -388,6 +388,13 @@ function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
     return fmtI18n.date(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
   };
   const groups = groupByPosition(items);
+  // Acordeão: só uma vaga aberta por vez. Abre por padrão a vaga com
+  // mensagem pendente (acionável); senão a primeira.
+  const keyOf = (g: { title: string | null }) => g.title ?? "__none__";
+  const [openKey, setOpenKey] = useState<string | null>(() => {
+    const initial = groups.find((g) => g.msgs.some((m) => m.status === "pending")) ?? groups[0];
+    return initial ? keyOf(initial) : null;
+  });
   return (
     <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid var(--rule-soft)" }}>
       <div className="font-mono uppercase"
@@ -397,11 +404,13 @@ function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
 
       <div className="grid" style={{ gap: 8 }}>
         {groups.map((g) => {
-          const hasPending = g.msgs.some((m) => m.status === "pending");
+          const key = keyOf(g);
+          const isOpen = openKey === key;
           return (
-            <details key={g.title ?? "__none__"} open={hasPending}
+            <details key={key} open={isOpen}
                      style={{ border: "1px solid var(--rule)" }}>
               <summary className="font-mono uppercase"
+                       onClick={(e) => { e.preventDefault(); setOpenKey(isOpen ? null : key); }}
                        style={{ cursor: "pointer", listStyle: "none", padding: "9px 12px",
                                 display: "flex", alignItems: "center", justifyContent: "space-between",
                                 gap: 8, color: "var(--text)", fontSize: 11, letterSpacing: "0.06em",
