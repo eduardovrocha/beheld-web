@@ -1,12 +1,15 @@
 /**
- * Full list of outbound messages this company has sent. Renders as a
- * stack of cards (not <table>) so we keep the hairline+padding rhythm
- * consistent with the rest of the company surfaces.
+ * Outbound-message overview for the recruiter dashboard.
+ *
+ * One card per DEVELOPER (never two cards for the same dev). Each card is a
+ * collapsible <details>: expanding it reveals the conversation, with the
+ * exchanged messages split per position (vaga). Cards with a pending message
+ * open by default.
  */
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import type { CompanyMessage } from "@/lib/companyDashboardApi";
-import { useT, useFmt } from "@/i18n/I18nProvider";
+import { useT, useTp, useFmt } from "@/i18n/I18nProvider";
 
 // Ícone por status — substitui o rótulo textual no chip. O texto continua
 // disponível via `title` + `aria-label` (acessibilidade + hover).
@@ -22,6 +25,47 @@ const STATUS_PALETTE: Record<CompanyMessage["status"], { fg: string; bg: string;
   ignored:   { fg: "var(--warn)",  bg: "rgba(181,97,53,0.12)",   bd: "rgba(181,97,53,0.4)" },
 };
 
+interface DevThread {
+  account_id:  number;
+  dev_handle:  string;
+  bundle_slug: string | null;
+  msgs:        CompanyMessage[];
+  lastSentAt:  string;
+}
+
+// Agrupa as mensagens por desenvolvedor (account_id), preservando a ordem de
+// primeira aparição. Cada dev vira um único thread.
+function groupByDev(messages: CompanyMessage[]): DevThread[] {
+  const order: number[] = [];
+  const map = new Map<number, DevThread>();
+  for (const m of messages) {
+    let thread = map.get(m.account_id);
+    if (!thread) {
+      thread = { account_id: m.account_id, dev_handle: m.dev_handle,
+                 bundle_slug: m.bundle_slug, msgs: [], lastSentAt: m.sent_at };
+      map.set(m.account_id, thread);
+      order.push(m.account_id);
+    }
+    thread.msgs.push(m);
+    if (m.sent_at > thread.lastSentAt) thread.lastSentAt = m.sent_at;
+    if (!thread.bundle_slug && m.bundle_slug) thread.bundle_slug = m.bundle_slug;
+  }
+  return order.map((id) => map.get(id)!);
+}
+
+// Dentro de um thread, separa as mensagens pela vaga (job_title) que originou
+// o contato — preservando a ordem de primeira aparição.
+function groupByPosition(msgs: CompanyMessage[]): { title: string | null; msgs: CompanyMessage[] }[] {
+  const order: (string | null)[] = [];
+  const map = new Map<string | null, CompanyMessage[]>();
+  for (const m of msgs) {
+    const key = m.job_title && m.job_title.trim() ? m.job_title : null;
+    if (!map.has(key)) { map.set(key, []); order.push(key); }
+    map.get(key)!.push(m);
+  }
+  return order.map((title) => ({ title, msgs: map.get(title)! }));
+}
+
 export function MessagesList({ messages }: { messages: CompanyMessage[] }) {
   const t = useT();
   if (messages.length === 0) {
@@ -32,99 +76,117 @@ export function MessagesList({ messages }: { messages: CompanyMessage[] }) {
     );
   }
 
+  const threads = groupByDev(messages);
   return (
-    <div className="grid gap-4"
-         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
-      {messages.map((m) => <MessageCard key={m.id} m={m} />)}
+    <div className="grid" style={{ gap: 12 }}>
+      {threads.map((thread) => <DevCard key={thread.account_id} thread={thread} />)}
     </div>
   );
 }
 
-function MessageCard({ m }: { m: CompanyMessage }) {
+function DevCard({ thread }: { thread: DevThread }) {
+  const t = useT();
+  const tp = useTp();
+  const fmt = useFmt();
+  const { account_id, dev_handle, bundle_slug, msgs } = thread;
+  const hasPending = msgs.some((m) => m.status === "pending");
+  const positions = groupByPosition(msgs);
+
+  return (
+    <details open={hasPending}
+             style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
+      <summary className="flex flex-wrap items-center"
+               style={{ cursor: "pointer", listStyle: "none", gap: 8, padding: "14px 18px" }}>
+        <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
+          {dev_handle}
+        </span>
+        <span className="font-mono"
+              style={{ marginLeft: "auto", color: "var(--muted-soft)", fontSize: 11,
+                       letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
+          {tp("company.messages.count", msgs.length)} · {fmt.date(thread.lastSentAt)}
+        </span>
+      </summary>
+
+      <div style={{ borderTop: "1px solid var(--rule-soft)", padding: 18 }}>
+        <div className="grid" style={{ gap: 16 }}>
+          {positions.map((g) => (
+            <section key={g.title ?? "__none__"}>
+              <div className="font-mono uppercase"
+                   style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
+                {g.title ? t("company.messages.position", { title: g.title }) : t("company.messages.position_none")}
+              </div>
+              <div className="grid" style={{ gap: 12 }}>
+                {g.msgs.map((m) => <MessageRow key={m.id} m={m} handle={dev_handle} />)}
+              </div>
+            </section>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center" style={{ gap: 8, marginTop: 16 }}>
+          <Link to={`/accounts/${account_id}/contact`}
+                style={{
+                  fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+                  fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
+                  color: "var(--bg)", background: "var(--text)", textDecoration: "none",
+                  border: "1px solid var(--text)", padding: "6px 14px", display: "inline-block",
+                }}>
+            {t("company.messages.open_contact")}
+          </Link>
+          {bundle_slug && (
+            <a href={`/v/${bundle_slug}`} target="_blank" rel="noopener noreferrer"
+               style={{
+                 fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+                 fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
+                 color: "var(--text)", textDecoration: "none",
+                 border: "1px solid var(--rule)", padding: "6px 14px", display: "inline-block",
+               }}>
+              {t("company.messages.view_profile")}
+            </a>
+          )}
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function MessageRow({ m, handle }: { m: CompanyMessage; handle: string }) {
   const t = useT();
   const fmt = useFmt();
-  const palette  = STATUS_PALETTE[m.status];
-  const navigate = useNavigate();
-  const contactPath = `/accounts/${m.account_id}/contact`;
+  const palette = STATUS_PALETTE[m.status];
   const statusLabel = t(`company.messages.status.${m.status}`);
 
   return (
-    <div role="button" tabIndex={0}
-         onClick={() => navigate(contactPath)}
-         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(contactPath); } }}
-         style={{
-           display: "flex", flexDirection: "column",
-           background: "var(--card-bg)", border: "1px solid var(--rule)",
-           padding: 18, minHeight: 196, cursor: "pointer",
-           transition: "border-color 120ms ease",
-         }}
-         onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
-         onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--rule)")}>
-      {/* header: handle (link) + status chip — mesmo layout do #devs */}
-      <div className="flex flex-wrap items-center" style={{ gap: 6 }}>
-        {m.bundle_slug
-          ? <a href={`/v/${m.bundle_slug}`} target="_blank" rel="noopener noreferrer"
-               onClick={(e) => e.stopPropagation()}
-               style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em",
-                        textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3 }}>
-              {m.dev_handle}
-            </a>
-          : <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
-              {m.dev_handle}
-            </span>}
+    <div style={{ borderLeft: `2px solid ${palette.fg}`, paddingLeft: 10 }}>
+      <div className="flex items-center" style={{ gap: 8 }}>
+        <span className="font-mono"
+              style={{ color: "var(--muted-soft)", fontSize: 11, letterSpacing: "0.04em",
+                       fontFeatureSettings: '"tnum"' }}>
+          {t("company.messages.sent_at", { date: fmt.date(m.sent_at) })}
+          {m.responded_at && <> · {t("company.messages.responded_at", { date: fmt.date(m.responded_at) })}</>}
+        </span>
         <span title={statusLabel} aria-label={statusLabel}
-              style={{
-                marginLeft: "auto",
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: 30, height: 30, fontSize: 17, lineHeight: 1,
-                color: palette.fg,
-              }}>
+              style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center",
+                       justifyContent: "center", width: 22, height: 22, fontSize: 15,
+                       lineHeight: 1, color: palette.fg }}>
           {STATUS_ICON[m.status]}
         </span>
       </div>
 
-      {m.job_title && (
-        <div className="mt-1" style={{ color: "var(--muted)", fontSize: 13 }}>{m.job_title}</div>
-      )}
-
-      <div className="mt-3" style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55 }}>
+      <div className="mt-1" style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55,
+                                     whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
         {m.body_excerpt}
       </div>
 
-      <div className="font-mono"
-           style={{ color: "var(--muted-soft)", fontSize: 11, marginTop: 8,
-                     letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
-        {t("company.messages.sent_at", { date: fmt.date(m.sent_at) })}
-        {m.responded_at && <> · {t("company.messages.responded_at", { date: fmt.date(m.responded_at) })}</>}
-      </div>
-
-      {/* resposta do dev (F_REPLY) — bloco com filete de acento à esquerda */}
       {m.reply_body && (
-        <div className="mt-3" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
+        <div className="mt-2" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
           <div className="font-mono uppercase"
                style={{ color: "var(--ok)", fontSize: 9, letterSpacing: "0.14em", marginBottom: 3 }}>
-            {t("company.messages.reply_from", { handle: m.dev_handle })}
+            {t("company.messages.reply_from", { handle })}
           </div>
           <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55,
                         whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
             {m.reply_body}
           </div>
-        </div>
-      )}
-
-      {/* ações ancoradas no rodapé (mt-auto), como no #devs */}
-      {m.bundle_slug && (
-        <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
-          <a href={`/v/${m.bundle_slug}`} target="_blank" rel="noopener noreferrer"
-             onClick={(e) => e.stopPropagation()}
-             style={{
-               fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-               fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
-               color: "var(--text)", textDecoration: "none",
-               border: "1px solid var(--rule)", padding: "6px 14px", display: "inline-block",
-             }}>
-            {t("company.messages.view_profile")}
-          </a>
         </div>
       )}
     </div>
