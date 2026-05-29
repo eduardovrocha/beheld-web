@@ -163,7 +163,6 @@ function Hero({ subtitle, navCurrent }: { subtitle: string; navCurrent: "dashboa
       <h1 className="font-semibold"
           style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
         {t("company.dashboard.hero.title")}
-        <span style={{ color: "var(--muted)", fontWeight: 400 }}> {t("company.dashboard.hero.tail")}</span>
       </h1>
       <div className="mt-3 flex flex-wrap items-baseline gap-3 font-mono"
            style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
