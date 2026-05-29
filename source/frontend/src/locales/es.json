@@ -407,7 +407,7 @@
   "dashboard.error.auth_hint_prefix": "Ejecuta ",
   "dashboard.error.auth_hint_suffix": " en la terminal para obtener un nuevo enlace.",
   "dashboard.tab.overview.label": "Visión general",
-  "dashboard.tab.overview.subtitle": "fingerprint, bundles y contacto",
+  "dashboard.tab.overview.subtitle": "visión general, publicaciones y verificaciones",
   "dashboard.tab.bundles.label": "Publicaciones",
   "dashboard.tab.bundles.subtitle": "bundles activos en el portal",
   "dashboard.tab.verifications.label": "Verificaciones",

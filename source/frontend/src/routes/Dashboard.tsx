@@ -52,12 +52,10 @@ function formatDateTime(fmt: Formatters, iso: string): string {
 
 // ── tabs ────────────────────────────────────────────────────────────────────
 
-type TabId = "overview" | "bundles" | "verifications" | "messages" | "settings";
+type TabId = "overview" | "messages" | "settings";
 
 const TABS: Array<{ id: TabId; labelKey: TKey; hash: string; subtitleKey: TKey }> = [
   { id: "overview",      labelKey: "dashboard.tab.overview.label",      hash: "#visao-geral",   subtitleKey: "dashboard.tab.overview.subtitle" },
-  { id: "bundles",       labelKey: "dashboard.tab.bundles.label",       hash: "#publicacoes",   subtitleKey: "dashboard.tab.bundles.subtitle" },
-  { id: "verifications", labelKey: "dashboard.tab.verifications.label", hash: "#verificacoes",  subtitleKey: "dashboard.tab.verifications.subtitle" },
   { id: "messages",      labelKey: "dashboard.tab.messages.label",      hash: "#mensagens",     subtitleKey: "dashboard.tab.messages.subtitle" },
   { id: "settings",      labelKey: "dashboard.tab.settings.label",      hash: "#configuracoes", subtitleKey: "dashboard.tab.settings.subtitle" },
 ];
@@ -160,50 +158,51 @@ export function Dashboard() {
         tabs={TABS.map((tab) => ({
           id:    tab.id,
           label: t(tab.labelKey),
-          badge: tab.id === "bundles"       ? bundles.length
-               : tab.id === "verifications" ? notifications.length
-               : tab.id === "messages"      ? messages.length
-               : null,
+          badge: tab.id === "messages" ? messages.length : null,
         })) as readonly TabDef<TabId>[]}
         active={active}
         onSelect={selectTab} />
 
       <div className="pt-8">
         {active === "overview" && (
-          <OverviewTab bundlesCount={bundles.length}
-                       contactConfigured={account.contact_configured}
-                       interest={data.interest}
-                       evolution={data.evolution} />
-        )}
+          <div className="grid" style={{ gap: 40 }}>
+            <OverviewTab bundlesCount={bundles.length}
+                         contactConfigured={account.contact_configured}
+                         interest={data.interest}
+                         evolution={data.evolution} />
 
-        {active === "bundles" && (
-          bundles.length === 0 ? (
-            <EmptyCard>
-              {t("dashboard.bundles.empty_prefix")}
-              <code style={{ color: "var(--accent)" }}>beheld share</code>{t("dashboard.bundles.empty_suffix")}
-            </EmptyCard>
-          ) : (
-            <Card padded={false}>
-              {bundles.map((b, i) => (
-                <BundleRow key={b.id} bundle={b} busy={busy} first={i === 0}
-                           onToggle={() => refresh(() => toggleBundle(b.id))}
-                           onRevoke={() => {
-                             if (!confirm(t("dashboard.bundles.revoke_confirm"))) return;
-                             refresh(() => revokeBundle(b.id));
-                           }} />
-              ))}
-            </Card>
-          )
-        )}
+            <section>
+              <SectionHeading>{t("dashboard.tab.bundles.label")}</SectionHeading>
+              {bundles.length === 0 ? (
+                <EmptyCard>
+                  {t("dashboard.bundles.empty_prefix")}
+                  <code style={{ color: "var(--accent)" }}>beheld share</code>{t("dashboard.bundles.empty_suffix")}
+                </EmptyCard>
+              ) : (
+                <Card padded={false}>
+                  {bundles.map((b, i) => (
+                    <BundleRow key={b.id} bundle={b} busy={busy} first={i === 0}
+                               onToggle={() => refresh(() => toggleBundle(b.id))}
+                               onRevoke={() => {
+                                 if (!confirm(t("dashboard.bundles.revoke_confirm"))) return;
+                                 refresh(() => revokeBundle(b.id));
+                               }} />
+                  ))}
+                </Card>
+              )}
+            </section>
 
-        {active === "verifications" && (
-          notifications.length === 0 ? (
-            <EmptyCard>{t("dashboard.verifications.empty")}</EmptyCard>
-          ) : (
-            <Card padded={false}>
-              {notifications.map((n, i) => <NotificationRow key={n.id} v={n} first={i === 0} />)}
-            </Card>
-          )
+            <section>
+              <SectionHeading>{t("dashboard.tab.verifications.label")}</SectionHeading>
+              {notifications.length === 0 ? (
+                <EmptyCard>{t("dashboard.verifications.empty")}</EmptyCard>
+              ) : (
+                <Card padded={false}>
+                  {notifications.map((n, i) => <NotificationRow key={n.id} v={n} first={i === 0} />)}
+                </Card>
+              )}
+            </section>
+          </div>
         )}
 
         {active === "messages" && (
@@ -416,6 +415,17 @@ function EmptyCard({ children }: { children: ReactNode }) {
     <Card>
       <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, margin: 0 }}>{children}</p>
     </Card>
+  );
+}
+
+// Section divider inside the unified overview tab — mono uppercase label
+// that visually separates Publicações / Verificações from the glance cards.
+function SectionHeading({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-3 font-mono uppercase"
+         style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
+      {children}
+    </div>
   );
 }
 

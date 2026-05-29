@@ -407,7 +407,7 @@
   "dashboard.error.auth_hint_prefix": "Run ",
   "dashboard.error.auth_hint_suffix": " in the terminal to get a new link.",
   "dashboard.tab.overview.label": "Overview",
-  "dashboard.tab.overview.subtitle": "fingerprint, bundles and contact",
+  "dashboard.tab.overview.subtitle": "overview, publications and verifications",
   "dashboard.tab.bundles.label": "Publications",
   "dashboard.tab.bundles.subtitle": "bundles active on the portal",
   "dashboard.tab.verifications.label": "Verifications",
