@@ -11,10 +11,12 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { signupCompany, type SignupResult } from "@/lib/companyApi";
+import { useT } from "@/i18n/I18nProvider";
 
 type Phase = "form" | "sending" | "sent";
 
 export function CompaniesNew() {
+  const t = useT();
   const [phase, setPhase]   = useState<Phase>("form");
   const [name,  setName]    = useState("");
   const [email, setEmail]   = useState("");
@@ -38,7 +40,7 @@ export function CompaniesNew() {
     if (result.status === 422) {
       setErrors(result.errors);
     } else {
-      setGenericError(result.message ?? "Falha de comunicação com o servidor.");
+      setGenericError(result.message ?? t("auth.signup.generic_error"));
     }
     setPhase("form");
   }
@@ -46,16 +48,13 @@ export function CompaniesNew() {
   if (phase === "sent") {
     return (
       <Page>
-        <Header step="02" title="Verifique seu email" emTail="· link enviado" />
+        <Header step="02" title={t("auth.verify_email.title")} emTail={t("auth.verify_email.em_tail")} />
         <Card>
           <p style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.85 }}>
-            Enviamos um link de acesso para <strong style={{ color: "var(--accent)" }}>{confirmedEmail}</strong>.
+            {t("auth.verify_email.body_prefix")}<strong style={{ color: "var(--accent)" }}>{confirmedEmail}</strong>{t("auth.verify_email.body_suffix")}
           </p>
           <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, marginTop: 12 }}>
-            O link expira em <span style={{ color: "var(--text)" }}>30 minutos</span> e
-            funciona uma única vez. Em dev, a entrega passa pelo Sidekiq —
-            cheque <code style={{ color: "var(--accent)" }}>log/development.log</code> ou
-            o painel do Sidekiq.
+            {t("auth.verify_email.expiry_prefix")}<span style={{ color: "var(--text)" }}>{t("auth.verify_email.expiry_minutes")}</span>{t("auth.verify_email.expiry_mid")}<code style={{ color: "var(--accent)" }}>log/development.log</code>{t("auth.verify_email.expiry_suffix")}
           </p>
           <div style={{ marginTop: 24 }}>
             <Link to="/" style={{
@@ -64,7 +63,7 @@ export function CompaniesNew() {
               textTransform: "uppercase",
               textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
             }}>
-              ← voltar ao início
+              {t("auth.back_home")}
             </Link>
           </div>
         </Card>
@@ -74,7 +73,7 @@ export function CompaniesNew() {
 
   return (
     <Page>
-      <Header step="01" title="Cadastro de empresa" emTail="· acesso ao diretório" />
+      <Header step="01" title={t("auth.signup.title")} emTail={t("auth.signup.em_tail")} />
 
       <Card>
         <form onSubmit={handleSubmit} className="grid gap-5">
@@ -89,13 +88,13 @@ export function CompaniesNew() {
             </div>
           )}
 
-          <Field label="Nome da empresa" error={errors.name?.[0]}>
+          <Field label={t("auth.signup.name_label")} error={errors.name?.[0]}>
             <Input
               type="text" value={name} onChange={(e) => setName(e.target.value)}
               autoComplete="organization" required disabled={phase === "sending"} />
           </Field>
 
-          <Field label="Email corporativo" hint="enviaremos o link de acesso" error={errors.email?.[0]}>
+          <Field label={t("auth.login.email_label")} hint={t("auth.signup.email_hint")} error={errors.email?.[0]}>
             <Input
               type="email" value={email} onChange={(e) => setEmail(e.target.value)}
               autoComplete="email" required disabled={phase === "sending"} />
@@ -108,19 +107,18 @@ export function CompaniesNew() {
               textTransform: "uppercase",
               textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
             }}>
-              já tem conta? entrar
+              {t("auth.signup.has_account")}
             </Link>
             <PrimaryButton type="submit" disabled={phase === "sending"}>
-              {phase === "sending" ? "Enviando…" : "Criar conta"}
+              {phase === "sending" ? t("auth.sending") : t("auth.signup.submit")}
             </PrimaryButton>
           </div>
         </form>
       </Card>
 
       <p style={{ marginTop: 32, color: "var(--muted)", fontSize: 12.5, lineHeight: 1.7 }}>
-        beheld nunca compartilha email ou telefone de um dev até que ele clique{" "}
-        <span style={{ color: "var(--text)" }}>Responder</span> na sua mensagem.
-        O cadastro é gratuito durante o piloto.
+        {t("auth.signup.note_prefix")}
+        <span style={{ color: "var(--text)" }}>{t("contact.action_respond")}</span>{t("auth.signup.note_suffix")}
       </p>
     </Page>
   );
@@ -137,11 +135,12 @@ function Page({ children }: { children: ReactNode }) {
 }
 
 function Header({ step, title, emTail }: { step: string; title: string; emTail?: string }) {
+  const t = useT();
   return (
     <header className="mb-8">
       <div className="mb-3 font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        empresa · cadastro
+        {t("auth.signup.eyebrow")}
       </div>
       <div className="flex flex-wrap items-baseline gap-6">
         <span className="font-mono uppercase"

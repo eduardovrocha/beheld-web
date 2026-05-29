@@ -10,32 +10,23 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { verifyCompanyToken, type VerifyFailureReason } from "@/lib/companyApi";
+import { useT } from "@/i18n/I18nProvider";
+import type { TKey } from "@/i18n/dict";
 
 type Phase =
   | { kind: "verifying" }
   | { kind: "ok"; companyName: string; redirectTo: string }
   | { kind: "fail"; reason: VerifyFailureReason };
 
-const FAIL_COPY: Record<VerifyFailureReason, { title: string; body: string }> = {
-  not_found: {
-    title: "Link inválido",
-    body:  "Não encontramos esse link. Talvez tenha sido digitado incorretamente ou copiado parcialmente.",
-  },
-  expired: {
-    title: "Link expirado",
-    body:  "Este link já passou da validade de 30 minutos. Solicite um novo.",
-  },
-  used: {
-    title: "Link já usado",
-    body:  "Cada link funciona uma única vez por segurança. Solicite um novo.",
-  },
-  unknown: {
-    title: "Não foi possível verificar",
-    body:  "Algo deu errado ao conferir o link. Tente novamente em alguns segundos.",
-  },
+const FAIL_COPY: Record<VerifyFailureReason, { titleKey: TKey; bodyKey: TKey }> = {
+  not_found: { titleKey: "auth.verify.fail.not_found.title", bodyKey: "auth.verify.fail.not_found.body" },
+  expired:   { titleKey: "auth.verify.fail.expired.title",   bodyKey: "auth.verify.fail.expired.body" },
+  used:      { titleKey: "auth.verify.fail.used.title",      bodyKey: "auth.verify.fail.used.body" },
+  unknown:   { titleKey: "auth.verify.fail.unknown.title",   bodyKey: "auth.verify.fail.unknown.body" },
 };
 
 export function CompanyVerify() {
+  const t = useT();
   const [params]  = useSearchParams();
   const navigate  = useNavigate();
   const fetchedRef = useRef(false);
@@ -68,22 +59,22 @@ export function CompanyVerify() {
 
   return (
     <Page>
-      <Header step="03" title="Verificando link" emTail="· magic-link · empresa" />
+      <Header step="03" title={t("auth.verify.title")} emTail={t("auth.verify.em_tail")} />
 
       <Card>
         {phase.kind === "verifying" && (
           <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7 }}>
-            Conferindo seu link de acesso…
+            {t("auth.verify.checking")}
           </p>
         )}
 
         {phase.kind === "ok" && (
           <>
             <p style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.7 }}>
-              ✓ Sessão criada para <strong style={{ color: "var(--accent)" }}>{phase.companyName}</strong>.
+              {t("auth.verify.ok_prefix")}<strong style={{ color: "var(--accent)" }}>{phase.companyName}</strong>{t("auth.verify.ok_suffix")}
             </p>
             <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, marginTop: 12 }}>
-              Redirecionando para o diretório…
+              {t("auth.verify.redirecting")}
             </p>
           </>
         )}
@@ -91,10 +82,10 @@ export function CompanyVerify() {
         {phase.kind === "fail" && (
           <>
             <p style={{ color: "var(--warn)", fontSize: 15, lineHeight: 1.7, fontWeight: 500 }}>
-              {FAIL_COPY[phase.reason].title}
+              {t(FAIL_COPY[phase.reason].titleKey)}
             </p>
             <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, marginTop: 8 }}>
-              {FAIL_COPY[phase.reason].body}
+              {t(FAIL_COPY[phase.reason].bodyKey)}
             </p>
             <div className="mt-6 flex gap-3">
               <Link to="/companies/new" style={{
@@ -105,7 +96,7 @@ export function CompanyVerify() {
                 border: "1px solid var(--text)",
                 textDecoration: "none",
               }}>
-                criar conta
+                {t("auth.verify.create_account")}
               </Link>
               <Link to="/" style={{
                 fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
@@ -115,7 +106,7 @@ export function CompanyVerify() {
                 border: "1px solid var(--rule)",
                 textDecoration: "none",
               }}>
-                voltar
+                {t("auth.verify.back")}
               </Link>
             </div>
           </>
@@ -136,11 +127,12 @@ function Page({ children }: { children: ReactNode }) {
 }
 
 function Header({ step, title, emTail }: { step: string; title: string; emTail?: string }) {
+  const t = useT();
   return (
     <header className="mb-8">
       <div className="mb-3 font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        empresa · sessão
+        {t("auth.verify.eyebrow")}
       </div>
       <div className="flex flex-wrap items-baseline gap-6">
         <span className="font-mono uppercase"
