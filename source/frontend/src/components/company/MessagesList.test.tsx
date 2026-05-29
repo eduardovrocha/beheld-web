@@ -31,11 +31,11 @@ describe("MessagesList", () => {
     expect(screen.getByText(/Nenhuma mensagem enviada ainda/i)).toBeInTheDocument();
   });
 
-  it("renderiza o trecho do corpo e o link 'ver perfil →'", () => {
+  it("renderiza o trecho do corpo, o cargo e o handle linkando o perfil", () => {
     render(<MessagesList messages={[sample()]} />);
     expect(screen.getByText("Olá, tudo bem?")).toBeInTheDocument();
     expect(screen.getByText(/Backend/)).toBeInTheDocument();
-    const link = screen.getByRole("link", { name: /ver perfil/i });
+    const link = screen.getByRole("link", { name: "@alice" });
     expect(link).toHaveAttribute("href", "/v/abc123");
   });
 
@@ -52,9 +52,10 @@ describe("MessagesList", () => {
     expect(screen.getByLabelText(/ignorado/i)).toBeInTheDocument();
   });
 
-  it("não exibe link 'ver perfil' quando não há bundle_slug", () => {
+  it("handle não vira link quando não há bundle_slug", () => {
     render(<MessagesList messages={[sample({ bundle_slug: null })]} />);
-    expect(screen.queryByRole("link", { name: /ver perfil/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.getByText("@alice")).toBeInTheDocument();
   });
 
   it("exibe a resposta do dev quando há reply_body (F_REPLY)", () => {

@@ -150,28 +150,15 @@ function DevCard({ thread }: { thread: DevThread }) {
         </div>
       )}
 
-      {/* rodapé (mt-auto): contagem de mensagens (quando >1) + ver perfil */}
-      <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
-        {count > 1 && (
+      {/* rodapé (mt-auto): contagem de mensagens (quando >1) */}
+      {count > 1 && (
+        <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
           <span className="font-mono uppercase"
                 style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
             {tp("company.messages.count", count)}
           </span>
-        )}
-        {bundle_slug && (
-          <a href={`/v/${bundle_slug}`} target="_blank" rel="noopener noreferrer"
-             onClick={(e) => e.stopPropagation()}
-             style={{
-               marginLeft: "auto",
-               fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-               fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
-               color: "var(--text)", textDecoration: "none",
-               border: "1px solid var(--rule)", padding: "6px 14px", display: "inline-block",
-             }}>
-            {t("company.messages.view_profile")}
-          </a>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

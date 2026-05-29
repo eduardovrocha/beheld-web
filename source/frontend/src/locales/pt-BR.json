@@ -190,7 +190,6 @@
   "company.messages.sent_at": "enviada {date}",
   "company.messages.responded_at": "respondida {date}",
   "company.messages.reply_from": "resposta de {handle}",
-  "company.messages.view_profile": "ver perfil →",
   "company.messages.count.one": "1 mensagem",
   "company.messages.count.other": "{count} mensagens",
   "company.saved.empty": "Nenhum dev salvo ainda.",
