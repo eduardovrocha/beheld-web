@@ -377,7 +377,6 @@
   "contact.sent.back": "voltar ao diretório",
   "contact.action_respond": "Responder",
   "contact.title": "Entrar em contato",
-  "contact.em_tail": "· enviando para {handle}",
   "contact.form.job_title_label": "Cargo da vaga",
   "contact.form.job_title_hint_locked": "fixada — já há uma mensagem pendente para esta vaga",
   "contact.form.job_title_hint": "opcional",

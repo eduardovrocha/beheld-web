@@ -167,7 +167,6 @@ export function AccountContact() {
   return (
     <Shell>
       <Header title={t("contact.title")}
-              emTail={t("contact.em_tail", { handle: target.handle })}
               meta={<CompanyNav bare />} />
 
       <div className="grid gap-6"

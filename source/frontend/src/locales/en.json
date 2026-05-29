@@ -377,7 +377,6 @@
   "contact.sent.back": "back to directory",
   "contact.action_respond": "Reply",
   "contact.title": "Get in touch",
-  "contact.em_tail": "· sending to {handle}",
   "contact.form.job_title_label": "Position title",
   "contact.form.job_title_hint_locked": "locked — there is already a pending message for this position",
   "contact.form.job_title_hint": "optional",

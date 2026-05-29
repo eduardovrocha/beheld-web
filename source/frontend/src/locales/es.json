@@ -377,7 +377,6 @@
   "contact.sent.back": "volver al directorio",
   "contact.action_respond": "Responder",
   "contact.title": "Ponerse en contacto",
-  "contact.em_tail": "· enviando a {handle}",
   "contact.form.job_title_label": "Puesto de la vacante",
   "contact.form.job_title_hint_locked": "fijado — ya hay un mensaje pendiente para esta vacante",
   "contact.form.job_title_hint": "opcional",
