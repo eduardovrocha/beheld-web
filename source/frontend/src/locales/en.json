@@ -390,7 +390,6 @@
   "contact.form.submitting": "Sending…",
   "contact.profile.eyebrow": "profile",
   "contact.profile.verified_desc": "Bundle signed with the dev's key and published in the last 30 days — checked offline.",
-  "contact.profile.view_full": "View full profile →",
   "contact.profile.privacy_prefix": "beheld does not share the email or phone of ",
   "contact.profile.privacy_mid": " until they click ",
   "contact.profile.privacy_suffix": " on your message.",

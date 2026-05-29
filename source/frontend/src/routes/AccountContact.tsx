@@ -282,9 +282,15 @@ function ProfilePanel({ target }: { target: ContactTarget["account"] }) {
       </div>
 
       <div className="mt-2 flex flex-wrap items-center" style={{ gap: 6, paddingRight: 24 }}>
-        <span style={{ color: "var(--text)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>
-          {target.handle}
-        </span>
+        {slug
+          ? <a href={`/v/${slug}`} target="_blank" rel="noopener noreferrer"
+               style={{ color: "var(--text)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em",
+                        textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3 }}>
+              {target.handle}
+            </a>
+          : <span style={{ color: "var(--text)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>
+              {target.handle}
+            </span>}
         {target.status === "outdated" && <StatusBadge kind="warn">{t("common.bundle_status.outdated")}</StatusBadge>}
       </div>
 
@@ -307,19 +313,6 @@ function ProfilePanel({ target }: { target: ContactTarget["account"] }) {
               background: "var(--rule-soft)", color: "var(--text)", border: "1px solid var(--rule)",
             }}>{eco}</span>
           ))}
-        </div>
-      )}
-
-      {slug && (
-        <div className="mt-4">
-          <a href={`/v/${slug}`} target="_blank" rel="noopener noreferrer"
-             style={{
-               font: "inherit", fontSize: 12,
-               color: "var(--text)", textDecoration: "none",
-               border: "1px solid var(--rule)", padding: "6px 12px", display: "inline-block",
-             }}>
-            {t("contact.profile.view_full")}
-          </a>
         </div>
       )}
 
