@@ -84,10 +84,19 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
+// Fallback usado fora de um <I18nProvider> (ex.: testes de componente que
+// renderizam isoladamente). Resolve em pt-BR (idioma padrão), de modo que
+// componentes funcionem sem provider e as traduções pt batam com o original.
+const FALLBACK: I18nContextValue = {
+  locale: "pt",
+  setLocale: () => {},
+  t: (key, params) => format(resolve(loadedDict("pt"), key as string), params),
+  tp: (key, count, params) => pluralize(loadedDict("pt"), "pt", key as string, count, params),
+  fmt: createFormatters("pt"),
+};
+
 export function useI18n(): I18nContextValue {
-  const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useI18n must be used inside <I18nProvider>");
-  return ctx;
+  return useContext(I18nContext) ?? FALLBACK;
 }
 
 export function useT(): I18nContextValue["t"] {

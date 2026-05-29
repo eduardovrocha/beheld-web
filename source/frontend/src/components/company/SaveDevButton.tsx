@@ -7,18 +7,21 @@
 import { useState, type CSSProperties } from "react";
 
 import { saveDev as apiSaveDev, CompanyAuthError } from "@/lib/companyDashboardApi";
+import { useT } from "@/i18n/I18nProvider";
 
-export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md", label = "+ Salvar", variant = "chip" }: {
+export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md", label, variant = "chip" }: {
   accountId:     number;
   alreadySaved?: boolean;
   hidden?:       boolean;     // explicit opt-out (e.g., recruiter not logged in)
   size?:         "sm" | "md";
-  label?:        string;      // customizable copy — Directory uses "+ Salvar", /v/:slug uses "Salvar perfil"
+  label?:        string;      // copy customizável; default = company.save_dev.cta
   variant?:      "chip" | "mono"; // "mono" matches the JetBrains Mono / uppercase chrome of FloatingBack
 }) {
+  const t = useT();
   const [saved, setSaved]   = useState<boolean>(alreadySaved ?? false);
   const [busy,  setBusy]    = useState(false);
   const [error, setError]   = useState<string | null>(null);
+  const cta = label ?? t("company.save_dev.cta");
 
   if (hidden) return null;
 
@@ -29,14 +32,10 @@ export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md", la
       await apiSaveDev(accountId, null);
       setSaved(true);
     } catch (e) {
-      if (e instanceof CompanyAuthError) {
-        // Surface as plain text — the parent route decides what to do
-        // (Directory already redirects on its own 401, /v/:slug just
-        // hides the button if not authed).
-        setError("login necessário");
-      } else {
-        setError("falha ao salvar");
-      }
+      // Surface as plain text — the parent route decides what to do.
+      setError(e instanceof CompanyAuthError
+        ? t("company.save_dev.login_required")
+        : t("company.save_dev.failed"));
     } finally {
       setBusy(false);
     }
@@ -44,7 +43,7 @@ export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md", la
 
   if (variant === "mono") {
     return (
-      <MonoSaveButton saved={saved} busy={busy} error={error} label={label} onSave={handleSave} />
+      <MonoSaveButton saved={saved} busy={busy} error={error} label={cta} onSave={handleSave} />
     );
   }
 
@@ -52,7 +51,7 @@ export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md", la
     return (
       <span style={chipStyle(size, { background: "rgba(74,124,78,0.12)", color: "var(--ok)",
                                       border: "1px solid rgba(74,124,78,0.4)" })}>
-        Salvo ✓
+        {t("company.save_dev.saved")}
       </span>
     );
   }
@@ -67,7 +66,7 @@ export function SaveDevButton({ accountId, alreadySaved, hidden, size = "md", la
               opacity:     busy ? 0.5 : 1,
             })}
             title={error ?? undefined}>
-      {busy ? "Salvando…" : error ?? label}
+      {busy ? t("company.save_dev.saving") : error ?? cta}
     </button>
   );
 }
@@ -78,10 +77,11 @@ function MonoSaveButton({ saved, busy, error, label, onSave }: {
   saved: boolean; busy: boolean; error: string | null; label: string;
   onSave: () => Promise<void> | void;
 }) {
+  const t = useT();
   if (saved) {
     return (
       <span style={{ ...monoBase(), color: "var(--ok)" }}>
-        ✓ salvo
+        {t("company.save_dev.saved_mono")}
       </span>
     );
   }
@@ -92,7 +92,7 @@ function MonoSaveButton({ saved, busy, error, label, onSave }: {
                      opacity: busy ? 0.5 : 1, transition: "color 150ms ease" }}
             onMouseEnter={(e) => { if (!busy) e.currentTarget.style.color = "var(--accent)"; }}
             onMouseLeave={(e) => { if (!busy) e.currentTarget.style.color = "var(--muted)"; }}>
-      {busy ? "salvando…" : error ?? label}
+      {busy ? t("company.save_dev.saving_mono") : error ?? label}
     </button>
   );
 }

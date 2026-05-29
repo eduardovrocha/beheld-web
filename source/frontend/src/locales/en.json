@@ -157,5 +157,18 @@
   "identity.key_status.unknown": "unknown (key not in registry)",
   "company.nav.dashboard": "Dashboard",
   "company.nav.directory": "Directory",
-  "company.nav.messages": "Messages"
+  "company.nav.messages": "Messages",
+  "common.back": "back",
+  "company.stats.verifications": "verifications",
+  "company.stats.messages_sent": "messages sent",
+  "company.stats.responded": "responded",
+  "company.stats.saved_devs": "saved devs",
+  "company.stats.responded_hint": "{responded} of {total}",
+  "company.save_dev.cta": "+ Save",
+  "company.save_dev.saved": "Saved ✓",
+  "company.save_dev.saving": "Saving…",
+  "company.save_dev.saved_mono": "✓ saved",
+  "company.save_dev.saving_mono": "saving…",
+  "company.save_dev.login_required": "login required",
+  "company.save_dev.failed": "failed to save"
 }

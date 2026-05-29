@@ -15,8 +15,11 @@
  */
 import { useNavigate } from "react-router-dom";
 
+import { useT } from "@/i18n/I18nProvider";
+
 export function FloatingBack({ to = "/company/dashboard", back = false }: { to?: string; back?: boolean }) {
   const navigate = useNavigate();
+  const t = useT();
 
   function handleBack() {
     if (back) {
@@ -39,7 +42,7 @@ export function FloatingBack({ to = "/company/dashboard", back = false }: { to?:
       <button
         type="button"
         onClick={handleBack}
-        aria-label="voltar"
+        aria-label={t("common.back")}
         style={{
           background: "none", border: "none", cursor: "pointer",
           fontFamily: "'JetBrains Mono', ui-monospace, monospace",
@@ -51,7 +54,7 @@ export function FloatingBack({ to = "/company/dashboard", back = false }: { to?:
         }}
         onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
-        ← voltar
+        ← {t("common.back")}
       </button>
     </div>
   );

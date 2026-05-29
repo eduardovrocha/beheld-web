@@ -157,5 +157,18 @@
   "identity.key_status.unknown": "desconhecida (chave não está no registro)",
   "company.nav.dashboard": "Dashboard",
   "company.nav.directory": "Directory",
-  "company.nav.messages": "Mensagens"
+  "company.nav.messages": "Mensagens",
+  "common.back": "voltar",
+  "company.stats.verifications": "verificações",
+  "company.stats.messages_sent": "mensagens enviadas",
+  "company.stats.responded": "respondidas",
+  "company.stats.saved_devs": "devs salvos",
+  "company.stats.responded_hint": "{responded} de {total}",
+  "company.save_dev.cta": "+ Salvar",
+  "company.save_dev.saved": "Salvo ✓",
+  "company.save_dev.saving": "Salvando…",
+  "company.save_dev.saved_mono": "✓ salvo",
+  "company.save_dev.saving_mono": "salvando…",
+  "company.save_dev.login_required": "login necessário",
+  "company.save_dev.failed": "falha ao salvar"
 }

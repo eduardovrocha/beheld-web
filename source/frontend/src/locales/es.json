@@ -157,5 +157,18 @@
   "identity.key_status.unknown": "desconocida (clave no está en el registro)",
   "company.nav.dashboard": "Panel",
   "company.nav.directory": "Directorio",
-  "company.nav.messages": "Mensajes"
+  "company.nav.messages": "Mensajes",
+  "common.back": "volver",
+  "company.stats.verifications": "verificaciones",
+  "company.stats.messages_sent": "mensajes enviados",
+  "company.stats.responded": "respondidas",
+  "company.stats.saved_devs": "devs guardados",
+  "company.stats.responded_hint": "{responded} de {total}",
+  "company.save_dev.cta": "+ Guardar",
+  "company.save_dev.saved": "Guardado ✓",
+  "company.save_dev.saving": "Guardando…",
+  "company.save_dev.saved_mono": "✓ guardado",
+  "company.save_dev.saving_mono": "guardando…",
+  "company.save_dev.login_required": "inicia sesión",
+  "company.save_dev.failed": "error al guardar"
 }

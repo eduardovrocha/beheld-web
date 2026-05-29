@@ -5,21 +5,23 @@
 import type { ReactNode } from "react";
 
 import type { DashboardStats } from "@/lib/companyDashboardApi";
+import { useT } from "@/i18n/I18nProvider";
 
 export function StatsGrid({ stats }: { stats: DashboardStats | null }) {
+  const t = useT();
   if (!stats) return null;
 
   return (
     <div className="grid gap-4"
          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
-      <StatCard label="verificações"
+      <StatCard label={t("company.stats.verifications")}
                 value={stats.verifications_total} />
-      <StatCard label="mensagens enviadas"
+      <StatCard label={t("company.stats.messages_sent")}
                 value={stats.messages_total} />
-      <StatCard label="respondidas"
+      <StatCard label={t("company.stats.responded")}
                 value={stats.response_rate != null ? `${stats.response_rate}%` : "—"}
-                hint={`${stats.messages_responded} de ${stats.messages_total}`} />
-      <StatCard label="devs salvos"
+                hint={t("company.stats.responded_hint", { responded: stats.messages_responded, total: stats.messages_total })} />
+      <StatCard label={t("company.stats.saved_devs")}
                 value={stats.saved_devs_total} />
     </div>
   );
