@@ -118,7 +118,7 @@ export function AccountContact() {
   if (phase.kind === "unavailable") {
     return (
       <Shell>
-        <Header title={t("contact.unavailable.title")} emTail={t("contact.unavailable.em_tail")} />
+        <Header title={t("contact.unavailable.title")} />
         <Card>
           <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7 }}>
             {t("contact.unavailable.body")}
@@ -134,7 +134,7 @@ export function AccountContact() {
   if (phase.kind === "sent") {
     return (
       <Shell>
-        <Header title={t("contact.sent.title")} emTail={t("contact.sent.em_tail")} />
+        <Header title={t("contact.sent.title")} />
         <Card>
           <p style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.7 }}>
             {t("contact.sent.body_prefix")}<strong style={{ color: "var(--accent)" }}>{phase.handle}</strong>{t("contact.sent.body_suffix")}

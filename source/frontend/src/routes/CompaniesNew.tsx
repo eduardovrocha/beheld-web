@@ -48,7 +48,7 @@ export function CompaniesNew() {
   if (phase === "sent") {
     return (
       <Page>
-        <Header step="02" title={t("auth.verify_email.title")} emTail={t("auth.verify_email.em_tail")} />
+        <Header step="02" title={t("auth.verify_email.title")} />
         <Card>
           <p style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.85 }}>
             {t("auth.verify_email.body_prefix")}<strong style={{ color: "var(--accent)" }}>{confirmedEmail}</strong>{t("auth.verify_email.body_suffix")}
@@ -73,7 +73,7 @@ export function CompaniesNew() {
 
   return (
     <Page>
-      <Header step="01" title={t("auth.signup.title")} emTail={t("auth.signup.em_tail")} />
+      <Header step="01" title={t("auth.signup.title")} />
 
       <Card>
         <form onSubmit={handleSubmit} className="grid gap-5">

@@ -59,7 +59,7 @@ export function CompanyVerify() {
 
   return (
     <Page>
-      <Header step="03" title={t("auth.verify.title")} emTail={t("auth.verify.em_tail")} />
+      <Header step="03" title={t("auth.verify.title")} />
 
       <Card>
         {phase.kind === "verifying" && (
