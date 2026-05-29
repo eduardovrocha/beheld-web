@@ -14,6 +14,7 @@ import { Tooltip } from "@/components/Tooltip";
 import { DragScroll } from "@/components/DragScroll";
 import { Dropdown } from "@/components/Dropdown";
 import { VerifiedIcon } from "@/components/icons";
+import { useT, useTp, useFmt } from "@/i18n/I18nProvider";
 import { CompanyNav } from "@/components/company/CompanyNav";
 import { SaveDevButton } from "@/components/company/SaveDevButton";
 import {
@@ -28,25 +29,19 @@ import {
 // ── tabs ──────────────────────────────────────────────────────────────────
 type DirTab = "filters" | "results";
 
-const DIR_TABS: Array<{ id: DirTab; label: string; hash: string }> = [
-  { id: "filters", label: "Filtros",    hash: "#filtros" },
-  { id: "results", label: "Resultados", hash: "#resultados" },
+const DIR_TABS: Array<{ id: DirTab; labelKey: string; hash: string }> = [
+  { id: "filters", labelKey: "directory.tab.filters", hash: "#filtros" },
+  { id: "results", labelKey: "directory.tab.results", hash: "#resultados" },
 ];
 
 function dirTabFromHash(hash: string): DirTab {
   return DIR_TABS.find((t) => t.hash === hash)?.id ?? "results";
 }
 
-const PT_MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-
-function shortMonthYear(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : `${PT_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-}
-
 export function Directory() {
   const navigate = useNavigate();
+  const t = useT();
+  const tp = useTp();
   const [data, setData]       = useState<DirectoryPayload | null>(null);
   const [error, setError]     = useState<string | null>(null);
   const [busy, setBusy]       = useState(false);
@@ -114,7 +109,7 @@ export function Directory() {
   if (error) {
     return (
       <Shell>
-        <Section num="01" title="Falha no diretório">
+        <Section num="01" title={t("directory.error_title")}>
           <EmptyCard>{error}</EmptyCard>
         </Section>
       </Shell>
@@ -124,7 +119,7 @@ export function Directory() {
   if (!data) {
     return (
       <Shell>
-        <p style={{ color: "var(--muted)", fontSize: 13, padding: "32px 0" }}>Carregando diretório…</p>
+        <p style={{ color: "var(--muted)", fontSize: 13, padding: "32px 0" }}>{t("directory.loading")}</p>
       </Shell>
     );
   }
@@ -136,10 +131,10 @@ export function Directory() {
       <DirectoryHero company={data.company.name} total={activeCount} />
 
       <TabStrip<DirTab>
-        tabs={DIR_TABS.map((t) => ({
-          id:    t.id,
-          label: t.label,
-          badge: t.id === "results" ? activeCount : null,
+        tabs={DIR_TABS.map((tab_) => ({
+          id:    tab_.id,
+          label: t(tab_.labelKey),
+          badge: tab_.id === "results" ? activeCount : null,
         })) as readonly TabDef<DirTab>[]}
         active={tab}
         onSelect={selectTab}
@@ -148,10 +143,10 @@ export function Directory() {
             tone="ok"
             align="right"
             icon={<VerifiedIcon size={12} />}
-            label="verificado"
-            title="Identidade verificada."
-            description="Bundle assinado com a chave do dev e publicado nos últimos 30 dias — checado offline. O selo aparece no canto dos cards verificados.">
-            <span aria-label="o que significa verificado"
+            label={t("common.verified.label")}
+            title={t("common.verified.title")}
+            description={t("directory.verified.desc")}>
+            <span aria-label={t("directory.verified.legend_aria")}
                   style={{ display: "inline-flex", alignItems: "center", color: "var(--ok)", cursor: "help" }}>
               <VerifiedIcon size={16} />
             </span>
@@ -162,14 +157,14 @@ export function Directory() {
         {tab === "filters" && (
           <Card>
             <form onSubmit={onSubmit} className="grid gap-5">
-              <Field label="Ecossistemas / linguagens" hint="qualquer um dos selecionados">
+              <Field label={t("directory.filter.ecosystems_label")} hint={t("directory.filter.ecosystems_hint")}>
                 <EcosystemPicker
                   selected={draft.ecosystems}
                   available={data.available_ecosystems}
                   onChange={(next) => setDraft((d) => ({ ...d, ecosystems: next }))} />
               </Field>
 
-              <Field label="Test ratio" hint="proporção de arquivos de teste por arquivo de código">
+              <Field label={t("directory.filter.test_ratio_label")} hint={t("directory.filter.test_ratio_hint")}>
                 <DualRangeSlider
                   min={0} max={1} step={0.05}
                   lo={parseRatio(draft.test_ratio_min, 0)}
@@ -182,20 +177,20 @@ export function Directory() {
                   formatLabel={(v) => `${Math.round(v * 100)}%`} />
               </Field>
 
-              <Field label="Status do bundle">
+              <Field label={t("directory.filter.status_label")}>
                 <Dropdown
                   value={draft.status}
                   onChange={(v) => setDraft((d) => ({ ...d, status: v as DirectoryFilters["status"] }))}
                   options={[
-                    { value: "all",      label: "Todos" },
-                    { value: "verified", label: "Verificados (≤ 30 dias)" },
-                    { value: "outdated", label: "Desatualizados (> 30 dias)" },
+                    { value: "all",      label: t("directory.filter.status.all") },
+                    { value: "verified", label: t("directory.filter.status.verified") },
+                    { value: "outdated", label: t("directory.filter.status.outdated") },
                   ]} />
               </Field>
 
               <div className="flex flex-wrap items-center" style={{ gap: 14 }}>
                 <PrimaryButton type="submit" disabled={busy}>
-                  {busy ? "Aplicando…" : "Aplicar filtros"}
+                  {busy ? t("directory.filter.applying") : t("directory.filter.apply")}
                 </PrimaryButton>
                 {applied && !busy && (
                   <span className="font-mono" style={{ fontSize: 13, letterSpacing: "0.02em" }}>
@@ -203,10 +198,10 @@ export function Directory() {
                       {activeCount}
                     </strong>
                     <span style={{ color: "var(--muted)" }}>
-                      {" "}{activeCount === 1 ? "dev corresponde" : "devs correspondem"} ·{" "}
+                      {" "}{tp("directory.filter.match_count", activeCount)} ·{" "}
                     </span>
                     <button type="button" onClick={() => selectTab("results")} style={inlineLinkBtn()}>
-                      ver resultados
+                      {t("directory.filter.see_results")}
                     </button>
                   </span>
                 )}
@@ -218,8 +213,9 @@ export function Directory() {
         {tab === "results" && (
           data.results.length === 0 ? (
             <EmptyCard>
-              Nenhum dev encontrado com esses critérios. Ajuste os{" "}
-              <button type="button" onClick={() => selectTab("filters")} style={inlineLinkBtn()}>filtros</button>.
+              {t("directory.results.empty_prefix")}
+              <button type="button" onClick={() => selectTab("filters")} style={inlineLinkBtn()}>{t("directory.results.empty_link")}</button>
+              {t("directory.results.empty_suffix")}
             </EmptyCard>
           ) : (
             <div className="grid gap-4"
@@ -252,11 +248,13 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 function DirectoryHero({ company, total }: { company: string; total: number }) {
+  const t = useT();
+  const tp = useTp();
   return (
     <header className="mb-10">
       <div className="mb-3 font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        empresa · diretório
+        {t("directory.hero.eyebrow")}
       </div>
       <h1 className="font-semibold"
           style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
@@ -268,7 +266,7 @@ function DirectoryHero({ company, total }: { company: string; total: number }) {
       </div>
       <div className="mt-2 font-mono"
            style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
-        {total === 0 ? "nenhum perfil ativo no momento" : `${total} ${total === 1 ? "perfil ativo" : "perfis ativos"}`}
+        {total === 0 ? t("directory.hero.total_zero") : tp("directory.hero.total", total)}
       </div>
     </header>
   );
@@ -324,6 +322,8 @@ function EmptyCard({ children }: { children: ReactNode }) {
 // ── dev card ──────────────────────────────────────────────────────────────
 
 function DevCard({ dev }: { dev: DevSummary }) {
+  const t = useT();
+  const fmt = useFmt();
   const portal      = window.location.origin;
   const profileUrl  = dev.slug ? `${portal}/v/${dev.slug}` : null;
   const contactPath = `/accounts/${dev.account_id}/contact`;
@@ -340,7 +340,7 @@ function DevCard({ dev }: { dev: DevSummary }) {
       {/* selo de verificação — só o ícone no canto; o significado é explicado
           uma vez na legenda do topo (alinhada às tabs). */}
       {dev.status === "verified" && (
-        <span aria-label="verificado"
+        <span aria-label={t("common.verified.aria")}
               style={{ position: "absolute", top: 12, right: 12, display: "inline-flex", color: "var(--ok)" }}>
           <VerifiedIcon size={18} />
         </span>
@@ -351,7 +351,7 @@ function DevCard({ dev }: { dev: DevSummary }) {
         <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
           {dev.handle}
         </span>
-        {dev.status === "outdated" && <Badge kind="warn">desatualizado</Badge>}
+        {dev.status === "outdated" && <Badge kind="warn">{t("common.bundle_status.outdated")}</Badge>}
       </div>
 
       {/* test ratio + última publicação (mono numerics) */}
@@ -359,10 +359,10 @@ function DevCard({ dev }: { dev: DevSummary }) {
            style={{ color: "var(--muted)", fontSize: 12, letterSpacing: "0.02em",
                      fontFeatureSettings: '"tnum"', lineHeight: 1.6 }}>
         {typeof dev.test_ratio === "number" && (
-          <span>test ratio <strong style={{ color: "var(--accent)" }}>{Math.round(dev.test_ratio * 100)}%</strong></span>
+          <span>{t("directory.card.test_ratio_label")} <strong style={{ color: "var(--accent)" }}>{fmt.percent(dev.test_ratio)}</strong></span>
         )}
         {dev.last_bundle_at && (
-          <span> · pub. {shortMonthYear(dev.last_bundle_at)}</span>
+          <span> · {t("directory.card.published", { date: fmt.date(dev.last_bundle_at, { month: "short", year: "numeric" }) })}</span>
         )}
       </div>
 
@@ -388,12 +388,12 @@ function DevCard({ dev }: { dev: DevSummary }) {
       <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
         <SaveDevButton accountId={dev.account_id} />
         <Link to={contactPath} style={linkButtonStyle({ primary: true })}>
-          Contatar
+          {t("directory.card.contact")}
         </Link>
         {profileUrl && (
           <a href={profileUrl} target="_blank" rel="noopener noreferrer"
              style={linkButtonStyle({ primary: false })}>
-            Ver perfil →
+            {t("directory.card.view_profile")}
           </a>
         )}
       </div>
