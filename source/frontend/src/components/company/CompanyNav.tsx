@@ -31,10 +31,6 @@ export function CompanyNav({ current, bare = false }: { current?: Current; bare?
       <NavLink to="/directory" active={current === "directory"}>
         <DirectoryIcon /> {t("company.nav.directory")}
       </NavLink>
-      <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
-      <NavLink to="/company/dashboard#mensagens" active={current === "messages"}>
-        <MessagesIcon /> {t("company.nav.messages")}
-      </NavLink>
     </span>
   );
 }
@@ -93,17 +89,6 @@ function DirectoryIcon() {
       <line x1="0.5" y1="1.5"  x2="10.5" y2="1.5"  stroke="currentColor" />
       <line x1="0.5" y1="5.5"  x2="10.5" y2="5.5"  stroke="currentColor" />
       <line x1="0.5" y1="9.5"  x2="10.5" y2="9.5"  stroke="currentColor" />
-    </svg>
-  );
-}
-
-// Envelope — mensagens, no mesmo gabarito 11×11 dos demais ícones.
-function MessagesIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
-         style={{ flexShrink: 0 }}>
-      <rect x="0.5" y="1.5" width="10" height="8" stroke="currentColor" />
-      <path d="M0.5 2 L5.5 6 L10.5 2" stroke="currentColor" />
     </svg>
   );
 }
