@@ -6,10 +6,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import type { SavedDev } from "@/lib/companyDashboardApi";
-
-const BUNDLE_STATUS_LABEL: Record<NonNullable<SavedDev["bundle_status"]>, string> = {
-  verified: "verificado", outdated: "desatualizado", revoked: "revogado",
-};
+import { useT, useFmt } from "@/i18n/I18nProvider";
 
 // Ícone por status do bundle — substitui o rótulo textual no chip. O texto
 // continua acessível via title + aria-label.
@@ -30,10 +27,11 @@ export function SavedDevsList({ savedDevs, onUpdateNote, onRemove }: {
   onUpdateNote: (accountId: number, note: string) => Promise<void> | void;
   onRemove:     (accountId: number)               => Promise<void> | void;
 }) {
+  const t = useT();
   if (savedDevs.length === 0) {
     return (
       <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7 }}>
-        Nenhum dev salvo ainda.
+        {t("company.saved.empty")}
       </p>
     );
   }
@@ -54,6 +52,8 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
   onUpdateNote: (accountId: number, note: string) => Promise<void> | void;
   onRemove:     (accountId: number)               => Promise<void> | void;
 }) {
+  const t = useT();
+  const fmt = useFmt();
   const [editing, setEditing] = useState(false);
   const [draft,   setDraft]   = useState(dev.note ?? "");
   const [busy,    setBusy]    = useState(false);
@@ -65,7 +65,7 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
   }
 
   async function remove() {
-    if (!confirm("Remover este dev da sua lista? A nota será apagada.")) return;
+    if (!confirm(t("company.saved.remove_confirm"))) return;
     setBusy(true);
     try { await onRemove(dev.account_id); } finally { setBusy(false); }
   }
@@ -88,8 +88,8 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
               {dev.dev_handle}
             </span>}
         {dev.bundle_status && (
-          <span title={BUNDLE_STATUS_LABEL[dev.bundle_status]}
-                aria-label={BUNDLE_STATUS_LABEL[dev.bundle_status]}
+          <span title={t(`common.bundle_status.${dev.bundle_status}`)}
+                aria-label={t(`common.bundle_status.${dev.bundle_status}`)}
                 style={{
                   marginLeft: "auto",
                   display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -105,7 +105,7 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
       {editing ? (
         <div className="mt-3 grid gap-2">
           <textarea value={draft} onChange={(e) => setDraft(e.target.value)}
-                    rows={3} placeholder="nota privada — só você vê"
+                    rows={3} placeholder={t("company.saved.note_placeholder")}
                     style={{
                       font: "inherit", fontSize: 13, padding: "8px 10px",
                       color: "var(--text)", background: "var(--bg)",
@@ -114,9 +114,9 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
                       fontFamily: "'Newsreader', Georgia, 'Times New Roman', serif", lineHeight: 1.55,
                     }} />
           <div className="flex gap-2">
-            <button type="button" onClick={save} disabled={busy} style={primaryBtn(busy)}>Salvar nota</button>
+            <button type="button" onClick={save} disabled={busy} style={primaryBtn(busy)}>{t("company.saved.save_note")}</button>
             <button type="button" onClick={() => { setDraft(dev.note ?? ""); setEditing(false); }}
-                    disabled={busy} style={secondaryBtn(busy)}>Cancelar</button>
+                    disabled={busy} style={secondaryBtn(busy)}>{t("common.cancel")}</button>
           </div>
         </div>
       ) : (
@@ -125,7 +125,7 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
                        fontSize: 13.5, lineHeight: 1.55,
                        fontFamily: dev.note ? "'Newsreader', Georgia, serif" : "inherit",
                        fontStyle: dev.note ? "normal" : "italic" }}>
-            {dev.note || "sem nota"}
+            {dev.note || t("company.saved.no_note")}
           </p>
           <button type="button" onClick={() => setEditing(true)}
                   className="font-mono uppercase"
@@ -134,7 +134,7 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
                     fontSize: 10, letterSpacing: "0.14em", color: "var(--muted)",
                     textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
                   }}>
-            editar nota
+            {t("company.saved.edit_note")}
           </button>
         </div>
       )}
@@ -142,16 +142,16 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
       <div className="font-mono"
            style={{ color: "var(--muted-soft)", fontSize: 11, marginTop: 8,
                      letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
-        salvo {formatDate(dev.saved_at)}
+        {t("company.saved.saved_at", { date: fmt.date(dev.saved_at) })}
       </div>
 
       {/* ações ancoradas no rodapé */}
       <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
         <Link to={`/accounts/${dev.account_id}/contact`} style={primaryLinkStyle()}>
-          enviar mensagem →
+          {t("company.saved.send_message")}
         </Link>
         <button type="button" onClick={remove} disabled={busy} style={dangerBtn(busy)}>
-          remover
+          {t("company.saved.remove")}
         </button>
       </div>
     </div>
@@ -195,9 +195,3 @@ function primaryLinkStyle(): React.CSSProperties {
   };
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
-}

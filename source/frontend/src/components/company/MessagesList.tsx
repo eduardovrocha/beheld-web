@@ -6,12 +6,7 @@
 import { useNavigate } from "react-router-dom";
 
 import type { CompanyMessage } from "@/lib/companyDashboardApi";
-
-const STATUS_LABEL: Record<CompanyMessage["status"], string> = {
-  pending:   "aguardando resposta",
-  responded: "respondido",
-  ignored:   "ignorado",
-};
+import { useT, useFmt } from "@/i18n/I18nProvider";
 
 // Ícone por status — substitui o rótulo textual no chip. O texto continua
 // disponível via `title` + `aria-label` (acessibilidade + hover).
@@ -28,10 +23,11 @@ const STATUS_PALETTE: Record<CompanyMessage["status"], { fg: string; bg: string;
 };
 
 export function MessagesList({ messages }: { messages: CompanyMessage[] }) {
+  const t = useT();
   if (messages.length === 0) {
     return (
       <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7 }}>
-        Nenhuma mensagem enviada ainda.
+        {t("company.messages.empty")}
       </p>
     );
   }
@@ -45,9 +41,12 @@ export function MessagesList({ messages }: { messages: CompanyMessage[] }) {
 }
 
 function MessageCard({ m }: { m: CompanyMessage }) {
+  const t = useT();
+  const fmt = useFmt();
   const palette  = STATUS_PALETTE[m.status];
   const navigate = useNavigate();
   const contactPath = `/accounts/${m.account_id}/contact`;
+  const statusLabel = t(`company.messages.status.${m.status}`);
 
   return (
     <div role="button" tabIndex={0}
@@ -73,7 +72,7 @@ function MessageCard({ m }: { m: CompanyMessage }) {
           : <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
               {m.dev_handle}
             </span>}
-        <span title={STATUS_LABEL[m.status]} aria-label={STATUS_LABEL[m.status]}
+        <span title={statusLabel} aria-label={statusLabel}
               style={{
                 marginLeft: "auto",
                 display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -95,8 +94,8 @@ function MessageCard({ m }: { m: CompanyMessage }) {
       <div className="font-mono"
            style={{ color: "var(--muted-soft)", fontSize: 11, marginTop: 8,
                      letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
-        enviada {formatDate(m.sent_at)}
-        {m.responded_at && <> · respondida {formatDate(m.responded_at)}</>}
+        {t("company.messages.sent_at", { date: fmt.date(m.sent_at) })}
+        {m.responded_at && <> · {t("company.messages.responded_at", { date: fmt.date(m.responded_at) })}</>}
       </div>
 
       {/* resposta do dev (F_REPLY) — bloco com filete de acento à esquerda */}
@@ -104,7 +103,7 @@ function MessageCard({ m }: { m: CompanyMessage }) {
         <div className="mt-3" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
           <div className="font-mono uppercase"
                style={{ color: "var(--ok)", fontSize: 9, letterSpacing: "0.14em", marginBottom: 3 }}>
-            resposta de {m.dev_handle}
+            {t("company.messages.reply_from", { handle: m.dev_handle })}
           </div>
           <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55,
                         whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
@@ -124,17 +123,10 @@ function MessageCard({ m }: { m: CompanyMessage }) {
                color: "var(--text)", textDecoration: "none",
                border: "1px solid var(--rule)", padding: "6px 14px", display: "inline-block",
              }}>
-            ver perfil →
+            {t("company.messages.view_profile")}
           </a>
         </div>
       )}
     </div>
   );
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
 }

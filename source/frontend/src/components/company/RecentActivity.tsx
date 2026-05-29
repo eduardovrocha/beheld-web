@@ -5,18 +5,16 @@
 import { Link } from "react-router-dom";
 
 import type { ActivityEvent } from "@/lib/companyDashboardApi";
-
-const STATUS_LABEL: Record<NonNullable<ActivityEvent["status"]>, string> = {
-  pending:   "aguardando",
-  responded: "respondido",
-  ignored:   "ignorado",
-};
+import { useT, useFmt } from "@/i18n/I18nProvider";
 
 export function RecentActivity({ events }: { events: ActivityEvent[] }) {
+  const t = useT();
   if (events.length === 0) {
     return (
       <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7 }}>
-        Nenhuma atividade ainda. Acesse o <Link to="/directory" style={inlineLink()}>diretório</Link> para começar.
+        {t("company.activity.empty_prefix")}
+        <Link to="/directory" style={inlineLink()}>{t("company.activity.empty_link")}</Link>
+        {t("company.activity.empty_suffix")}
       </p>
     );
   }
@@ -32,6 +30,8 @@ export function RecentActivity({ events }: { events: ActivityEvent[] }) {
 }
 
 function ActivityCard({ event: e }: { event: ActivityEvent }) {
+  const t = useT();
+  const fmt = useFmt();
   const isVerification = e.type === "verification";
   return (
     <div style={{
@@ -43,11 +43,11 @@ function ActivityCard({ event: e }: { event: ActivityEvent }) {
       <div className="flex items-center justify-between">
         <span className="font-mono uppercase"
               style={{ color: "var(--accent)", fontSize: 9, letterSpacing: "0.14em" }}>
-          {isVerification ? "↗ verificação" : "✉ mensagem"}
+          {t(isVerification ? "company.activity.verification" : "company.activity.message")}
         </span>
         <span className="font-mono"
               style={{ color: "var(--muted-soft)", fontSize: 11, fontFeatureSettings: '"tnum"' }}>
-          {formatDateTime(e.at)}
+          {`${fmt.date(e.at)} · ${fmt.time(e.at)}`}
         </span>
       </div>
 
@@ -70,7 +70,7 @@ function ActivityCard({ event: e }: { event: ActivityEvent }) {
             <span className="font-mono uppercase"
                   style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.12em",
                             padding: "2px 8px", background: "var(--rule-soft)", border: "1px solid var(--rule)" }}>
-              {STATUS_LABEL[e.status]}
+              {t(`company.activity.status.${e.status}`)}
             </span>
           )}
         </div>
@@ -88,9 +88,3 @@ function inlineLink(): React.CSSProperties {
   };
 }
 
-function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
