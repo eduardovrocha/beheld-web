@@ -10,6 +10,7 @@
 
 module Sessions
   class CompanySessionsController < ActionController::Base
+    include LocaleSelectable
     MAGIC_LINK_TTL = 30.minutes
 
     layout "public"
@@ -22,7 +23,7 @@ module Sessions
       email = params[:email].to_s.strip.downcase
       company = Company.find_by("LOWER(email) = ?", email)
       if company.nil?
-        flash[:alert] = "Email não cadastrado."
+        flash[:alert] = I18n.t("controllers.sessions.email_not_registered")
         return redirect_to new_company_path
       end
 
@@ -56,7 +57,7 @@ module Sessions
 
     def destroy
       cookies.delete(CompanyAuthenticated::COOKIE_NAME)
-      redirect_to new_company_session_path, notice: "Sessão encerrada."
+      redirect_to new_company_session_path, notice: I18n.t("controllers.sessions.signed_out")
     end
   end
 end

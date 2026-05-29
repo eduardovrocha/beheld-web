@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
 <body style="font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; max-width: 560px; margin: 24px auto; color: #0f172a;">
-  <p>Olá,</p>
-  <p><strong><%= @handle %></strong> tem interesse na sua mensagem.</p>
+  <p><%= t("mailers.contact.respond.greeting") %></p>
+  <p><%= t("mailers.contact.respond.interest_html", handle: @handle) %></p>
   <p style="margin: 12px 0;">
-    <strong>Contatos:</strong><br>
-    Email&nbsp;&nbsp;&nbsp; <code><%= @account.email_contact %></code><br>
-    Telefone <code><%= @account.phone_contact %></code>
+    <strong><%= t("mailers.contact.respond.contacts_label") %></strong><br>
+    <%= t("mailers.contact.respond.email_label") %>&nbsp;&nbsp;&nbsp; <code><%= @account.email_contact %></code><br>
+    <%= t("mailers.contact.respond.phone_label") %> <code><%= @account.phone_contact %></code>
   </p>
   <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;">
   <p style="color: #64748b; font-size: 12px; margin: 0;">
-    Esta mensagem foi enviada automaticamente pelo beheld.<br>
-    beheld.dev · forever free for developers
+    <%= t("mailers.contact.respond.footer_auto") %><br>
+    <%= t("mailers.contact.respond.footer_brand") %>
   </p>
 </body>
 </html>

@@ -16,7 +16,7 @@ class ContactMailer < ApplicationMailer
 
     mail(
       to:      company.email,
-      subject: "Resposta de #{@handle} via beheld",
+      subject: I18n.t("mailers.contact.respond.subject", handle: @handle),
     )
   end
 end

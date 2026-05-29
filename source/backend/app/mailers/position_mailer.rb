@@ -15,7 +15,7 @@ class PositionMailer < ApplicationMailer
     @company  = position.company
     mail(
       to:      @company.email,
-      subject: "Vaga expirada: #{@position.title}",
+      subject: I18n.t("mailers.position.expired.subject", title: @position.title),
     )
   end
 end

@@ -101,7 +101,7 @@ module Api
         def purge
           position = current_company.positions.find(params[:id])
           unless position.archived?
-            return render json: { ok: false, error: "Só é possível excluir uma vaga arquivada." },
+            return render json: { ok: false, error: I18n.t("controllers.positions.purge_not_archived") },
                           status: :unprocessable_entity
           end
           position.destroy!

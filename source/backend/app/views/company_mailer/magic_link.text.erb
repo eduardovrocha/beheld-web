@@ -1,7 +1,7 @@
-Olá<%= ", #{@company.name}" if @company.name.present? %>,
+<%= t("mailers.company.magic_link.greeting") %><%= ", #{@company.name}" if @company.name.present? %>,
 
-Clique no link abaixo para acessar o beheld.
+<%= t("mailers.company.magic_link.intro") %>
 
 <%= @verify_url %>
 
-Válido por 30 minutos. Use uma vez.
+<%= t("mailers.company.magic_link.validity") %>

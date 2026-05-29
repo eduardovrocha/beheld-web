@@ -17,6 +17,7 @@
 #   for casual rendering / OpenGraph previews.
 
 class VController < ActionController::Base
+  include LocaleSelectable
   helper VHelper
 
   # No CSRF for these public GET endpoints — there's no mutable state and no

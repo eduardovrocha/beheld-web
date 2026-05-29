@@ -15,7 +15,7 @@ class NotificationMailer < ApplicationMailer
 
     mail(
       to:      account.notification_email,
-      subject: "Seu perfil foi verificado",
+      subject: I18n.t("mailers.notification.verification_received.subject"),
     )
   end
 end

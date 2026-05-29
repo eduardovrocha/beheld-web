@@ -10,6 +10,7 @@
 #   - Revoked bundles render a 404 page with no payload data.
 
 class ProfilesController < ActionController::Base
+  include LocaleSelectable
   layout "profile"
 
   # The legacy `v/show.html.erb` uses helpers from VHelper (score colors,

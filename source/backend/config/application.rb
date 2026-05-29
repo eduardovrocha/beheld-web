@@ -36,6 +36,12 @@ module Backend
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
+    # i18n — pt-BR é o idioma primário do projeto; en é o fallback; es é
+    # suportado. Fallback de chave pt-BR → en evita strings faltantes.
+    config.i18n.available_locales = [:"pt-BR", :en, :es]
+    config.i18n.default_locale    = :"pt-BR"
+    config.i18n.fallbacks         = [:en]
+
     # Only loads a smaller set of middleware suitable for API only apps.
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.

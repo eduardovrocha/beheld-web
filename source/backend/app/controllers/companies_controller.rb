@@ -3,6 +3,7 @@
 # step before the user can log in.
 
 class CompaniesController < ActionController::Base
+  include LocaleSelectable
   MAGIC_LINK_TTL = 30.minutes
 
   layout "public"

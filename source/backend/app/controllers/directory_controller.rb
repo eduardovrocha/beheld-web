@@ -12,6 +12,7 @@
 # inbound Message, which the dev then accepts via "Responder".
 
 class DirectoryController < ActionController::Base
+  include LocaleSelectable
   include CompanyAuthenticated
 
   layout "company"

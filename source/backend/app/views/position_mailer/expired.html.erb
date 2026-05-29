@@ -1,9 +1,8 @@
-<p>A vaga <strong>"<%= @position.title %>"</strong> completou 30 dias.</p>
+<p><%= t("mailers.position.expired.body_completed_html", title: @position.title) %></p>
 
-<p>Acesse o beheld para revisar matches e near-miss e decidir o próximo passo:
-reativar, modificar critérios, ou encerrar.</p>
+<p><%= t("mailers.position.expired.body_action") %></p>
 
 <p><a href="https://beheld.dev/company/dashboard#posicoes">beheld.dev/company/dashboard</a></p>
 
 <hr>
-<p style="color:#6e6555;font-size:12px;">— beheld</p>
+<p style="color:#6e6555;font-size:12px;"><%= t("mailers.position.expired.footer") %></p>

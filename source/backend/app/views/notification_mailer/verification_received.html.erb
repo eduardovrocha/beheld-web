@@ -8,7 +8,7 @@
     </p>
   <% end %>
   <p style="color: #64748b; margin: 0; font-size: 14px;">
-    <%= @verification.verified_at.strftime("%d/%m/%Y às %H:%M") %>
+    <%= "#{@verification.verified_at.strftime("%d/%m/%Y")} #{t("common.at")} #{@verification.verified_at.strftime("%H:%M")}" %>
   </p>
 </body>
 </html>

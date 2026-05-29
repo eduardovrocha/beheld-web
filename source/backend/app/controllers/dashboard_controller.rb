@@ -8,6 +8,7 @@
 # header) and resolves @current_account / @current_session.
 
 class DashboardController < ActionController::Base
+  include LocaleSelectable
   include DevAuthenticated
 
   layout "dashboard"
@@ -40,7 +41,7 @@ class DashboardController < ActionController::Base
   # PATCH /dashboard/settings
   def settings
     current_account.update!(settings_params)
-    redirect_to dashboard_path, notice: "Configurações atualizadas."
+    redirect_to dashboard_path, notice: I18n.t("controllers.dashboard.settings_updated")
   end
 
   # DELETE /dashboard/bundles/:id  → revoke
@@ -114,6 +115,6 @@ class DashboardController < ActionController::Base
   end
 
   def record_not_found
-    redirect_to dashboard_path, alert: "Recurso não encontrado."
+    redirect_to dashboard_path, alert: I18n.t("controllers.dashboard.not_found")
   end
 end

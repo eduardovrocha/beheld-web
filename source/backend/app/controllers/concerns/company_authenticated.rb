@@ -19,7 +19,7 @@ module CompanyAuthenticated
     return if @current_company
 
     cookies.delete(COOKIE_NAME) if company_id.present?
-    redirect_to new_company_session_path, alert: "Faça login para continuar."
+    redirect_to new_company_session_path, alert: I18n.t("controllers.auth.login_required")
   end
 
   def current_company

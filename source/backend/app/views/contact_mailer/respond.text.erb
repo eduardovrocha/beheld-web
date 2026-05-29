@@ -1,11 +1,11 @@
-Olá,
+<%= t("mailers.contact.respond.greeting") %>
 
-<%= @handle %> tem interesse na sua mensagem.
+<%= t("mailers.contact.respond.interest", handle: @handle) %>
 
-Contatos:
-  Email    <%= @account.email_contact %>
-  Telefone <%= @account.phone_contact %>
+<%= t("mailers.contact.respond.contacts_label") %>
+  <%= t("mailers.contact.respond.email_label") %>    <%= @account.email_contact %>
+  <%= t("mailers.contact.respond.phone_label") %> <%= @account.phone_contact %>
 
 —
-Esta mensagem foi enviada automaticamente pelo beheld.
-beheld.dev · forever free for developers
+<%= t("mailers.contact.respond.footer_auto") %>
+<%= t("mailers.contact.respond.footer_brand") %>

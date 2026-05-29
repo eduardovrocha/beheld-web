@@ -1,7 +1,6 @@
-A vaga "<%= @position.title %>" completou 30 dias.
+<%= t("mailers.position.expired.body_completed", title: @position.title) %>
 
-Acesse o beheld para revisar matches e near-miss e decidir o próximo passo:
-reativar, modificar critérios, ou encerrar.
+<%= t("mailers.position.expired.body_action") %>
 
 beheld.dev/company/dashboard#posicoes
 

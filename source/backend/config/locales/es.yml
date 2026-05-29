@@ -1,0 +1,50 @@
+# es — idioma soportado (carga junto con los demás locales).
+es:
+  common:
+    at: "a las"
+  controllers:
+    verify:
+      invalid_file: "Archivo inválido — no se pudo leer el bundle."
+    dashboard:
+      settings_updated: "Configuración actualizada."
+      not_found: "Recurso no encontrado."
+    contacts:
+      message_sent: "Mensaje enviado."
+      profile_unavailable: "Perfil no disponible."
+    sessions:
+      email_not_registered: "Email no registrado."
+      signed_out: "Sesión cerrada."
+    positions:
+      purge_not_archived: "Solo se puede eliminar una vacante archivada."
+    auth:
+      login_required: "Inicia sesión para continuar."
+  mailers:
+    company:
+      magic_link:
+        subject: "Tu enlace de acceso a beheld"
+        greeting: "Hola"
+        intro: "Haz clic en el enlace de abajo para acceder a beheld."
+        cta: "Entrar en beheld"
+        copy_paste: "O copia y pega en el navegador:"
+        validity: "Válido por 30 minutos. Un solo uso."
+    contact:
+      respond:
+        subject: "Respuesta de %{handle} vía beheld"
+        greeting: "Hola,"
+        interest: "%{handle} tiene interés en tu mensaje."
+        interest_html: "<strong>%{handle}</strong> tiene interés en tu mensaje."
+        contacts_label: "Contactos:"
+        email_label: "Email"
+        phone_label: "Teléfono"
+        footer_auto: "Este mensaje fue enviado automáticamente por beheld."
+        footer_brand: "beheld.dev · forever free for developers"
+    notification:
+      verification_received:
+        subject: "Tu perfil fue verificado"
+    position:
+      expired:
+        subject: "Vacante expirada: %{title}"
+        body_completed: "La vacante \"%{title}\" cumplió 30 días."
+        body_completed_html: "La vacante <strong>\"%{title}\"</strong> cumplió 30 días."
+        body_action: "Accede a beheld para revisar matches y near-miss y decidir el siguiente paso: reactivar, modificar criterios o cerrar."
+        footer: "— beheld"

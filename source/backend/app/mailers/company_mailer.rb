@@ -13,7 +13,7 @@ class CompanyMailer < ApplicationMailer
     @verify_url = "#{portal_host}/sessions/company/verify?token=#{token}"
     mail(
       to:      company.email,
-      subject: "Seu link de acesso ao beheld",
+      subject: I18n.t("mailers.company.magic_link.subject"),
     )
   end
 

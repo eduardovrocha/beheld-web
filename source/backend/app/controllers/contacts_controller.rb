@@ -9,6 +9,7 @@
 # The portal NEVER passes the dev's contact details through this form path.
 
 class ContactsController < ActionController::Base
+  include LocaleSelectable
   include CompanyAuthenticated
 
   layout "company"
@@ -52,7 +53,7 @@ class ContactsController < ActionController::Base
       body:      body || job_title, # body is required at DB level; fall back to title
       sent_at:   Time.current,
     )
-    redirect_to directory_path, notice: "Mensagem enviada."
+    redirect_to directory_path, notice: I18n.t("controllers.contacts.message_sent")
   end
 
   private
@@ -62,7 +63,7 @@ class ContactsController < ActionController::Base
   end
 
   def render_unavailable
-    render plain: "Perfil indisponível.", status: :not_found
+    render plain: I18n.t("controllers.contacts.profile_unavailable"), status: :not_found
   end
 
   def current_company

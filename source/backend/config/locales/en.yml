@@ -1,31 +1,50 @@
-# Files in the config/locales directory are used for internationalization and
-# are automatically loaded by Rails. If you want to use locales other than
-# English, add the necessary files in this directory.
-#
-# To use the locales, use `I18n.t`:
-#
-#     I18n.t "hello"
-#
-# In views, this is aliased to just `t`:
-#
-#     <%= t("hello") %>
-#
-# To use a different locale, set it with `I18n.locale`:
-#
-#     I18n.locale = :es
-#
-# This would use the information in config/locales/es.yml.
-#
-# To learn more about the API, please read the Rails Internationalization guide
-# at https://guides.rubyonrails.org/i18n.html.
-#
-# Be aware that YAML interprets the following case-insensitive strings as
-# booleans: `true`, `false`, `on`, `off`, `yes`, `no`. Therefore, these strings
-# must be quoted to be interpreted as strings. For example:
-#
-#     en:
-#       "yes": yup
-#       enabled: "ON"
-
+# en — fallback locale (config.i18n.fallbacks = [:en]).
 en:
-  hello: "Hello world"
+  common:
+    at: "at"
+  controllers:
+    verify:
+      invalid_file: "Invalid file — could not read the bundle."
+    dashboard:
+      settings_updated: "Settings updated."
+      not_found: "Resource not found."
+    contacts:
+      message_sent: "Message sent."
+      profile_unavailable: "Profile unavailable."
+    sessions:
+      email_not_registered: "Email not registered."
+      signed_out: "Session ended."
+    positions:
+      purge_not_archived: "A position can only be deleted once archived."
+    auth:
+      login_required: "Sign in to continue."
+  mailers:
+    company:
+      magic_link:
+        subject: "Your beheld access link"
+        greeting: "Hello"
+        intro: "Click the link below to access beheld."
+        cta: "Enter beheld"
+        copy_paste: "Or copy and paste into your browser:"
+        validity: "Valid for 30 minutes. Single use."
+    contact:
+      respond:
+        subject: "Reply from %{handle} via beheld"
+        greeting: "Hello,"
+        interest: "%{handle} is interested in your message."
+        interest_html: "<strong>%{handle}</strong> is interested in your message."
+        contacts_label: "Contacts:"
+        email_label: "Email"
+        phone_label: "Phone"
+        footer_auto: "This message was sent automatically by beheld."
+        footer_brand: "beheld.dev · forever free for developers"
+    notification:
+      verification_received:
+        subject: "Your profile was verified"
+    position:
+      expired:
+        subject: "Position expired: %{title}"
+        body_completed: "The position \"%{title}\" reached 30 days."
+        body_completed_html: "The position <strong>\"%{title}\"</strong> reached 30 days."
+        body_action: "Open beheld to review matches and near-misses and decide the next step: reactivate, adjust criteria, or close."
+        footer: "— beheld"

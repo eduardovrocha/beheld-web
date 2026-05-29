@@ -8,6 +8,7 @@
 # fingerprint matches an existing, non-revoked Bundle row.
 
 class VerifyController < ActionController::Base
+  include LocaleSelectable
   layout "public"
   protect_from_forgery with: :exception
 
@@ -27,7 +28,7 @@ class VerifyController < ActionController::Base
 
     @bundle_data = parse_bundle(file)
     if @bundle_data.nil?
-      flash.now[:alert] = "Arquivo inválido — não foi possível ler o bundle."
+      flash.now[:alert] = I18n.t("controllers.verify.invalid_file")
       @company_logged_in = @current_company.present?
       return render :index, status: :unprocessable_entity
     end

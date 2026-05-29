@@ -1,0 +1,51 @@
+# pt-BR — idioma primário do projeto. As strings aqui são idênticas às que
+# antes estavam hardcoded em controllers/mailers, preservando o comportamento.
+pt-BR:
+  common:
+    at: "às"
+  controllers:
+    verify:
+      invalid_file: "Arquivo inválido — não foi possível ler o bundle."
+    dashboard:
+      settings_updated: "Configurações atualizadas."
+      not_found: "Recurso não encontrado."
+    contacts:
+      message_sent: "Mensagem enviada."
+      profile_unavailable: "Perfil indisponível."
+    sessions:
+      email_not_registered: "Email não cadastrado."
+      signed_out: "Sessão encerrada."
+    positions:
+      purge_not_archived: "Só é possível excluir uma vaga arquivada."
+    auth:
+      login_required: "Faça login para continuar."
+  mailers:
+    company:
+      magic_link:
+        subject: "Seu link de acesso ao beheld"
+        greeting: "Olá"
+        intro: "Clique no link abaixo para acessar o beheld."
+        cta: "Entrar no beheld"
+        copy_paste: "Ou copie e cole no navegador:"
+        validity: "Válido por 30 minutos. Use uma vez."
+    contact:
+      respond:
+        subject: "Resposta de %{handle} via beheld"
+        greeting: "Olá,"
+        interest: "%{handle} tem interesse na sua mensagem."
+        interest_html: "<strong>%{handle}</strong> tem interesse na sua mensagem."
+        contacts_label: "Contatos:"
+        email_label: "Email"
+        phone_label: "Telefone"
+        footer_auto: "Esta mensagem foi enviada automaticamente pelo beheld."
+        footer_brand: "beheld.dev · forever free for developers"
+    notification:
+      verification_received:
+        subject: "Seu perfil foi verificado"
+    position:
+      expired:
+        subject: "Vaga expirada: %{title}"
+        body_completed: "A vaga \"%{title}\" completou 30 dias."
+        body_completed_html: "A vaga <strong>\"%{title}\"</strong> completou 30 dias."
+        body_action: "Acesse o beheld para revisar matches e near-miss e decidir o próximo passo: reativar, modificar critérios, ou encerrar."
+        footer: "— beheld"
