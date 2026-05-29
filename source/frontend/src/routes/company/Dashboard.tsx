@@ -18,22 +18,25 @@ import { RecentActivity } from "@/components/company/RecentActivity";
 import { SavedDevsList } from "@/components/company/SavedDevsList";
 import { StatsGrid } from "@/components/company/StatsGrid";
 import { useCompanyDashboard } from "@/hooks/useCompanyDashboard";
+import { useT } from "@/i18n/I18nProvider";
 
 type TabId = "overview" | "activity" | "messages" | "devs" | "positions";
 
-const TABS: Array<{ id: TabId; label: string; hash: string; subtitle: string }> = [
+// label/subtitle são CHAVES i18n (traduzidas no render via t()).
+const TABS: Array<{ id: TabId; labelKey: string; hash: string; subtitleKey: string }> = [
   // TEMP: abas "Visão geral" e "Atividade recente" ocultas temporariamente.
   // Descomentar reativa cada tab; os renders (`active === "overview" | "activity"`)
   // seguem intactos. O fallback de tabFromHash usa TABS[0] dinamicamente.
-  // { id: "overview",  label: "Visão geral",            hash: "#visao-geral", subtitle: "totais e taxa de resposta" },
-  // { id: "activity",  label: "Atividade recente",      hash: "#atividade",   subtitle: "verificações e mensagens" },
-  { id: "messages",  label: "Mensagens",              hash: "#mensagens",   subtitle: "tudo que sua empresa enviou" },
-  { id: "devs",      label: "Devs salvos",            hash: "#devs",        subtitle: "bookmarks privados da empresa" },
-  { id: "positions", label: "Posições disponíveis",   hash: "#posicoes",    subtitle: "vagas abertas para captação" },
+  // { id: "overview",  labelKey: "company.dashboard.tabs.overview.label",  hash: "#visao-geral", subtitleKey: "company.dashboard.tabs.overview.subtitle" },
+  // { id: "activity",  labelKey: "company.dashboard.tabs.activity.label",  hash: "#atividade",   subtitleKey: "company.dashboard.tabs.activity.subtitle" },
+  { id: "messages",  labelKey: "company.dashboard.tabs.messages.label",  hash: "#mensagens",   subtitleKey: "company.dashboard.tabs.messages.subtitle" },
+  { id: "devs",      labelKey: "company.dashboard.tabs.devs.label",      hash: "#devs",        subtitleKey: "company.dashboard.tabs.devs.subtitle" },
+  { id: "positions", labelKey: "company.dashboard.tabs.positions.label", hash: "#posicoes",    subtitleKey: "company.dashboard.tabs.positions.subtitle" },
 ];
 
 export function CompanyDashboardPage() {
   const navigate = useNavigate();
+  const t = useT();
   const {
     stats, recentActivity, messages, savedDevs, positions,
     loading, error, authRequired,
@@ -85,11 +88,11 @@ export function CompanyDashboardPage() {
 
   return (
     <Shell>
-      <Hero subtitle={activeTab.subtitle} navCurrent={active === "messages" ? "messages" : "dashboard"} />
+      <Hero subtitle={t(activeTab.subtitleKey)} navCurrent={active === "messages" ? "messages" : "dashboard"} />
 
       {loading && !error && (
         <p style={{ color: "var(--muted)", fontSize: 13, padding: "32px 0" }}>
-          Carregando dashboard…
+          {t("company.dashboard.loading")}
         </p>
       )}
       {error && (
@@ -99,12 +102,12 @@ export function CompanyDashboardPage() {
       {!loading && !error && (
         <>
           <TabStrip<TabId>
-            tabs={TABS.map((t) => ({
-              id:    t.id,
-              label: t.label,
-              badge: t.id === "messages"  ? messages.length
-                   : t.id === "devs"      ? savedDevs.length
-                   : t.id === "positions" ? positions.filter((p) => !p.archived).length
+            tabs={TABS.map((tab) => ({
+              id:    tab.id,
+              label: t(tab.labelKey),
+              badge: tab.id === "messages"  ? messages.length
+                   : tab.id === "devs"      ? savedDevs.length
+                   : tab.id === "positions" ? positions.filter((p) => !p.archived).length
                    : null,
             })) as readonly TabDef<TabId>[]}
             active={active}
@@ -150,16 +153,17 @@ function Shell({ children }: { children: ReactNode }) {
 }
 
 function Hero({ subtitle, navCurrent }: { subtitle: string; navCurrent: "dashboard" | "messages" }) {
+  const t = useT();
   return (
     <header className="mb-10">
       <div className="mb-3 font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        empresa · dashboard
+        {t("company.dashboard.hero.eyebrow")}
       </div>
       <h1 className="font-semibold"
           style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
-        Painel
-        <span style={{ color: "var(--muted)", fontWeight: 400 }}> · o registro do que já aconteceu</span>
+        {t("company.dashboard.hero.title")}
+        <span style={{ color: "var(--muted)", fontWeight: 400 }}> {t("company.dashboard.hero.tail")}</span>
       </h1>
       <div className="mt-3 flex flex-wrap items-baseline gap-3 font-mono"
            style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>

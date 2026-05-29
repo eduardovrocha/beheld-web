@@ -199,5 +199,19 @@
   "company.saved.edit_note": "edit note",
   "company.saved.saved_at": "saved {date}",
   "company.saved.send_message": "send message →",
-  "company.saved.remove": "remove"
+  "company.saved.remove": "remove",
+  "company.dashboard.hero.eyebrow": "company · dashboard",
+  "company.dashboard.hero.title": "Dashboard",
+  "company.dashboard.hero.tail": "· the record of what already happened",
+  "company.dashboard.loading": "Loading dashboard…",
+  "company.dashboard.tabs.overview.label": "Overview",
+  "company.dashboard.tabs.overview.subtitle": "totals and response rate",
+  "company.dashboard.tabs.activity.label": "Recent activity",
+  "company.dashboard.tabs.activity.subtitle": "verifications and messages",
+  "company.dashboard.tabs.messages.label": "Messages",
+  "company.dashboard.tabs.messages.subtitle": "everything your company sent",
+  "company.dashboard.tabs.devs.label": "Saved devs",
+  "company.dashboard.tabs.devs.subtitle": "your company's private bookmarks",
+  "company.dashboard.tabs.positions.label": "Open positions",
+  "company.dashboard.tabs.positions.subtitle": "vacancies open for sourcing"
 }

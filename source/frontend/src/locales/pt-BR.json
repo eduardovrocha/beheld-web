@@ -199,5 +199,19 @@
   "company.saved.edit_note": "editar nota",
   "company.saved.saved_at": "salvo {date}",
   "company.saved.send_message": "enviar mensagem →",
-  "company.saved.remove": "remover"
+  "company.saved.remove": "remover",
+  "company.dashboard.hero.eyebrow": "empresa · dashboard",
+  "company.dashboard.hero.title": "Painel",
+  "company.dashboard.hero.tail": "· o registro do que já aconteceu",
+  "company.dashboard.loading": "Carregando dashboard…",
+  "company.dashboard.tabs.overview.label": "Visão geral",
+  "company.dashboard.tabs.overview.subtitle": "totais e taxa de resposta",
+  "company.dashboard.tabs.activity.label": "Atividade recente",
+  "company.dashboard.tabs.activity.subtitle": "verificações e mensagens",
+  "company.dashboard.tabs.messages.label": "Mensagens",
+  "company.dashboard.tabs.messages.subtitle": "tudo que sua empresa enviou",
+  "company.dashboard.tabs.devs.label": "Devs salvos",
+  "company.dashboard.tabs.devs.subtitle": "bookmarks privados da empresa",
+  "company.dashboard.tabs.positions.label": "Posições disponíveis",
+  "company.dashboard.tabs.positions.subtitle": "vagas abertas para captação"
 }
