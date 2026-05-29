@@ -12,7 +12,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import {
-  loadedDict, loadLocale, resolve, format, pluralize,
+  loadedDict, loadLocale, resolve, format, pluralize, setActiveLocale,
   LOCALES, type Dict, type Locale, type Translatable,
 } from "./dict";
 import { createFormatters, type Formatters } from "./format";
@@ -62,6 +62,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   // Carrega o dicionário do locale ativo (es é assíncrono) e mantém <html lang>.
   useEffect(() => {
     let cancelled = false;
+    setActiveLocale(locale); // espelha p/ translate() fora do React (camada lib)
     setDict(loadedDict(locale)); // imediato (cai no fallback pt enquanto es não chega)
     loadLocale(locale).then((d) => { if (!cancelled) setDict(d); }).catch(() => {});
     document.documentElement.setAttribute("lang", htmlLang(locale));

@@ -48,6 +48,21 @@ export function resolve(active: Dict, key: string): string {
   return active[key] ?? ptDict[key] ?? enDict[key] ?? key;
 }
 
+// ── Tradução fora do React ───────────────────────────────────────────────────
+// Locale ativo espelhado em um singleton de módulo, mantido em sincronia pelo
+// I18nProvider. Permite que código não-React (ex.: mensagens de erro lançadas
+// na camada de API, em src/lib) traduza com o idioma atual via translate().
+let activeLocale: Locale = "pt";
+
+export function setActiveLocale(locale: Locale): void {
+  activeLocale = locale;
+}
+
+/** Tradução standalone (sem hook). Use só fora de componentes React. */
+export function translate(key: Translatable, params?: Record<string, string | number>): string {
+  return format(resolve(loadedDict(activeLocale), key as string), params);
+}
+
 /** Substitui tokens {placeholder} pelo valor correspondente em `params`. */
 export function format(template: string, params?: Record<string, string | number>): string {
   if (!params) return template;

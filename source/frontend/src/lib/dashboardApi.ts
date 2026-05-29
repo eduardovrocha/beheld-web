@@ -5,6 +5,7 @@
  * deliberately avoid localStorage so a session doesn't outlive the tab.
  */
 import { apiBase } from "./api";
+import { translate } from "@/i18n/dict";
 
 const TOKEN_KEY = "beheld:dashboard_token";
 
@@ -104,7 +105,7 @@ export interface DashboardPayload {
 }
 
 export class DashboardAuthError extends Error {
-  constructor() { super("Sessão expirada ou inválida. Faça login novamente."); }
+  constructor() { super(translate("errors.session_invalid")); }
 }
 
 async function call(path: string, init: RequestInit = {}): Promise<DashboardPayload> {

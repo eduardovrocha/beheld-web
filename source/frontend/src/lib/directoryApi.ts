@@ -4,6 +4,7 @@
  * credentials and the browser handles it.
  */
 import { apiBase } from "./api";
+import { translate } from "@/i18n/dict";
 
 export interface DevSummary {
   account_id:     number;
@@ -32,7 +33,7 @@ export interface DirectoryPayload {
 }
 
 export class DirectoryAuthError extends Error {
-  constructor() { super("Sessão expirada — faça login para continuar."); }
+  constructor() { super(translate("errors.session_expired")); }
 }
 
 export interface DirectoryQuery {

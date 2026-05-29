@@ -5,12 +5,13 @@
  * the dev opted out or has no active bundle.
  */
 import { apiBase } from "./api";
+import { translate } from "@/i18n/dict";
 
 export class ContactAuthError extends Error {
-  constructor() { super("Sessão expirada — faça login para continuar."); }
+  constructor() { super(translate("errors.session_expired")); }
 }
 export class ContactUnavailableError extends Error {
-  constructor() { super("Perfil indisponível."); }
+  constructor() { super(translate("errors.profile_unavailable")); }
 }
 
 export interface ContactPreviousMessage {

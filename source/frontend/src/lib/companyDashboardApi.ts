@@ -4,9 +4,10 @@
  * as CompanyAuthError so the SPA can redirect to /companies/new.
  */
 import { apiBase } from "./api";
+import { translate } from "@/i18n/dict";
 
 export class CompanyAuthError extends Error {
-  constructor() { super("Sessão expirada — faça login para continuar."); }
+  constructor() { super(translate("errors.session_expired")); }
 }
 
 // ── shapes (mirror Api::V1::Company::* JSON responses) ─────────────────────

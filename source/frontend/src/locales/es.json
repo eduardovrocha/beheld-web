@@ -711,5 +711,8 @@
   "profile.actions.verify_cli": "Verificar offline (CLI)",
   "profile.foot.profile_id": "profile id",
   "profile.foot.bundle_hash": "bundle hash",
-  "profile.foot.created_at": "bundle creado en {ts}"
+  "profile.foot.created_at": "bundle creado en {ts}",
+  "errors.session_expired": "Sesión expirada — inicia sesión para continuar.",
+  "errors.session_invalid": "Sesión expirada o inválida. Inicia sesión de nuevo.",
+  "errors.profile_unavailable": "Perfil no disponible."
 }
