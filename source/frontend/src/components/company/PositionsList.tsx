@@ -227,17 +227,18 @@ export function PositionsList({ positions, onCreate, onUpdate, onArchive, onReac
 // ── detail panels ───────────────────────────────────────────────────────────
 
 function EmptyPanel({ onNew }: { onNew: () => void }) {
+  const t = useT();
   return (
     <div style={{ padding: 28 }}>
       <div className="font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        nenhuma vaga selecionada
+        {t("company.positions.empty_panel.eyebrow")}
       </div>
       <p style={{ color: "var(--muted)", fontSize: 13.5, lineHeight: 1.7, marginTop: 12 }}>
-        Selecione uma vaga na coluna à esquerda para ver os detalhes, ou cadastre uma nova.
+        {t("company.positions.empty_panel.body")}
       </p>
       <div style={{ marginTop: 20 }}>
-        <button type="button" onClick={onNew} style={primaryBtn(false)}>+ Nova posição</button>
+        <button type="button" onClick={onNew} style={primaryBtn(false)}>{t("company.positions.empty_panel.cta")}</button>
       </div>
     </div>
   );
@@ -447,9 +448,10 @@ function FormTabs({ active, onChange }: {
   active:   FormTab;
   onChange: (t: FormTab) => void;
 }) {
+  const t = useT();
   const tabs: Array<{ id: FormTab; label: string }> = [
-    { id: "description",    label: "Descrição" },
-    { id: "match_criteria", label: "Critérios de match" },
+    { id: "description",    label: t("company.positions.form.tab.description") },
+    { id: "match_criteria", label: t("company.positions.form.tab.criteria") },
   ];
   return (
     <div role="tablist" style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--rule)" }}>
@@ -489,10 +491,11 @@ function NewForm({ onCreate, onCancel }: {
   const [criteria,     setCriteria]     = useState<MatchCriteria>(initialCriteria());
   const [busy,         setBusy]         = useState(false);
   const [error,        setError]        = useState<string | null>(null);
+  const t = useT();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!title.trim()) { setError("Título é obrigatório."); setTab("description"); return; }
+    if (!title.trim()) { setError(t("company.positions.form.title_required")); setTab("description"); return; }
     const criteriaError = validateCriteria(criteria);
     if (criteriaError) { setError(criteriaError); setTab("match_criteria"); return; }
     setBusy(true);
@@ -508,7 +511,7 @@ function NewForm({ onCreate, onCancel }: {
         priorities,
       });
     } catch (e2) {
-      setError((e2 as Error).message || "Falha ao criar posição.");
+      setError((e2 as Error).message || t("company.positions.form.create_error"));
     } finally {
       setBusy(false);
     }
@@ -518,7 +521,7 @@ function NewForm({ onCreate, onCancel }: {
     <form onSubmit={handleSubmit} style={{ padding: 28 }} className="grid gap-4">
       <div className="font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        nova posição
+        {t("company.positions.form.new_title")}
       </div>
 
       {error && <ErrorBanner>{error}</ErrorBanner>}
@@ -527,19 +530,19 @@ function NewForm({ onCreate, onCancel }: {
 
       {tab === "description" && (
         <div className="grid gap-4">
-          <Field label="Título" hint="obrigatório">
+          <Field label={t("company.positions.form.field.title")} hint={t("company.positions.form.field.title_hint")}>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-                   required disabled={busy} placeholder="Engenheiro Backend Sênior"
+                   required disabled={busy} placeholder={t("company.positions.form.field.title_placeholder")}
                    autoFocus style={inputStyle()} />
           </Field>
 
-          <Field label="Localização" hint="opcional">
+          <Field label={t("company.positions.form.field.location")} hint={t("company.positions.form.field.location_hint")}>
             <LocationPicker value={location} disabled={busy} onChange={setLocation} />
           </Field>
 
           <SectionFields disabled={busy} sections={sections} onChange={setSections} />
 
-          <TechEditor label="Tecnologias" disabled={busy}
+          <TechEditor label={t("company.positions.form.field.technologies")} disabled={busy}
                       techs={technologies} onChange={setTechnologies}
                       source={(sections.requirements ?? "") + "\n" + (sections.responsibilities ?? "")} />
         </div>
@@ -550,9 +553,9 @@ function NewForm({ onCreate, onCancel }: {
       )}
 
       <div className="flex gap-2 justify-end" style={{ marginTop: 4 }}>
-        <button type="button" onClick={onCancel} disabled={busy} style={secondaryBtn(busy)}>Cancelar</button>
+        <button type="button" onClick={onCancel} disabled={busy} style={secondaryBtn(busy)}>{t("common.cancel")}</button>
         <button type="submit" disabled={busy} style={primaryBtn(busy)}>
-          {busy ? "Cadastrando…" : "Cadastrar posição"}
+          {busy ? t("company.positions.form.creating") : t("company.positions.form.create_cta")}
         </button>
       </div>
     </form>
@@ -578,10 +581,11 @@ function EditForm({ position, onSave, onCancel }: {
   const [criteria,     setCriteria]     = useState<MatchCriteria>(criteriaFromPosition(position));
   const [busy,         setBusy]         = useState(false);
   const [error,        setError]        = useState<string | null>(null);
+  const t = useT();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!title.trim()) { setError("Título é obrigatório."); setTab("description"); return; }
+    if (!title.trim()) { setError(t("company.positions.form.title_required")); setTab("description"); return; }
     const criteriaError = validateCriteria(criteria);
     if (criteriaError) { setError(criteriaError); setTab("match_criteria"); return; }
     setBusy(true);
@@ -597,7 +601,7 @@ function EditForm({ position, onSave, onCancel }: {
         priorities,
       });
     } catch (e2) {
-      setError((e2 as Error).message || "Falha ao salvar.");
+      setError((e2 as Error).message || t("company.positions.form.save_error"));
     } finally {
       setBusy(false);
     }
@@ -607,7 +611,7 @@ function EditForm({ position, onSave, onCancel }: {
     <form onSubmit={handleSubmit} style={{ padding: 28 }} className="grid gap-4">
       <div className="font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        editar vaga
+        {t("company.positions.form.edit_title")}
       </div>
 
       {error && <ErrorBanner>{error}</ErrorBanner>}
@@ -616,17 +620,17 @@ function EditForm({ position, onSave, onCancel }: {
 
       {tab === "description" && (
         <div className="grid gap-4">
-          <Field label="Título">
+          <Field label={t("company.positions.form.field.title")}>
             <input type="text" value={title} onChange={(e) => setTitle(e.target.value)}
                    required disabled={busy} autoFocus style={inputStyle()} />
           </Field>
-          <Field label="Localização">
+          <Field label={t("company.positions.form.field.location")}>
             <LocationPicker value={location} disabled={busy} onChange={setLocation} />
           </Field>
 
           <SectionFields disabled={busy} sections={sections} onChange={setSections} />
 
-          <TechEditor label="Tecnologias" disabled={busy}
+          <TechEditor label={t("company.positions.form.field.technologies")} disabled={busy}
                       techs={technologies} onChange={setTechnologies}
                       source={(sections.requirements ?? "") + "\n" + (sections.responsibilities ?? "")} />
         </div>
@@ -637,9 +641,9 @@ function EditForm({ position, onSave, onCancel }: {
       )}
 
       <div className="flex gap-2 justify-end" style={{ marginTop: 4 }}>
-        <button type="button" onClick={onCancel} disabled={busy} style={secondaryBtn(busy)}>Cancelar</button>
+        <button type="button" onClick={onCancel} disabled={busy} style={secondaryBtn(busy)}>{t("common.cancel")}</button>
         <button type="submit" disabled={busy} style={primaryBtn(busy)}>
-          {busy ? "Salvando…" : "Salvar"}
+          {busy ? t("company.positions.form.saving") : t("company.positions.form.save_cta")}
         </button>
       </div>
     </form>
