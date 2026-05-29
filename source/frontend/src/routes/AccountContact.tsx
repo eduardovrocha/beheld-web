@@ -44,6 +44,9 @@ export function AccountContact() {
   const [error, setError]       = useState<string | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [prevMessages, setPrevMessages] = useState<ContactPreviousMessage[]>([]);
+  // Vaga em foco no acordeão de mensagens anteriores. "__none__" = grupo sem
+  // vaga; null = nenhum aberto. O campo travado "Cargo da vaga" espelha isto.
+  const [focusedKey, setFocusedKey] = useState<string | null>(null);
 
   // Vagas cadastradas da empresa, pra preencher o dropdown de "Cargo da vaga".
   // Fire-and-forget: se falhar, o campo cai no input de texto livre.
@@ -63,6 +66,11 @@ export function AccountContact() {
         // fixamos o jobTitle e travamos o seletor (ver `vagaLocked` no render).
         const pending = prev.find((m) => m.status === "pending");
         if (pending) setJobTitle(pending.job_title ?? "");
+        // Vaga aberta por padrão no acordeão: a pendente (acionável), senão a
+        // primeira do histórico. O campo travado segue essa vaga em foco.
+        const groups = groupByPosition(prev);
+        const initial = groups.find((g) => g.msgs.some((m) => m.status === "pending")) ?? groups[0];
+        if (initial) setFocusedKey(initial.title ?? "__none__");
       } catch (e) {
         if (e instanceof ContactAuthError)         navigate("/companies/new", { replace: true });
         else if (e instanceof ContactUnavailableError) setPhase({ kind: "unavailable" });
@@ -147,6 +155,14 @@ export function AccountContact() {
   const openPositions = positions.filter((p) => !p.archived);
   // Há contato pendente (enviado, sem resposta) → a vaga não pode mudar.
   const vagaLocked = prevMessages.some((m) => m.status === "pending");
+  // Título da vaga em foco no acordeão (null quando o grupo "sem vaga" ou nada).
+  const focusedTitle = focusedKey && focusedKey !== "__none__" ? focusedKey : null;
+  // Ao trocar a vaga em foco, o campo travado acompanha (e, travado, é o que
+  // será enviado — você continua a conversa daquela vaga).
+  const focusVaga = (key: string | null) => {
+    setFocusedKey(key);
+    if (vagaLocked) setJobTitle(key && key !== "__none__" ? key : "");
+  };
 
   return (
     <Shell>
@@ -161,7 +177,9 @@ export function AccountContact() {
 
         {/* ── direita: box de mensagem ── */}
         <Card>
-          {prevMessages.length > 0 && <PreviousMessages items={prevMessages} />}
+          {prevMessages.length > 0 && (
+            <PreviousMessages items={prevMessages} openKey={focusedKey} onToggle={focusVaga} />
+          )}
           <form onSubmit={handleSubmit} className="grid gap-5">
             {error && (
               <div style={{
@@ -182,7 +200,7 @@ export function AccountContact() {
                   color: "var(--muted)", background: "var(--surface)",
                   border: "1px solid var(--rule)", cursor: "not-allowed",
                 }}>
-                  {jobTitle || t("contact.form.no_position")}
+                  {focusedTitle || jobTitle || t("contact.form.no_position")}
                 </div>
               ) : openPositions.length > 0 ? (
                 <Dropdown
@@ -379,7 +397,14 @@ function groupByPosition(items: ContactPreviousMessage[]): { title: string | nul
   return order.map((title) => ({ title, msgs: map.get(title)! }));
 }
 
-function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
+// Acordeão controlado pelo pai: `openKey` é a vaga aberta (só uma por vez) e
+// `onToggle` reporta a troca — o pai usa isso para espelhar a vaga em foco no
+// campo travado "Cargo da vaga".
+function PreviousMessages({ items, openKey, onToggle }: {
+  items: ContactPreviousMessage[];
+  openKey: string | null;
+  onToggle: (key: string | null) => void;
+}) {
   const t = useT();
   const fmtI18n = useFmt();
   const fmt = (iso: string) => {
@@ -388,13 +413,7 @@ function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
     return fmtI18n.date(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
   };
   const groups = groupByPosition(items);
-  // Acordeão: só uma vaga aberta por vez. Abre por padrão a vaga com
-  // mensagem pendente (acionável); senão a primeira.
   const keyOf = (g: { title: string | null }) => g.title ?? "__none__";
-  const [openKey, setOpenKey] = useState<string | null>(() => {
-    const initial = groups.find((g) => g.msgs.some((m) => m.status === "pending")) ?? groups[0];
-    return initial ? keyOf(initial) : null;
-  });
   return (
     <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid var(--rule-soft)" }}>
       <div className="font-mono uppercase"
@@ -410,7 +429,7 @@ function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
             <details key={key} open={isOpen}
                      style={{ border: "1px solid var(--rule)" }}>
               <summary className="font-mono uppercase"
-                       onClick={(e) => { e.preventDefault(); setOpenKey(isOpen ? null : key); }}
+                       onClick={(e) => { e.preventDefault(); onToggle(isOpen ? null : key); }}
                        style={{ cursor: "pointer", listStyle: "none", padding: "9px 12px",
                                 display: "flex", alignItems: "center", justifyContent: "space-between",
                                 gap: 8, color: "var(--text)", fontSize: 11, letterSpacing: "0.06em",
