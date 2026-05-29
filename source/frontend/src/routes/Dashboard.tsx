@@ -255,7 +255,6 @@ function Hero({ handle, fingerprint, subtitle }: {
       <h1 className="font-semibold"
           style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
         {handle}
-        <span style={{ color: "var(--muted)", fontWeight: 400 }}> {t("dashboard.hero.subtitle")}</span>
       </h1>
       {fingerprint && (
         <div className="mt-3 font-mono"
