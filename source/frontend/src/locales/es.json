@@ -267,5 +267,20 @@
   "company.positions.form.creating": "Creando…",
   "company.positions.form.create_cta": "Crear posición",
   "company.positions.form.saving": "Guardando…",
-  "company.positions.form.save_cta": "Guardar"
+  "company.positions.form.save_cta": "Guardar",
+  "company.positions.section.responsibilities.label": "Responsabilidades",
+  "company.positions.section.responsibilities.hint": "lo que el dev hace en el día a día",
+  "company.positions.section.responsibilities.placeholder": "• participar del diseño e implementación de…",
+  "company.positions.section.requirements.label": "Requisitos",
+  "company.positions.section.requirements.hint": "obligatorios para la vacante",
+  "company.positions.section.requirements.placeholder": "3+ años con…",
+  "company.positions.section.qualifications.label": "Cualificaciones",
+  "company.positions.section.qualifications.hint": "experiencia, formación, soft skills",
+  "company.positions.section.qualifications.placeholder": "experiencia previa en producto B2B…",
+  "company.positions.section.nice_to_have.label": "Deseable",
+  "company.positions.section.nice_to_have.hint": "diferenciales — bueno tener, no obligatorio",
+  "company.positions.section.nice_to_have.placeholder": "contribuciones en proyectos open source…",
+  "company.positions.section.add_item": "+ ítem",
+  "company.positions.section.remove_item": "quitar ítem",
+  "company.positions.sections_view.empty": "Sin descripción. Usa \"Editar\" para agregar detalles de la posición."
 }

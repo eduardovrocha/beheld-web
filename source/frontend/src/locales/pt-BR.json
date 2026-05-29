@@ -267,5 +267,20 @@
   "company.positions.form.creating": "Cadastrando…",
   "company.positions.form.create_cta": "Cadastrar posição",
   "company.positions.form.saving": "Salvando…",
-  "company.positions.form.save_cta": "Salvar"
+  "company.positions.form.save_cta": "Salvar",
+  "company.positions.section.responsibilities.label": "Responsabilidades",
+  "company.positions.section.responsibilities.hint": "o que o dev faz no dia a dia",
+  "company.positions.section.responsibilities.placeholder": "• participar do design e implementação de…",
+  "company.positions.section.requirements.label": "Requirements",
+  "company.positions.section.requirements.hint": "obrigatórios para a vaga",
+  "company.positions.section.requirements.placeholder": "3+ anos com…",
+  "company.positions.section.qualifications.label": "Qualifications",
+  "company.positions.section.qualifications.hint": "experiência, formação, soft-skills",
+  "company.positions.section.qualifications.placeholder": "experiência prévia em produto B2B…",
+  "company.positions.section.nice_to_have.label": "Nice to Have",
+  "company.positions.section.nice_to_have.hint": "diferenciais — bom de ter, mas não obrigatórios",
+  "company.positions.section.nice_to_have.placeholder": "contribuição em projetos open source…",
+  "company.positions.section.add_item": "+ item",
+  "company.positions.section.remove_item": "remover item",
+  "company.positions.sections_view.empty": "Sem descrição. Use \"Editar\" para adicionar detalhes da vaga."
 }

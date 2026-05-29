@@ -22,12 +22,7 @@ import type {
   PositionSignal, PositionThreshold, PositionMatchesPayload, PositionMatchRow,
 } from "@/lib/companyDashboardApi";
 import { getPositionMatches, recalculatePositionMatches } from "@/lib/companyDashboardApi";
-import {
-  SECTION_KEYS,
-  SECTION_LABELS,
-  SECTION_HINTS,
-  type Sections,
-} from "@/lib/positionMarkdownParser";
+import { SECTION_KEYS, type Sections } from "@/lib/positionMarkdownParser";
 import { extractTechnologies } from "@/lib/positionTechExtractor";
 import { LocationPicker, formatLocation } from "@/components/position/LocationPicker";
 import { Tooltip } from "@/components/Tooltip";
@@ -795,18 +790,21 @@ function SectionFields({ disabled, sections, onChange }: {
   sections: Sections;
   onChange: (next: Sections) => void;
 }) {
+  const t = useT();
   function set(key: PositionSectionKey, value: string) {
     onChange({ ...sections, [key]: value });
   }
   return (
     <>
       {FORM_SECTION_KEYS.map((key) => (
-        <Field key={key} label={SECTION_LABELS[key]} hint={SECTION_HINTS[key]}>
+        <Field key={key}
+               label={t(`company.positions.section.${key}.label`)}
+               hint={t(`company.positions.section.${key}.hint`)}>
           {LIST_SECTION_KEYS.has(key) ? (
             <ItemListField
               value={sections[key] ?? ""}
               disabled={disabled}
-              placeholder={placeholderFor(key).replace(/^•\s*/, "")}
+              placeholder={t(`company.positions.section.${key}.placeholder`)}
               onChange={(v) => set(key, v)} />
           ) : (
             <textarea
@@ -814,7 +812,7 @@ function SectionFields({ disabled, sections, onChange }: {
               onChange={(e) => set(key, e.target.value)}
               disabled={disabled}
               rows={key === "responsibilities" ? 5 : 4}
-              placeholder={placeholderFor(key)}
+              placeholder={t(`company.positions.section.${key}.placeholder`)}
               style={textareaStyle()} />
           )}
         </Field>
@@ -832,6 +830,7 @@ function ItemListField({ value, disabled, placeholder, onChange }: {
   placeholder: string;
   onChange:    (next: string) => void;
 }) {
+  const t = useT();
   const items = value.length === 0 ? [""] : value.split("\n");
 
   function update(i: number, text: string) {
@@ -860,7 +859,7 @@ function ItemListField({ value, disabled, placeholder, onChange }: {
                  placeholder={placeholder}
                  style={{ ...inputStyle(), flex: 1 }} />
           <button type="button" disabled={disabled || (items.length === 1 && item === "")}
-                  onClick={() => remove(i)} aria-label="remover item"
+                  onClick={() => remove(i)} aria-label={t("company.positions.section.remove_item")}
                   style={{
                     font: "inherit", fontSize: 15, lineHeight: 1,
                     width: 30, height: 30, padding: 0,
@@ -879,21 +878,11 @@ function ItemListField({ value, disabled, placeholder, onChange }: {
                   border: "1px dashed var(--accent)", borderRadius: 0,
                   cursor: disabled ? "not-allowed" : "pointer",
                 }}>
-          + item
+          {t("company.positions.section.add_item")}
         </button>
       </div>
     </div>
   );
-}
-
-function placeholderFor(key: PositionSectionKey): string {
-  switch (key) {
-    case "responsibilities": return "• participar do design e implementação de…";
-    case "technical_stack":  return "• Ruby on Rails, PostgreSQL, Sidekiq…";
-    case "requirements":     return "• 3+ anos com…";
-    case "qualifications":   return "• experiência prévia em produto B2B…";
-    case "nice_to_have":     return "• contribuição em projetos open source…";
-  }
 }
 
 // Strip empty / whitespace-only strings before sending to the backend so the
@@ -916,6 +905,7 @@ function sanitizeSections(s: Sections): PositionSections {
 // Read-only render used by the detail panel. Falls back to the legacy
 // `description` field when the position has no structured sections.
 function SectionsView({ sections, fallback }: { sections?: Sections; fallback?: string | null }) {
+  const t = useT();
   const filled = FORM_SECTION_KEYS
     .filter((k) => (sections?.[k] ?? "").trim().length > 0);
 
@@ -933,7 +923,7 @@ function SectionsView({ sections, fallback }: { sections?: Sections; fallback?: 
     }
     return (
       <p style={{ color: "var(--muted-soft)", fontSize: 13, lineHeight: 1.7, fontStyle: "italic" }}>
-        Sem descrição. Use "Editar" para adicionar detalhes da vaga.
+        {t("company.positions.sections_view.empty")}
       </p>
     );
   }
@@ -944,7 +934,7 @@ function SectionsView({ sections, fallback }: { sections?: Sections; fallback?: 
         <div key={key}>
           <div className="font-mono uppercase"
                style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em", marginBottom: 8 }}>
-            {SECTION_LABELS[key]}
+            {t(`company.positions.section.${key}.label`)}
           </div>
           {LIST_SECTION_KEYS.has(key) ? (
             <ul style={{
