@@ -31,7 +31,7 @@ import {
 import { extractTechnologies } from "@/lib/positionTechExtractor";
 import { LocationPicker, formatLocation } from "@/components/position/LocationPicker";
 import { Tooltip } from "@/components/Tooltip";
-import { useT } from "@/i18n/I18nProvider";
+import { useT, useFmt } from "@/i18n/I18nProvider";
 
 type Mode =
   | { kind: "empty" }
@@ -250,12 +250,14 @@ function DetailPanel({ position, onEdit, onArchive, onReactivate, onPurge }: {
   onReactivate: () => void | Promise<void>;
   onPurge:      () => void | Promise<void>;
 }) {
+  const t = useT();
+  const fmt = useFmt();
   return (
     <div style={{ padding: 28 }}>
       <div className="flex items-start justify-between gap-3">
         <div className="font-mono uppercase"
              style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-          vaga
+          {t("company.positions.detail.eyebrow")}
           <PositionStatusChip status={position.status} expiresAt={position.expires_at} />
         </div>
         {/* Ações da vaga arquivada — ícones no topo direito, tooltip no hover */}
@@ -278,15 +280,15 @@ function DetailPanel({ position, onEdit, onArchive, onReactivate, onPurge }: {
       <div className="font-mono"
            style={{ color: "var(--muted-soft)", fontSize: 11, marginTop: 8,
                      letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
-        criada {formatDate(position.created_at)}
-        {position.archived_at && <> · arquivada {formatDate(position.archived_at)}</>}
+        {t("company.positions.detail.created", { date: fmt.date(position.created_at) })}
+        {position.archived_at && <> · {t("company.positions.detail.archived_at", { date: fmt.date(position.archived_at) })}</>}
       </div>
 
       {position.technologies && position.technologies.length > 0 && (
         <div style={{ marginTop: 16 }}>
           <div className="font-mono uppercase"
                style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
-            tecnologias
+            {t("company.positions.detail.technologies")}
           </div>
           <div className="flex flex-wrap" style={{ gap: 6 }}>
             {position.technologies.map((t) => <TechChip key={t} label={t} />)}
@@ -315,6 +317,7 @@ function ArchivedActions({ onReactivate, onPurge }: {
   onReactivate: () => void | Promise<void>;
   onPurge:      () => void | Promise<void>;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   async function run(fn: () => void | Promise<void>) {
     setBusy(true);
@@ -324,22 +327,22 @@ function ArchivedActions({ onReactivate, onPurge }: {
     <div className="flex items-center" style={{ gap: 6 }}>
       <Tooltip
         icon={<ReactivateIcon size={12} />}
-        label="reativar vaga"
-        title="Reabrir por mais 30 dias."
-        description="A vaga volta a ficar ativa e o matcher roda de novo contra o diretório atual.">
+        label={t("company.positions.reactivate.label")}
+        title={t("company.positions.reactivate.title")}
+        description={t("company.positions.reactivate.desc")}>
         <button type="button" disabled={busy} onClick={() => run(onReactivate)}
-                aria-label="Reativar (+ 30 dias)" style={iconBtn(busy)}>
+                aria-label={t("company.positions.reactivate.cta")} style={iconBtn(busy)}>
           <ReactivateIcon />
         </button>
       </Tooltip>
       <Tooltip
         tone="danger"
         icon={<TrashIcon size={12} />}
-        label="excluir vaga"
-        title="Remover permanentemente."
-        description="A vaga e seus critérios são apagados para sempre. Esta ação não pode ser desfeita.">
+        label={t("company.positions.purge.label")}
+        title={t("company.positions.purge.title")}
+        description={t("company.positions.purge.desc")}>
         <button type="button" disabled={busy} onClick={() => run(onPurge)}
-                aria-label="Excluir permanentemente" style={iconBtn(busy, "danger")}>
+                aria-label={t("company.positions.purge.cta")} style={iconBtn(busy, "danger")}>
           <TrashIcon />
         </button>
       </Tooltip>
@@ -390,6 +393,7 @@ function PositionActions({ position, onEdit, onArchive, onReactivate }: {
   onArchive:    () => void;
   onReactivate: () => void | Promise<void>;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
 
   async function handleReactivate() {
@@ -408,18 +412,17 @@ function PositionActions({ position, onEdit, onArchive, onReactivate }: {
       }}>
         <div className="font-mono uppercase"
              style={{ color: "var(--warn)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
-          posição expirada
+          {t("company.positions.expired.eyebrow")}
         </div>
         <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.55, marginBottom: 12 }}>
-          A janela de 30 dias terminou. Revise os matches + near-miss atualizados acima
-          e decida o próximo passo.
+          {t("company.positions.expired.body")}
         </p>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={handleReactivate} disabled={busy} style={primaryBtn(busy)}>
-            {busy ? "Reativando…" : "Reativar (+ 30 dias)"}
+            {busy ? t("company.positions.reactivate.busy") : t("company.positions.reactivate.cta")}
           </button>
-          <button type="button" onClick={onEdit}    disabled={busy} style={secondaryBtn(busy)}>Modificar critérios</button>
-          <button type="button" onClick={onArchive} disabled={busy} style={dangerBtn(busy)}>Encerrar</button>
+          <button type="button" onClick={onEdit}    disabled={busy} style={secondaryBtn(busy)}>{t("company.positions.expired.modify")}</button>
+          <button type="button" onClick={onArchive} disabled={busy} style={dangerBtn(busy)}>{t("company.positions.expired.close")}</button>
         </div>
       </div>
     );
@@ -427,8 +430,8 @@ function PositionActions({ position, onEdit, onArchive, onReactivate }: {
 
   return (
     <div style={{ marginTop: 24, display: "flex", gap: 10 }}>
-      <button type="button" onClick={onEdit}    style={secondaryBtn(false)}>Editar</button>
-      <button type="button" onClick={onArchive} style={dangerBtn(false)}>Arquivar</button>
+      <button type="button" onClick={onEdit}    style={secondaryBtn(false)}>{t("company.positions.actions.edit")}</button>
+      <button type="button" onClick={onArchive} style={dangerBtn(false)}>{t("company.positions.actions.archive")}</button>
     </div>
   );
 }
@@ -753,12 +756,6 @@ function dangerBtn(busy: boolean): React.CSSProperties {
   };
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
-}
 
 function uniqueOrdered(items: string[]): string[] {
   const seen = new Set<string>();
@@ -1347,12 +1344,13 @@ function formatDateTimeShort(iso: string): string {
 // ── status chip ────────────────────────────────────────────────────────────
 
 function PositionStatusChip({ status, expiresAt }: { status: Position["status"]; expiresAt: string | null }) {
+  const t = useT();
+  const fmt = useFmt();
   const palette = status === "active"
     ? { bg: "rgba(74,124,78,0.12)", fg: "var(--ok)",   bd: "rgba(74,124,78,0.4)" }
     : status === "expired"
     ? { bg: "rgba(181,97,53,0.12)", fg: "var(--warn)", bd: "rgba(181,97,53,0.4)" }
     : { bg: "var(--rule-soft)",     fg: "var(--muted)", bd: "var(--rule)" };
-  const label = status === "active" ? "ativa" : status === "expired" ? "expirada" : "encerrada";
   return (
     <span style={{
       marginLeft: 8, padding: "2px 8px",
@@ -1360,10 +1358,10 @@ function PositionStatusChip({ status, expiresAt }: { status: Position["status"];
       border: `1px solid ${palette.bd}`,
       fontSize: 9, letterSpacing: "0.14em",
     }}>
-      {label}
+      {t(`company.positions.status.${status}`)}
       {status === "active" && expiresAt && (
         <span style={{ marginLeft: 6, opacity: 0.8, fontFeatureSettings: '"tnum"' }}>
-          · expira {formatDate(expiresAt)}
+          · {t("company.positions.status.expires", { date: fmt.date(expiresAt) })}
         </span>
       )}
     </span>
