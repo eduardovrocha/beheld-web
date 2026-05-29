@@ -365,6 +365,20 @@ function Header({ title, emTail, meta }: { title: string; emTail?: string; meta?
 // Mensagens que esta empresa já enviou a este dev — contexto antes de mandar
 // outra. As pendentes (sem resposta) ganham destaque; as respondidas mostram
 // a resposta do dev.
+// Agrupa as mensagens anteriores pela vaga que originou cada contato. Cada
+// vaga vira um <details> colapsável; abrir revela a conversa (mensagem +
+// resposta do dev). Grupos com mensagem pendente abrem por padrão.
+function groupByPosition(items: ContactPreviousMessage[]): { title: string | null; msgs: ContactPreviousMessage[] }[] {
+  const order: (string | null)[] = [];
+  const map = new Map<string | null, ContactPreviousMessage[]>();
+  for (const m of items) {
+    const key = m.job_title && m.job_title.trim() ? m.job_title : null;
+    if (!map.has(key)) { map.set(key, []); order.push(key); }
+    map.get(key)!.push(m);
+  }
+  return order.map((title) => ({ title, msgs: map.get(title)! }));
+}
+
 function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
   const t = useT();
   const fmtI18n = useFmt();
@@ -373,43 +387,68 @@ function PreviousMessages({ items }: { items: ContactPreviousMessage[] }) {
     if (Number.isNaN(d.getTime())) return iso;
     return fmtI18n.date(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
   };
+  const groups = groupByPosition(items);
   return (
     <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid var(--rule-soft)" }}>
       <div className="font-mono uppercase"
            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 10 }}>
         {t("contact.prev.heading")} · {items.length}
       </div>
-      <div className="grid" style={{ gap: 12 }}>
-        {items.map((m) => {
-          const pending = m.status === "pending";
+
+      <div className="grid" style={{ gap: 8 }}>
+        {groups.map((g) => {
+          const hasPending = g.msgs.some((m) => m.status === "pending");
           return (
-            <div key={m.id}
-                 style={{ borderLeft: `2px solid ${pending ? "var(--muted)" : m.status === "responded" ? "var(--ok)" : "var(--warn)"}`,
-                          paddingLeft: 10 }}>
-              <div className="font-mono"
-                   style={{ color: "var(--muted-soft)", fontSize: 11, letterSpacing: "0.04em", marginBottom: 3,
-                            fontFeatureSettings: '"tnum"' }}>
-                {m.job_title ? `${m.job_title} · ` : ""}{t("contact.prev.sent", { date: fmt(m.sent_at) })}
-                {" · "}
-                <span style={{ color: pending ? "var(--muted)" : m.status === "responded" ? "var(--ok)" : "var(--warn)" }}>
-                  {pending ? t("contact.prev.status_pending") : m.status === "responded" ? t("contact.prev.status_responded") : t("contact.prev.status_ignored")}
+            <details key={g.title ?? "__none__"} open={hasPending}
+                     style={{ border: "1px solid var(--rule)" }}>
+              <summary className="font-mono uppercase"
+                       style={{ cursor: "pointer", listStyle: "none", padding: "9px 12px",
+                                display: "flex", alignItems: "center", justifyContent: "space-between",
+                                gap: 8, color: "var(--text)", fontSize: 11, letterSpacing: "0.06em",
+                                background: "var(--surface)" }}>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {g.title ? t("contact.prev.group", { title: g.title }) : t("contact.prev.group_none")}
                 </span>
+                <span style={{ color: "var(--muted-soft)", fontFeatureSettings: '"tnum"', flexShrink: 0 }}>
+                  {g.msgs.length}
+                </span>
+              </summary>
+
+              <div className="grid" style={{ gap: 12, padding: "12px" }}>
+                {g.msgs.map((m) => {
+                  const pending = m.status === "pending";
+                  return (
+                    <div key={m.id}
+                         style={{ borderLeft: `2px solid ${pending ? "var(--muted)" : m.status === "responded" ? "var(--ok)" : "var(--warn)"}`,
+                                  paddingLeft: 10 }}>
+                      <div className="font-mono"
+                           style={{ color: "var(--muted-soft)", fontSize: 11, letterSpacing: "0.04em", marginBottom: 3,
+                                    fontFeatureSettings: '"tnum"' }}>
+                        {t("contact.prev.sent", { date: fmt(m.sent_at) })}
+                        {" · "}
+                        <span style={{ color: pending ? "var(--muted)" : m.status === "responded" ? "var(--ok)" : "var(--warn)" }}>
+                          {pending ? t("contact.prev.status_pending") : m.status === "responded" ? t("contact.prev.status_responded") : t("contact.prev.status_ignored")}
+                        </span>
+                      </div>
+                      <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55,
+                                    whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                        {m.body}
+                      </div>
+                      {m.reply_body && (
+                        <div className="mt-2" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
+                          <div className="font-mono uppercase" style={{ color: "var(--ok)", fontSize: 9, letterSpacing: "0.14em", marginBottom: 2 }}>
+                            {t("contact.prev.reply_heading")}
+                          </div>
+                          <div style={{ color: "var(--text)", fontSize: 13, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                            {m.reply_body}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55,
-                            whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                {m.body}
-              </div>
-              {m.reply_body && (
-                <div className="mt-2" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
-                  <div className="font-mono uppercase" style={{ color: "var(--ok)", fontSize: 9, letterSpacing: "0.14em", marginBottom: 2 }}>
-                    {t("contact.prev.reply_heading")}
-                  </div>
-                  <div style={{ color: "var(--text)", fontSize: 13, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                    {m.reply_body}
-                  </div>
-                </div>
-              )}
-            </div>
+            </details>
           );
         })}
       </div>

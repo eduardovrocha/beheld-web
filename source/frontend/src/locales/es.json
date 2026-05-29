@@ -399,6 +399,8 @@
   "contact.prev.status_responded": "respondida",
   "contact.prev.status_ignored": "ignorada",
   "contact.prev.reply_heading": "respuesta del dev",
+  "contact.prev.group": "vacante: {title}",
+  "contact.prev.group_none": "vacante: sin vacante",
   "dashboard.eyebrow": "dashboard",
   "dashboard.hero.subtitle": "· tu retrato técnico",
   "dashboard.hero.fingerprint_label": "fingerprint",
