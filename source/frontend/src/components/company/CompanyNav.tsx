@@ -12,9 +12,12 @@
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 
+import { useT } from "@/i18n/I18nProvider";
+
 type Current = "dashboard" | "directory" | "messages";
 
 export function CompanyNav({ current, bare = false }: { current?: Current; bare?: boolean }) {
+  const t = useT();
   // Wrapped in a single inline-flex unit so the pieces (Dashboard · | ·
   // Directory · | · Mensagens) never wrap apart when the parent is a
   // flex-wrap row. Keeps the nav identical across heros + a contact page.
@@ -22,15 +25,15 @@ export function CompanyNav({ current, bare = false }: { current?: Current; bare?
     <span style={{ display: "inline-flex", alignItems: "center", gap: 10, whiteSpace: "nowrap" }}>
       {!bare && <span aria-hidden="true" style={{ color: "var(--rule)" }}>·</span>}
       <NavLink to="/company/dashboard" active={current === "dashboard"}>
-        <DashboardIcon /> Dashboard
+        <DashboardIcon /> {t("company.nav.dashboard")}
       </NavLink>
       <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
       <NavLink to="/directory" active={current === "directory"}>
-        <DirectoryIcon /> Directory
+        <DirectoryIcon /> {t("company.nav.directory")}
       </NavLink>
       <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
       <NavLink to="/company/dashboard#mensagens" active={current === "messages"}>
-        <MessagesIcon /> Mensagens
+        <MessagesIcon /> {t("company.nav.messages")}
       </NavLink>
     </span>
   );

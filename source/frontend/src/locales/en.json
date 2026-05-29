@@ -154,5 +154,8 @@
   "identity.key_status.active": "active",
   "identity.key_status.rotated": "rotated (still valid)",
   "identity.key_status.revoked": "revoked — request reissuance",
-  "identity.key_status.unknown": "unknown (key not in registry)"
+  "identity.key_status.unknown": "unknown (key not in registry)",
+  "company.nav.dashboard": "Dashboard",
+  "company.nav.directory": "Directory",
+  "company.nav.messages": "Messages"
 }

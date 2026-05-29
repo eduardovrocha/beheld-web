@@ -154,5 +154,8 @@
   "identity.key_status.active": "ativa",
   "identity.key_status.rotated": "rotacionada (válida)",
   "identity.key_status.revoked": "revogada — pedir reissuance",
-  "identity.key_status.unknown": "desconhecida (chave não está no registro)"
+  "identity.key_status.unknown": "desconhecida (chave não está no registro)",
+  "company.nav.dashboard": "Dashboard",
+  "company.nav.directory": "Directory",
+  "company.nav.messages": "Mensagens"
 }
