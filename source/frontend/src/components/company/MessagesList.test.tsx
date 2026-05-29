@@ -40,10 +40,11 @@ describe("MessagesList", () => {
   });
 
   it("traduz cada status para o rótulo correspondente", () => {
+    // Um card por desenvolvedor → cada status precisa de um account_id distinto.
     render(<MessagesList messages={[
-      sample({ id: 1, status: "pending" }),
-      sample({ id: 2, status: "responded", dev_handle: "@bob",   responded_at: "2026-05-21T10:00:00Z" }),
-      sample({ id: 3, status: "ignored",   dev_handle: "@carol" }),
+      sample({ id: 1, account_id: 1, status: "pending" }),
+      sample({ id: 2, account_id: 2, status: "responded", dev_handle: "@bob",   responded_at: "2026-05-21T10:00:00Z" }),
+      sample({ id: 3, account_id: 3, status: "ignored",   dev_handle: "@carol" }),
     ]} />);
     // Status agora é ícone — o rótulo vive em title/aria-label.
     expect(screen.getByLabelText(/aguardando resposta/i)).toBeInTheDocument();

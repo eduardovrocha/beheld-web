@@ -1,12 +1,12 @@
 /**
  * Outbound-message overview for the recruiter dashboard.
  *
- * One card per DEVELOPER (never two cards for the same dev). Each card is a
- * collapsible <details>: expanding it reveals the conversation, with the
- * exchanged messages split per position (vaga). Cards with a pending message
- * open by default.
+ * One card per DEVELOPER (grouped by account_id — never two cards for the
+ * same dev). The card keeps the original rich layout and previews the dev's
+ * most recent message; clicking it opens the details on the contact page
+ * (/accounts/:id/contact), where the conversation is split per vaga.
  */
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import type { CompanyMessage } from "@/lib/companyDashboardApi";
 import { useT, useTp, useFmt } from "@/i18n/I18nProvider";
@@ -29,41 +29,31 @@ interface DevThread {
   account_id:  number;
   dev_handle:  string;
   bundle_slug: string | null;
-  msgs:        CompanyMessage[];
-  lastSentAt:  string;
+  count:       number;
+  latest:      CompanyMessage; // mensagem mais recente — prévia do card
 }
 
 // Agrupa as mensagens por desenvolvedor (account_id), preservando a ordem de
-// primeira aparição. Cada dev vira um único thread.
+// primeira aparição. Cada dev vira um único card, com a mensagem mais recente
+// como prévia.
 function groupByDev(messages: CompanyMessage[]): DevThread[] {
   const order: number[] = [];
   const map = new Map<number, DevThread>();
   for (const m of messages) {
-    let thread = map.get(m.account_id);
+    const thread = map.get(m.account_id);
     if (!thread) {
-      thread = { account_id: m.account_id, dev_handle: m.dev_handle,
-                 bundle_slug: m.bundle_slug, msgs: [], lastSentAt: m.sent_at };
-      map.set(m.account_id, thread);
+      map.set(m.account_id, {
+        account_id: m.account_id, dev_handle: m.dev_handle,
+        bundle_slug: m.bundle_slug, count: 1, latest: m,
+      });
       order.push(m.account_id);
+      continue;
     }
-    thread.msgs.push(m);
-    if (m.sent_at > thread.lastSentAt) thread.lastSentAt = m.sent_at;
+    thread.count += 1;
     if (!thread.bundle_slug && m.bundle_slug) thread.bundle_slug = m.bundle_slug;
+    if (m.sent_at > thread.latest.sent_at) thread.latest = m;
   }
   return order.map((id) => map.get(id)!);
-}
-
-// Dentro de um thread, separa as mensagens pela vaga (job_title) que originou
-// o contato — preservando a ordem de primeira aparição.
-function groupByPosition(msgs: CompanyMessage[]): { title: string | null; msgs: CompanyMessage[] }[] {
-  const order: (string | null)[] = [];
-  const map = new Map<string | null, CompanyMessage[]>();
-  for (const m of msgs) {
-    const key = m.job_title && m.job_title.trim() ? m.job_title : null;
-    if (!map.has(key)) { map.set(key, []); order.push(key); }
-    map.get(key)!.push(m);
-  }
-  return order.map((title) => ({ title, msgs: map.get(title)! }));
 }
 
 export function MessagesList({ messages }: { messages: CompanyMessage[] }) {
@@ -78,7 +68,8 @@ export function MessagesList({ messages }: { messages: CompanyMessage[] }) {
 
   const threads = groupByDev(messages);
   return (
-    <div className="grid" style={{ gap: 12 }}>
+    <div className="grid gap-4"
+         style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
       {threads.map((thread) => <DevCard key={thread.account_id} thread={thread} />)}
     </div>
   );
@@ -88,100 +79,69 @@ function DevCard({ thread }: { thread: DevThread }) {
   const t = useT();
   const tp = useTp();
   const fmt = useFmt();
-  const { account_id, dev_handle, bundle_slug, msgs } = thread;
-  const hasPending = msgs.some((m) => m.status === "pending");
-  const positions = groupByPosition(msgs);
-
-  return (
-    <details open={hasPending}
-             style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
-      <summary className="flex flex-wrap items-center"
-               style={{ cursor: "pointer", listStyle: "none", gap: 8, padding: "14px 18px" }}>
-        <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
-          {dev_handle}
-        </span>
-        <span className="font-mono"
-              style={{ marginLeft: "auto", color: "var(--muted-soft)", fontSize: 11,
-                       letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
-          {tp("company.messages.count", msgs.length)} · {fmt.date(thread.lastSentAt)}
-        </span>
-      </summary>
-
-      <div style={{ borderTop: "1px solid var(--rule-soft)", padding: 18 }}>
-        <div className="grid" style={{ gap: 16 }}>
-          {positions.map((g) => (
-            <section key={g.title ?? "__none__"}>
-              <div className="font-mono uppercase"
-                   style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
-                {g.title ? t("company.messages.position", { title: g.title }) : t("company.messages.position_none")}
-              </div>
-              <div className="grid" style={{ gap: 12 }}>
-                {g.msgs.map((m) => <MessageRow key={m.id} m={m} handle={dev_handle} />)}
-              </div>
-            </section>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap items-center" style={{ gap: 8, marginTop: 16 }}>
-          <Link to={`/accounts/${account_id}/contact`}
-                style={{
-                  fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-                  fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
-                  color: "var(--bg)", background: "var(--text)", textDecoration: "none",
-                  border: "1px solid var(--text)", padding: "6px 14px", display: "inline-block",
-                }}>
-            {t("company.messages.open_contact")}
-          </Link>
-          {bundle_slug && (
-            <a href={`/v/${bundle_slug}`} target="_blank" rel="noopener noreferrer"
-               style={{
-                 fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-                 fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
-                 color: "var(--text)", textDecoration: "none",
-                 border: "1px solid var(--rule)", padding: "6px 14px", display: "inline-block",
-               }}>
-              {t("company.messages.view_profile")}
-            </a>
-          )}
-        </div>
-      </div>
-    </details>
-  );
-}
-
-function MessageRow({ m, handle }: { m: CompanyMessage; handle: string }) {
-  const t = useT();
-  const fmt = useFmt();
-  const palette = STATUS_PALETTE[m.status];
+  const { account_id, dev_handle, bundle_slug, count, latest } = thread;
+  const m = latest;
+  const palette  = STATUS_PALETTE[m.status];
+  const navigate = useNavigate();
+  const contactPath = `/accounts/${account_id}/contact`;
   const statusLabel = t(`company.messages.status.${m.status}`);
 
   return (
-    <div style={{ borderLeft: `2px solid ${palette.fg}`, paddingLeft: 10 }}>
-      <div className="flex items-center" style={{ gap: 8 }}>
-        <span className="font-mono"
-              style={{ color: "var(--muted-soft)", fontSize: 11, letterSpacing: "0.04em",
-                       fontFeatureSettings: '"tnum"' }}>
-          {t("company.messages.sent_at", { date: fmt.date(m.sent_at) })}
-          {m.responded_at && <> · {t("company.messages.responded_at", { date: fmt.date(m.responded_at) })}</>}
-        </span>
+    <div role="button" tabIndex={0}
+         onClick={() => navigate(contactPath)}
+         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(contactPath); } }}
+         style={{
+           display: "flex", flexDirection: "column",
+           background: "var(--card-bg)", border: "1px solid var(--rule)",
+           padding: 18, minHeight: 196, cursor: "pointer",
+           transition: "border-color 120ms ease",
+         }}
+         onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+         onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--rule)")}>
+      {/* header: handle (link) + status chip — mesmo layout do #devs */}
+      <div className="flex flex-wrap items-center" style={{ gap: 6 }}>
+        {bundle_slug
+          ? <a href={`/v/${bundle_slug}`} target="_blank" rel="noopener noreferrer"
+               onClick={(e) => e.stopPropagation()}
+               style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em",
+                        textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3 }}>
+              {dev_handle}
+            </a>
+          : <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
+              {dev_handle}
+            </span>}
         <span title={statusLabel} aria-label={statusLabel}
-              style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center",
-                       justifyContent: "center", width: 22, height: 22, fontSize: 15,
-                       lineHeight: 1, color: palette.fg }}>
+              style={{
+                marginLeft: "auto",
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 30, height: 30, fontSize: 17, lineHeight: 1,
+                color: palette.fg,
+              }}>
           {STATUS_ICON[m.status]}
         </span>
       </div>
 
-      <div className="mt-1" style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55,
-                                     whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+      {m.job_title && (
+        <div className="mt-1" style={{ color: "var(--muted)", fontSize: 13 }}>{m.job_title}</div>
+      )}
+
+      <div className="mt-3" style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55 }}>
         {m.body_excerpt}
       </div>
 
+      <div className="font-mono"
+           style={{ color: "var(--muted-soft)", fontSize: 11, marginTop: 8,
+                     letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
+        {t("company.messages.sent_at", { date: fmt.date(m.sent_at) })}
+        {m.responded_at && <> · {t("company.messages.responded_at", { date: fmt.date(m.responded_at) })}</>}
+      </div>
+
+      {/* resposta do dev (F_REPLY) — bloco com filete de acento à esquerda */}
       {m.reply_body && (
-        <div className="mt-2" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
+        <div className="mt-3" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
           <div className="font-mono uppercase"
                style={{ color: "var(--ok)", fontSize: 9, letterSpacing: "0.14em", marginBottom: 3 }}>
-            {t("company.messages.reply_from", { handle })}
+            {t("company.messages.reply_from", { handle: dev_handle })}
           </div>
           <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55,
                         whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
@@ -189,6 +149,29 @@ function MessageRow({ m, handle }: { m: CompanyMessage; handle: string }) {
           </div>
         </div>
       )}
+
+      {/* rodapé (mt-auto): contagem de mensagens (quando >1) + ver perfil */}
+      <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
+        {count > 1 && (
+          <span className="font-mono uppercase"
+                style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
+            {tp("company.messages.count", count)}
+          </span>
+        )}
+        {bundle_slug && (
+          <a href={`/v/${bundle_slug}`} target="_blank" rel="noopener noreferrer"
+             onClick={(e) => e.stopPropagation()}
+             style={{
+               marginLeft: "auto",
+               fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+               fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
+               color: "var(--text)", textDecoration: "none",
+               border: "1px solid var(--rule)", padding: "6px 14px", display: "inline-block",
+             }}>
+            {t("company.messages.view_profile")}
+          </a>
+        )}
+      </div>
     </div>
   );
 }
