@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
 import compromissoMd from "@/content/COMPROMISSO.md?raw";
 
 const OG_TITLE = "compromisso · forever free for developers — beheld";
@@ -44,9 +45,15 @@ export function Compromisso() {
 
   return (
     <div className="compromisso-page">
+      <div
+        className="mx-auto mb-12 pb-14 pt-16"
+        style={{ maxWidth: 1032, padding: "64px 32px 56px", borderBottom: "1px solid var(--rule)" }}
+      >
+        <SiteHeader />
+      </div>
       <article
         className="compromisso-article mx-auto"
-        style={{ maxWidth: 680, padding: "64px 32px 32px" }}
+        style={{ maxWidth: 680, padding: "8px 32px 32px" }}
       >
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{compromissoMd}</ReactMarkdown>
       </article>
