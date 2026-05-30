@@ -1138,7 +1138,7 @@ function PositionMatchesPanel({ position }: { position: Position }) {
         </p>
       ) : (
         // key por position → reseta tab/página ao trocar de vaga
-        <MatchesTabbed key={position.id} data={data} />
+        <MatchesTabbed key={position.id} data={data} thresholds={position.thresholds ?? []} />
       )}
     </div>
   );
@@ -1147,7 +1147,7 @@ function PositionMatchesPanel({ position }: { position: Position }) {
 // Match confirmado | Near-miss em tabs, com paginação de 15 por aba.
 const MATCHES_PER_PAGE = 15;
 
-function MatchesTabbed({ data }: { data: PositionMatchesPayload }) {
+function MatchesTabbed({ data, thresholds }: { data: PositionMatchesPayload; thresholds: PositionThreshold[] }) {
   const t = useT();
   const [tab, setTab]   = useState<"match" | "near_miss">("match");
   const [page, setPage] = useState(1);
@@ -1195,8 +1195,8 @@ function MatchesTabbed({ data }: { data: PositionMatchesPayload }) {
         </p>
       ) : (
         <>
-          <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}>
-            {pageRows.map((r, i) => <MatchRow key={r.account_id} row={r} first={i === 0} />)}
+          <div>
+            {pageRows.map((r, i) => <MatchRow key={r.account_id} row={r} first={i === 0} thresholds={thresholds} />)}
           </div>
           {pages > 1 && (
             <div className="flex items-center justify-between" style={{ marginTop: 10 }}>
@@ -1222,7 +1222,26 @@ function MatchesTabbed({ data }: { data: PositionMatchesPayload }) {
   );
 }
 
-function MatchRow({ row, first }: { row: PositionMatchRow; first: boolean }) {
+// Inline link styled like CompanyNav's "Dashboard | Directory" — muted mono
+// text, hovers to accent. `external` opens in a new tab.
+function MatchNavLink({ href, external, children }: {
+  href: string; external?: boolean; children: ReactNode;
+}) {
+  return (
+    <a href={href}
+       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+       style={{
+         color: "var(--muted)", textDecoration: "none",
+         transition: "color 120ms ease",
+       }}
+       onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+       onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
+      {children}
+    </a>
+  );
+}
+
+function MatchRow({ row, first, thresholds }: { row: PositionMatchRow; first: boolean; thresholds: PositionThreshold[] }) {
   const t = useT();
   return (
     <div style={{
@@ -1250,29 +1269,55 @@ function MatchRow({ row, first }: { row: PositionMatchRow; first: boolean }) {
         {row.match_type === "near_miss" && row.failed_signal && (
           <NearMissDetail row={row} />
         )}
+        {row.match_type === "match" && (
+          <MatchDetail row={row} thresholds={thresholds} />
+        )}
       </div>
-      {row.bundle_slug && (
-        <a href={`/v/${row.bundle_slug}`} target="_blank" rel="noopener noreferrer"
-           style={{
-             font: "inherit", fontSize: 11.5,
-             padding: "5px 12px",
-             background: "transparent", color: "var(--text)",
-             border: "1px solid var(--rule)",
-             textDecoration: "none", whiteSpace: "nowrap",
-           }}>
-          {t("company.positions.matches.view_profile")}
-        </a>
+      <span className="font-mono"
+            style={{ display: "inline-flex", alignItems: "center", gap: 10,
+                     fontSize: 12, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+        {row.bundle_slug && (
+          <>
+            <MatchNavLink href={`/v/${row.bundle_slug}`} external>
+              {t("company.positions.matches.view_profile")}
+            </MatchNavLink>
+            <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
+          </>
+        )}
+        <MatchNavLink href={`/accounts/${row.account_id}/contact`}>
+          {t("company.positions.matches.contact")}
+        </MatchNavLink>
+      </span>
+    </div>
+  );
+}
+
+// Positive analogue of NearMissDetail: same line shape — "passou: <signal
+// label>" + numeric gap when available + CurveBadge. We surface the
+// test_ratio signal when it's part of the position's thresholds (curve
+// data gives us the current value), otherwise fall back to a generic
+// "todos os sinais" line so the structure still matches visually.
+function MatchDetail({ row, thresholds }: { row: PositionMatchRow; thresholds: PositionThreshold[] }) {
+  const t = useT();
+  const tr = thresholds.find((th) => th.signal === "test_ratio");
+  const trThreshold = tr && "number" in tr.value ? tr.value.number : null;
+  const trCurrent   = row.curve?.current ?? null;
+  const showTestRatio = trThreshold != null && trCurrent != null;
+
+  return (
+    <div style={{ color: "var(--muted)", fontSize: 12.5, marginTop: 2, lineHeight: 1.55 }}>
+      {t("company.positions.match.passed")}{" "}
+      {showTestRatio ? (
+        <>
+          <strong style={{ color: "var(--ok)" }}>{t("company.positions.signal.test_ratio.label")}</strong>
+          <span style={{ marginLeft: 6, fontFeatureSettings: '"tnum"' }}>
+            {t("company.positions.near_miss.test_ratio", { current: Number(trCurrent.toFixed(1)), threshold: trThreshold })}
+          </span>
+        </>
+      ) : (
+        <strong style={{ color: "var(--ok)" }}>{t("company.positions.match.all_signals")}</strong>
       )}
-      <a href={`/accounts/${row.account_id}/contact`}
-         style={{
-           font: "inherit", fontSize: 11.5,
-           padding: "5px 12px",
-           background: "var(--text)", color: "var(--bg)",
-           border: "1px solid var(--text)",
-           textDecoration: "none", whiteSpace: "nowrap",
-         }}>
-        {t("company.positions.matches.contact")}
-      </a>
+      <CurveBadge curve={row.curve} />
     </div>
   );
 }

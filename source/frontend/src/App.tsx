@@ -6,6 +6,7 @@ import { CompaniesNew } from "./routes/CompaniesNew";
 import { CompanyLogin } from "./routes/CompanyLogin";
 import { CompanyVerify } from "./routes/CompanyVerify";
 import { CompanyDashboardPage } from "./routes/company/Dashboard";
+import { CompanyMessages } from "./routes/CompanyMessages";
 import { Dashboard } from "./routes/Dashboard";
 import { Directory } from "./routes/Directory";
 import { Home } from "./routes/Home";
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/v/:id" element={<VerifyPublic />} />
         <Route path="/verify" element={<VerifyLocal />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/companies/:company" element={<CompanyMessages />} />
         <Route path="/directory" element={<Directory />} />
         <Route path="/company/dashboard" element={<CompanyDashboardPage />} />
         <Route path="/companies/new" element={<CompaniesNew />} />

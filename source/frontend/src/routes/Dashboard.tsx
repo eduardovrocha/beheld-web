@@ -17,14 +17,13 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { TabStrip, type TabDef } from "@/components/TabStrip";
+import { VerifiedIcon } from "@/components/icons";
 import { useT, useTp, useFmt } from "@/i18n/I18nProvider";
 import type { Formatters } from "@/i18n/format";
 import type { TKey } from "@/i18n/dict";
 import {
   clearSessionToken,
   getDashboard,
-  ignoreMessage,
-  respondMessage,
   revokeBundle,
   setSessionToken,
   toggleBundle,
@@ -53,6 +52,7 @@ function formatDateTime(fmt: Formatters, iso: string): string {
 // ── tabs ────────────────────────────────────────────────────────────────────
 
 type TabId = "overview" | "messages" | "settings";
+type OverviewSubTabId = "summary" | "bundles" | "verifications";
 
 const TABS: Array<{ id: TabId; labelKey: TKey; hash: string; subtitleKey: TKey }> = [
   { id: "overview",      labelKey: "dashboard.tab.overview.label",      hash: "#visao-geral",   subtitleKey: "dashboard.tab.overview.subtitle" },
@@ -76,6 +76,7 @@ export function Dashboard() {
   const [busy, setBusy]   = useState(false);
 
   const [active, setActive] = useState<TabId>(() => tabFromHash(window.location.hash));
+  const [overviewSub, setOverviewSub] = useState<OverviewSubTabId>("summary");
 
   useEffect(() => {
     function onHash() { setActive(tabFromHash(window.location.hash)); }
@@ -165,15 +166,25 @@ export function Dashboard() {
 
       <div className="pt-8">
         {active === "overview" && (
-          <div className="grid" style={{ gap: 40 }}>
-            <OverviewTab bundlesCount={bundles.length}
-                         contactConfigured={account.contact_configured}
-                         interest={data.interest}
-                         evolution={data.evolution} />
+          <div className="grid" style={{ gap: 24 }}>
+            <TabStrip<OverviewSubTabId>
+              tabs={[
+                { id: "summary",       label: t("dashboard.overview.subtab.summary.label"), badge: null },
+                { id: "bundles",       label: t("dashboard.tab.bundles.label"),       badge: bundles.length },
+                { id: "verifications", label: t("dashboard.tab.verifications.label"), badge: notifications.length },
+              ]}
+              active={overviewSub}
+              onSelect={setOverviewSub} />
 
-            <section>
-              <SectionHeading>{t("dashboard.tab.bundles.label")}</SectionHeading>
-              {bundles.length === 0 ? (
+            {overviewSub === "summary" && (
+              <OverviewTab bundlesCount={bundles.length}
+                           contactConfigured={account.contact_configured}
+                           interest={data.interest}
+                           evolution={data.evolution} />
+            )}
+
+            {overviewSub === "bundles" && (
+              bundles.length === 0 ? (
                 <EmptyCard>
                   {t("dashboard.bundles.empty_prefix")}
                   <code style={{ color: "var(--accent)" }}>beheld share</code>{t("dashboard.bundles.empty_suffix")}
@@ -189,19 +200,20 @@ export function Dashboard() {
                                }} />
                   ))}
                 </Card>
-              )}
-            </section>
+              )
+            )}
 
-            <section>
-              <SectionHeading>{t("dashboard.tab.verifications.label")}</SectionHeading>
-              {notifications.length === 0 ? (
-                <EmptyCard>{t("dashboard.verifications.empty")}</EmptyCard>
+            {overviewSub === "verifications" && (
+              notifications.length === 0 ? (
+                <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, margin: 0 }}>
+                  {t("dashboard.verifications.empty")}
+                </p>
               ) : (
                 <Card padded={false}>
                   {notifications.map((n, i) => <NotificationRow key={n.id} v={n} first={i === 0} />)}
                 </Card>
-              )}
-            </section>
+              )
+            )}
           </div>
         )}
 
@@ -209,14 +221,7 @@ export function Dashboard() {
           messages.length === 0 ? (
             <EmptyCard>{t("dashboard.messages.empty")}</EmptyCard>
           ) : (
-            <Card padded={false}>
-              {messages.map((m, i) => (
-                <MessageRow key={m.id} m={m} busy={busy} first={i === 0}
-                            canRespond={account.contact_configured}
-                            onRespond={(reply) => refresh(() => respondMessage(m.id, reply))}
-                            onIgnore={() => refresh(() => ignoreMessage(m.id))} />
-              ))}
-            </Card>
+            <MessagesPanel messages={messages} />
           )
         )}
 
@@ -417,17 +422,6 @@ function EmptyCard({ children }: { children: ReactNode }) {
   );
 }
 
-// Section divider inside the unified overview tab — mono uppercase label
-// that visually separates Publicações / Verificações from the glance cards.
-function SectionHeading({ children }: { children: ReactNode }) {
-  return (
-    <div className="mb-3 font-mono uppercase"
-         style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-      {children}
-    </div>
-  );
-}
-
 const ROW_STYLE = (first: boolean) => ({
   display: "grid",
   gridTemplateColumns: "1fr auto",
@@ -469,7 +463,13 @@ function BundleRow({ bundle, busy, first, onToggle, onRevoke }: {
       <div>
         <div style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.6 }}>
           {formatDate(fmt, bundle.published_at)}
-          {bundle.status === "verified" && <Badge kind="ok">{t("common.bundle_status.verified")}</Badge>}
+          {bundle.status === "verified" && (
+            <span title={t("common.verified.title")} aria-label={t("common.verified.aria")}
+                  style={{ display: "inline-flex", alignItems: "center",
+                           color: "var(--ok)", marginLeft: 8, verticalAlign: "middle" }}>
+              <VerifiedIcon size={14} />
+            </span>
+          )}
           {bundle.status === "outdated" && <Badge kind="warn">{t("common.bundle_status.outdated")}</Badge>}
           {bundle.status === "revoked"  && <Badge kind="muted">{t("common.bundle_status.revoked")}</Badge>}
           {!bundle.visible && <Badge kind="muted">{t("dashboard.bundles.hidden")}</Badge>}
@@ -481,11 +481,15 @@ function BundleRow({ bundle, busy, first, onToggle, onRevoke }: {
           {" · "}{bundle.verifications_count} {tp("dashboard.bundles.verifications", bundle.verifications_count)}
         </div>
       </div>
-      <div className="flex flex-shrink-0 gap-2">
-        <SecondaryButton disabled={busy} onClick={onToggle}>
+      <div className="flex flex-shrink-0 items-center font-mono"
+           style={{ gap: 10, fontSize: 12, letterSpacing: "0.04em" }}>
+        <NavLinkButton disabled={busy} onClick={onToggle}>
           {bundle.visible ? t("dashboard.bundles.hide") : t("dashboard.bundles.show")}
-        </SecondaryButton>
-        <DangerButton disabled={busy} onClick={onRevoke}>{t("dashboard.bundles.revoke")}</DangerButton>
+        </NavLinkButton>
+        <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
+        <NavLinkButton disabled={busy} onClick={onRevoke} tone="warn">
+          {t("dashboard.bundles.revoke")}
+        </NavLinkButton>
       </div>
     </div>
   );
@@ -512,90 +516,102 @@ function NotificationRow({ v, first }: { v: DashboardNotification; first: boolea
   );
 }
 
-function MessageRow({ m, busy, first, canRespond, onRespond, onIgnore }: {
-  m: DashboardMessage; busy: boolean; first: boolean; canRespond: boolean;
-  onRespond: (reply: string) => void; onIgnore: () => void;
-}) {
-  const t = useT();
-  const fmt = useFmt();
-  const [composing, setComposing] = useState(false);
-  const [reply, setReply] = useState("");
+// ── Messages tab — grid of cards, one per company (mirrors the recruiter
+// Messages view): each card previews the latest message; clicking opens the
+// conversation on a dedicated page (/dashboard/companies/:company), split
+// per vaga, with reply/ignore inline there. ────────────────────────────────
 
-  function send() {
-    onRespond(reply.trim());
-    setComposing(false);
-    setReply("");
+const MSG_STATUS_ICON: Record<DashboardMessage["state"], string> = {
+  pending: "◷", responded: "✓", ignored: "✕",
+};
+const MSG_STATUS_FG: Record<DashboardMessage["state"], string> = {
+  pending: "var(--muted)", responded: "var(--ok)", ignored: "var(--warn)",
+};
+
+interface CompanyThread {
+  company: string;
+  msgs:    DashboardMessage[];
+  latest:  DashboardMessage;
+  count:   number;
+}
+
+// Um card por empresa (sem duplicados), preservando a ordem de aparição.
+function groupMessagesByCompany(messages: DashboardMessage[]): CompanyThread[] {
+  const order: string[] = [];
+  const map = new Map<string, CompanyThread>();
+  for (const m of messages) {
+    let th = map.get(m.company);
+    if (!th) { th = { company: m.company, msgs: [], latest: m, count: 0 }; map.set(m.company, th); order.push(m.company); }
+    th.msgs.push(m); th.count += 1;
+    if (m.sent_at > th.latest.sent_at) th.latest = m;
   }
+  return order.map((c) => map.get(c)!);
+}
+
+function MessagesPanel({ messages }: { messages: DashboardMessage[] }) {
+  const threads = groupMessagesByCompany(messages);
+  return (
+    <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
+      {threads.map((th) => <CompanyCard key={th.company} thread={th} />)}
+    </div>
+  );
+}
+
+function CompanyCard({ thread }: { thread: CompanyThread }) {
+  const t = useT();
+  const tp = useTp();
+  const fmt = useFmt();
+  const navigate = useNavigate();
+  const m = thread.latest;
+  const fg = MSG_STATUS_FG[m.state];
+  const statusLabel = t(`dashboard.messages.status.${m.state}`);
+  const excerpt = m.body.length > 240 ? m.body.slice(0, 240) + "…" : m.body;
+  const href = `/dashboard/companies/${encodeURIComponent(thread.company)}`;
+  const open = () => navigate(href);
 
   return (
-    <div style={ROW_STYLE(first)}>
-      <div>
-        <div style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.6 }}>
-          {m.company}
-          <span style={{ color: "var(--muted)" }}> · {formatDateTime(fmt, m.sent_at)}</span>
-        </div>
-        {m.job_title && (
-          <div className="mt-1" style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.75 }}>
-            {m.job_title}
-          </div>
-        )}
-        <div className="mt-2" style={{
-          color: "var(--text)", fontSize: 13.5, lineHeight: 1.7,
-          padding: "10px 12px",
-          whiteSpace: "pre-wrap", wordBreak: "break-word",
-        }}>
-          {m.body.length > 240 ? m.body.slice(0, 240) + "…" : m.body}
-        </div>
-
-        {/* compositor da resposta (F_REPLY) — texto curto e opcional */}
-        {composing && m.state === "pending" && (
-          <div className="mt-2">
-            <textarea value={reply} onChange={(e) => setReply(e.target.value)}
-                      disabled={busy} rows={3} autoFocus maxLength={2000}
-                      placeholder={t("dashboard.messages.reply_placeholder")}
-                      style={{
-                        width: "100%", font: "inherit", fontSize: 13.5, lineHeight: 1.6,
-                        padding: "8px 10px", color: "var(--text)", background: "var(--bg)",
-                        border: "1px solid var(--rule)", borderRadius: 0, outline: "none",
-                        resize: "vertical",
-                      }} />
-            <div className="mt-2 flex gap-2">
-              <PrimaryButton disabled={busy} onClick={send}>{t("dashboard.messages.send_reply")}</PrimaryButton>
-              <SecondaryButton disabled={busy} onClick={() => { setComposing(false); setReply(""); }}>{t("common.cancel")}</SecondaryButton>
-            </div>
-          </div>
-        )}
-
-        {/* resposta enviada — o dev vê o próprio texto */}
-        {m.state === "responded" && m.reply_body && (
-          <div className="mt-2" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
-            <div className="font-mono uppercase" style={{ color: "var(--ok)", fontSize: 9, letterSpacing: "0.14em", marginBottom: 3 }}>
-              {t("dashboard.messages.your_reply")}
-            </div>
-            <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-              {m.reply_body}
-            </div>
-          </div>
-        )}
+    <div role="button" tabIndex={0}
+         onClick={open}
+         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } }}
+         style={{
+           display: "flex", flexDirection: "column",
+           background: "var(--card-bg)", border: "1px solid var(--rule)",
+           padding: 18, minHeight: 196, cursor: "pointer",
+           transition: "border-color 120ms ease",
+         }}
+         onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--accent)")}
+         onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--rule)")}>
+      <div className="flex flex-wrap items-center" style={{ gap: 6 }}>
+        <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
+          {thread.company}
+        </span>
+        <span title={statusLabel} aria-label={statusLabel}
+              style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center",
+                       justifyContent: "center", width: 30, height: 30, fontSize: 17, lineHeight: 1, color: fg }}>
+          {MSG_STATUS_ICON[m.state]}
+        </span>
       </div>
-      <div className="flex flex-shrink-0 items-start gap-2">
-        {m.state === "pending" && !composing && (
-          <>
-            <PrimaryButton disabled={busy || !canRespond} onClick={() => setComposing(true)}>{t("dashboard.messages.respond")}</PrimaryButton>
-            <SecondaryButton disabled={busy} onClick={onIgnore}>{t("dashboard.messages.ignore")}</SecondaryButton>
-          </>
-        )}
-        {m.state === "responded" && (
-          <span className="font-mono uppercase" style={{ color: "var(--ok)", fontSize: 10, letterSpacing: "0.12em" }}>
-            {t("dashboard.messages.responded", { date: formatDate(fmt, m.responded_at ?? m.sent_at) })}
-          </span>
-        )}
-        {m.state === "ignored" && (
-          <span className="font-mono uppercase" style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.12em" }}>
-            {t("dashboard.messages.ignored")}
-          </span>
-        )}
+
+      {m.job_title && (
+        <div className="mt-1" style={{ color: "var(--muted)", fontSize: 13 }}>{m.job_title}</div>
+      )}
+
+      <div className="mt-3" style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55 }}>{excerpt}</div>
+
+      <div className="font-mono"
+           style={{ color: "var(--muted-soft)", fontSize: 11, marginTop: 8,
+                     letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
+        {formatDate(fmt, m.sent_at)}
       </div>
+
+      {thread.count > 1 && (
+        <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
+          <span className="font-mono uppercase"
+                style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
+            {tp("dashboard.messages.count", thread.count)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -624,30 +640,32 @@ function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
             }} />
   );
 }
-function SecondaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+// Inline text-link styled button — same visual language as CompanyNav's
+// "Dashboard | Directory" links. Muted by default; hovers to accent (or
+// warn for destructive actions). No border, no fill — reads as navigation
+// rather than a heavy CTA.
+function NavLinkButton({
+  tone = "accent",
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { tone?: "accent" | "warn" }) {
+  const hover = tone === "warn" ? "var(--warn)" : "var(--accent)";
   return (
-    <button {...props}
-            style={{
-              ...BUTTON_BASE,
-              background: "transparent", color: "var(--text)",
-              border: "1px solid var(--rule)",
-              opacity: props.disabled ? 0.45 : 1,
-              cursor: props.disabled ? "not-allowed" : "pointer",
-              ...(props.style ?? {}),
-            }} />
-  );
-}
-function DangerButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button {...props}
-            style={{
-              ...BUTTON_BASE,
-              background: "transparent", color: "var(--warn)",
-              border: "1px solid color-mix(in srgb, var(--warn) 60%, var(--rule))",
-              opacity: props.disabled ? 0.45 : 1,
-              cursor: props.disabled ? "not-allowed" : "pointer",
-              ...(props.style ?? {}),
-            }} />
+    <button
+      {...props}
+      style={{
+        background: "none", border: "none", padding: 0,
+        font: "inherit", letterSpacing: "0.04em",
+        color: "var(--muted)",
+        cursor: props.disabled ? "not-allowed" : "pointer",
+        opacity: props.disabled ? 0.45 : 1,
+        transition: "color 120ms ease",
+        ...(props.style ?? {}),
+      }}
+      onMouseEnter={(e) => { if (!props.disabled) e.currentTarget.style.color = hover; }}
+      onMouseLeave={(e) => { if (!props.disabled) e.currentTarget.style.color = "var(--muted)"; }}>
+      {children}
+    </button>
   );
 }
 

@@ -145,12 +145,28 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
         {t("company.saved.saved_at", { date: fmt.date(dev.saved_at) })}
       </div>
 
-      {/* ações ancoradas no rodapé */}
-      <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
-        <Link to={`/accounts/${dev.account_id}/contact`} style={primaryLinkStyle()}>
+      {/* ações ancoradas no rodapé — link style igual ao CompanyNav */}
+      <div className="mt-auto flex flex-wrap items-center font-mono pt-4"
+           style={{ gap: 10, fontSize: 12, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+        <Link to={`/accounts/${dev.account_id}/contact`}
+              style={{ color: "var(--muted)", textDecoration: "none",
+                       transition: "color 120ms ease" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
           {t("company.saved.send_message")}
         </Link>
-        <button type="button" onClick={remove} disabled={busy} style={dangerBtn(busy)}>
+        <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
+        <button type="button" onClick={remove} disabled={busy}
+                style={{
+                  background: "none", border: "none", padding: 0,
+                  font: "inherit", letterSpacing: "0.04em",
+                  color: "var(--muted)",
+                  cursor: busy ? "not-allowed" : "pointer",
+                  opacity: busy ? 0.45 : 1,
+                  transition: "color 120ms ease",
+                }}
+                onMouseEnter={(e) => { if (!busy) e.currentTarget.style.color = "var(--warn)"; }}
+                onMouseLeave={(e) => { if (!busy) e.currentTarget.style.color = "var(--muted)"; }}>
           {t("company.saved.remove")}
         </button>
       </div>
@@ -174,24 +190,6 @@ function secondaryBtn(busy: boolean): React.CSSProperties {
     background: "transparent", color: "var(--text)",
     border: "1px solid var(--rule)",
     cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1,
-  };
-}
-function dangerBtn(busy: boolean): React.CSSProperties {
-  return {
-    font: "inherit", fontSize: 12.5,
-    padding: "6px 14px",
-    background: "transparent", color: "var(--warn)",
-    border: "1px solid color-mix(in srgb, var(--warn) 60%, var(--rule))",
-    cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1,
-  };
-}
-function primaryLinkStyle(): React.CSSProperties {
-  return {
-    fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-    fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase",
-    color: "var(--bg)", background: "var(--text)",
-    border: "1px solid var(--text)", padding: "6px 14px",
-    textDecoration: "none", textAlign: "center",
   };
 }
 

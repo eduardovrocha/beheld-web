@@ -248,6 +248,13 @@ module Api
                                                    thresholds_by_signal[m.failed_signal])
             payload[:curve] = ::Positions::EvolutionCurve.for(acc, m.failed_signal)
           end
+          # Match rows also surface the test_ratio curve when the position
+          # uses it as a threshold — the frontend mirrors the near-miss
+          # detail line ("passou: Test ratio (X% · exigido: Y%) curva: …")
+          # so both tabs read with the same structure.
+          if m.match_type == "match" && thresholds_by_signal["test_ratio"]
+            payload[:curve] = ::Positions::EvolutionCurve.for(acc, "test_ratio")
+          end
           payload
         end
 
