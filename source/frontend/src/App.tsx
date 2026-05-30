@@ -12,6 +12,7 @@ import { Dashboard } from "./routes/Dashboard";
 import { Directory } from "./routes/Directory";
 import { Home } from "./routes/Home";
 import { HowItWorks } from "./routes/HowItWorks";
+import { MeetB3 } from "./routes/MeetB3";
 import { RealSessions } from "./routes/RealSessions";
 import { VerifyLocal } from "./routes/VerifyLocal";
 import { VerifyPublic } from "./routes/VerifyPublic";
@@ -26,6 +27,8 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/sessoes-reais" element={<RealSessions />} />
         <Route path="/real-sessions" element={<RealSessions />} />
+        <Route path="/b3" element={<MeetB3 />} />
+        <Route path="/b3h31d" element={<MeetB3 />} />
         <Route path="/v/:id" element={<VerifyPublic />} />
         <Route path="/verify" element={<VerifyLocal />} />
         <Route path="/dashboard" element={<Dashboard />} />

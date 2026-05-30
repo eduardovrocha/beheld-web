@@ -49,6 +49,17 @@ export function OpenSourceIcon({ size = 13 }: { size?: number }) {
   );
 }
 
+// Eye (feather) — B3, a testemunha. Encarnação da "lente que vê".
+export function B3Icon({ size = 13 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 // File-check (feather) — compromisso (documento assinado / vinculante).
 export function CompromissoIcon({ size = 13 }: { size?: number }) {
   return (
