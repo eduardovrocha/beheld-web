@@ -149,15 +149,17 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
       <div className="mt-auto flex flex-wrap items-center font-mono pt-4"
            style={{ gap: 10, fontSize: 12, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
         <Link to={`/accounts/${dev.account_id}/contact`}
-              style={{ color: "var(--muted)", textDecoration: "none",
+              style={{ display: "inline-flex", alignItems: "center", gap: 6,
+                       color: "var(--muted)", textDecoration: "none",
                        transition: "color 120ms ease" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
-          {t("company.saved.send_message")}
+          <ContactIcon /> {t("company.saved.send_message")}
         </Link>
         <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
         <button type="button" onClick={remove} disabled={busy}
                 style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
                   background: "none", border: "none", padding: 0,
                   font: "inherit", letterSpacing: "0.04em",
                   color: "var(--muted)",
@@ -167,7 +169,7 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
                 }}
                 onMouseEnter={(e) => { if (!busy) e.currentTarget.style.color = "var(--warn)"; }}
                 onMouseLeave={(e) => { if (!busy) e.currentTarget.style.color = "var(--muted)"; }}>
-          {t("company.saved.remove")}
+          <RemoveIcon /> {t("company.saved.remove")}
         </button>
       </div>
     </div>
@@ -191,5 +193,25 @@ function secondaryBtn(busy: boolean): React.CSSProperties {
     border: "1px solid var(--rule)",
     cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1,
   };
+}
+
+// Inline 11px stroke icons — same size/idiom as CompanyNav so the action
+// row reads as "Dashboard | Directory" style links rather than buttons.
+function ContactIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
+         style={{ flexShrink: 0 }}>
+      <rect x="0.5" y="2" width="10" height="7" stroke="currentColor" />
+      <path d="M0.5 2.5 L5.5 6 L10.5 2.5" stroke="currentColor" />
+    </svg>
+  );
+}
+function RemoveIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
+         style={{ flexShrink: 0 }}>
+      <line x1="2" y1="5.5" x2="9" y2="5.5" stroke="currentColor" />
+    </svg>
+  );
 }
 

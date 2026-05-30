@@ -25,6 +25,7 @@ import { getPositionMatches, recalculatePositionMatches } from "@/lib/companyDas
 import { SECTION_KEYS, type Sections } from "@/lib/positionMarkdownParser";
 import { extractTechnologies } from "@/lib/positionTechExtractor";
 import { LocationPicker, formatLocation } from "@/components/position/LocationPicker";
+import { TabStrip } from "@/components/TabStrip";
 import { Tooltip } from "@/components/Tooltip";
 import { useT, useFmt } from "@/i18n/I18nProvider";
 
@@ -239,6 +240,8 @@ function EmptyPanel({ onNew }: { onNew: () => void }) {
   );
 }
 
+type DetailSubTab = "description" | "matches";
+
 function DetailPanel({ position, onEdit, onArchive, onReactivate, onPurge }: {
   position:     Position;
   onEdit:       () => void;
@@ -248,18 +251,28 @@ function DetailPanel({ position, onEdit, onArchive, onReactivate, onPurge }: {
 }) {
   const t = useT();
   const fmt = useFmt();
+  const hasMatching = (position.thresholds ?? []).length > 0;
+  // Reset to "description" when switching positions or when matching gets
+  // disabled. key=position.id on the parent already remounts the strip; this
+  // also guards the case where thresholds drop without a remount.
+  const [tab, setTab] = useState<DetailSubTab>("description");
+  useEffect(() => { if (!hasMatching && tab === "matches") setTab("description"); }, [hasMatching, tab]);
+
   return (
     <div style={{ padding: 28 }}>
       <div className="flex items-start justify-between gap-3">
         <div className="font-mono uppercase"
              style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
           {t("company.positions.detail.eyebrow")}
-          <PositionStatusChip status={position.status} expiresAt={position.expires_at} />
+          <PositionStatusChip status={position.status} />
         </div>
-        {/* Ações da vaga arquivada — ícones no topo direito, tooltip no hover */}
-        {position.archived && (
-          <ArchivedActions onReactivate={onReactivate} onPurge={onPurge} />
-        )}
+        <div className="flex items-center gap-3">
+          <PositionExpiresLine status={position.status} expiresAt={position.expires_at} />
+          {/* Ações da vaga arquivada — ícones, tooltip no hover */}
+          {position.archived && (
+            <ArchivedActions onReactivate={onReactivate} onPurge={onPurge} />
+          )}
+        </div>
       </div>
 
       <h3 className="font-semibold"
@@ -267,11 +280,17 @@ function DetailPanel({ position, onEdit, onArchive, onReactivate, onPurge }: {
         {position.title}
       </h3>
 
-      {Object.keys(position.location ?? {}).length > 0 && (
-        <div style={{ color: "var(--muted)", fontSize: 13.5, marginTop: 4 }}>
-          {formatLocation(position.location)}
+      <div className="flex items-center justify-between gap-3"
+           style={{ marginTop: 4 }}>
+        <div style={{ color: "var(--muted)", fontSize: 13.5 }}>
+          {Object.keys(position.location ?? {}).length > 0 ? formatLocation(position.location) : null}
         </div>
-      )}
+        {/* Editar | Arquivar inline com a linha de localização — só pra
+            vagas ativas (não arquivadas, não expiradas). */}
+        {!position.archived && position.status !== "expired" && (
+          <EditArchiveLinks onEdit={onEdit} onArchive={onArchive} />
+        )}
+      </div>
 
       <div className="font-mono"
            style={{ color: "var(--muted-soft)", fontSize: 11, marginTop: 8,
@@ -280,24 +299,44 @@ function DetailPanel({ position, onEdit, onArchive, onReactivate, onPurge }: {
         {position.archived_at && <> · {t("company.positions.detail.archived_at", { date: fmt.date(position.archived_at) })}</>}
       </div>
 
-      {position.technologies && position.technologies.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <div className="font-mono uppercase"
-               style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
-            {t("company.positions.detail.technologies")}
-          </div>
-          <div className="flex flex-wrap" style={{ gap: 6 }}>
-            {position.technologies.map((t) => <TechChip key={t} label={t} />)}
-          </div>
-        </div>
-      )}
+      <div style={{ marginTop: 20 }}>
+        <TabStrip<DetailSubTab>
+          tabs={[
+            { id: "description", label: t("company.positions.form.tab.description"), badge: null },
+            ...(hasMatching
+              ? [{ id: "matches" as const, label: t("company.positions.matches.heading"), badge: null }]
+              : []),
+          ]}
+          active={tab}
+          onSelect={setTab} />
+      </div>
 
-      <MatchCriteriaView position={position} />
+      <div className="pt-6">
+        {tab === "description" && (
+          <>
+            {position.technologies && position.technologies.length > 0 && (
+              <div>
+                <div className="font-mono uppercase"
+                     style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 8 }}>
+                  {t("company.positions.detail.technologies")}
+                </div>
+                <div className="flex flex-wrap" style={{ gap: 6 }}>
+                  {position.technologies.map((t) => <TechChip key={t} label={t} />)}
+                </div>
+              </div>
+            )}
 
-      <PositionMatchesPanel position={position} />
+            <MatchCriteriaView position={position} />
 
-      <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--rule-soft)" }}>
-        <SectionsView sections={position.sections} fallback={position.description} />
+            <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--rule-soft)" }}>
+              <SectionsView sections={position.sections} fallback={position.description} />
+            </div>
+          </>
+        )}
+
+        {tab === "matches" && hasMatching && (
+          <PositionMatchesPanel position={position} />
+        )}
       </div>
 
       <PositionActions position={position} onEdit={onEdit} onArchive={onArchive}
@@ -424,11 +463,74 @@ function PositionActions({ position, onEdit, onArchive, onReactivate }: {
     );
   }
 
+  // Active state: Editar | Arquivar are rendered inline with the location
+  // row by DetailPanel — nothing to draw in the footer.
+  return null;
+}
+
+// Inline "Editar | Arquivar" link pair — same idiom as CompanyNav. Used
+// in the location row of DetailPanel for active vagas.
+function EditArchiveLinks({ onEdit, onArchive }: {
+  onEdit: () => void; onArchive: () => void;
+}) {
+  const t = useT();
   return (
-    <div style={{ marginTop: 24, display: "flex", gap: 10 }}>
-      <button type="button" onClick={onEdit}    style={secondaryBtn(false)}>{t("company.positions.actions.edit")}</button>
-      <button type="button" onClick={onArchive} style={dangerBtn(false)}>{t("company.positions.actions.archive")}</button>
+    <div className="font-mono"
+         style={{ display: "flex", alignItems: "center", gap: 10,
+                  fontSize: 12, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+      <ActionLinkButton onClick={onEdit} icon={<EditIcon />}>
+        {t("company.positions.actions.edit")}
+      </ActionLinkButton>
+      <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
+      <ActionLinkButton onClick={onArchive} icon={<ArchiveIcon />} tone="warn">
+        {t("company.positions.actions.archive")}
+      </ActionLinkButton>
     </div>
+  );
+}
+
+// Link-style action button: inline-flex icon + label, muted → accent/warn
+// on hover. Same idiom as CompanyNav and the rest of the dashboard.
+function ActionLinkButton({ onClick, icon, children, tone = "accent" }: {
+  onClick: () => void; icon: ReactNode; children: ReactNode; tone?: "accent" | "warn";
+}) {
+  const hover = tone === "warn" ? "var(--warn)" : "var(--accent)";
+  return (
+    <button type="button" onClick={onClick}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "none", border: "none", padding: 0,
+              font: "inherit", letterSpacing: "0.04em",
+              color: "var(--muted)", cursor: "pointer",
+              transition: "color 120ms ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = hover)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
+      {icon} {children}
+    </button>
+  );
+}
+
+// Pencil — edit action.
+function EditIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
+         style={{ flexShrink: 0 }}>
+      <path d="M1.5 9.5 L1.5 7.5 L7.5 1.5 L9.5 3.5 L3.5 9.5 Z" stroke="currentColor" strokeLinejoin="round" />
+      <line x1="6.5" y1="2.5" x2="8.5" y2="4.5" stroke="currentColor" />
+    </svg>
+  );
+}
+
+// Open box — archive action.
+function ArchiveIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
+         style={{ flexShrink: 0 }}>
+      <rect x="0.5" y="1.5" width="10" height="2.5" stroke="currentColor" />
+      <path d="M1.5 4 L1.5 9.5 L9.5 9.5 L9.5 4" stroke="currentColor" />
+      <line x1="4" y1="6" x2="7" y2="6" stroke="currentColor" />
+    </svg>
   );
 }
 
@@ -1110,12 +1212,8 @@ function PositionMatchesPanel({ position }: { position: Position }) {
   if ((position.thresholds ?? []).length === 0) return null;
 
   return (
-    <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--rule-soft)" }}>
-      <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
-        <div className="font-mono uppercase"
-             style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
-          {t("company.positions.matches.heading")}
-        </div>
+    <div>
+      <div className="flex items-center justify-end" style={{ marginBottom: 10 }}>
         <div className="flex items-center gap-3">
           {data?.calculated_at && (
             <span className="font-mono"
@@ -1124,8 +1222,20 @@ function PositionMatchesPanel({ position }: { position: Position }) {
               {t("company.positions.matches.calculated", { datetime: `${fmt.date(data.calculated_at, { day: "2-digit", month: "2-digit" })} ${fmt.time(data.calculated_at)}` })}
             </span>
           )}
-          <button type="button" onClick={recalc} disabled={busy} style={secondaryBtn(busy)}>
-            {busy ? t("company.positions.matches.recalc_busy") : t("company.positions.matches.recalc")}
+          <button type="button" onClick={recalc} disabled={busy}
+                  className="font-mono"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    background: "none", border: "none", padding: 0,
+                    font: "inherit", fontSize: 12, letterSpacing: "0.04em",
+                    color: "var(--muted)",
+                    cursor: busy ? "not-allowed" : "pointer",
+                    opacity: busy ? 0.45 : 1,
+                    transition: "color 120ms ease",
+                  }}
+                  onMouseEnter={(e) => { if (!busy) e.currentTarget.style.color = "var(--accent)"; }}
+                  onMouseLeave={(e) => { if (!busy) e.currentTarget.style.color = "var(--muted)"; }}>
+            <RecalcIcon spinning={busy} /> {busy ? t("company.positions.matches.recalc_busy") : t("company.positions.matches.recalc")}
           </button>
         </div>
       </div>
@@ -1223,21 +1333,62 @@ function MatchesTabbed({ data, thresholds }: { data: PositionMatchesPayload; thr
 }
 
 // Inline link styled like CompanyNav's "Dashboard | Directory" — muted mono
-// text, hovers to accent. `external` opens in a new tab.
-function MatchNavLink({ href, external, children }: {
-  href: string; external?: boolean; children: ReactNode;
+// text + leading 11px stroke icon, hovers to accent. `external` opens in
+// a new tab.
+function MatchNavLink({ href, external, icon, children }: {
+  href: string; external?: boolean; icon: ReactNode; children: ReactNode;
 }) {
   return (
     <a href={href}
        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
        style={{
+         display: "inline-flex", alignItems: "center", gap: 6,
          color: "var(--muted)", textDecoration: "none",
          transition: "color 120ms ease",
        }}
        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
-      {children}
+      {icon} {children}
     </a>
+  );
+}
+
+// Circular arrow — refresh/recalc icon. Optional `spinning` adds a CSS
+// rotation while the recalc is in flight.
+function RecalcIcon({ spinning = false }: { spinning?: boolean }) {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
+         style={{
+           flexShrink: 0,
+           animation: spinning ? "beheld-spin 900ms linear infinite" : undefined,
+           transformOrigin: "center",
+         }}>
+      <path d="M9.5 5.5 A4 4 0 1 1 8.4 2.6" stroke="currentColor" strokeLinecap="round" />
+      <path d="M9.5 1 L9.5 3 L7.5 3" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+      <style>{`@keyframes beheld-spin { to { transform: rotate(360deg); } }`}</style>
+    </svg>
+  );
+}
+
+// User silhouette — profile icon, sized to match CompanyNav's icons (11px).
+function ProfileIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
+         style={{ flexShrink: 0 }}>
+      <circle cx="5.5" cy="3.5" r="2" stroke="currentColor" />
+      <path d="M1.5 10.5 C1.5 7.5 3.5 6.5 5.5 6.5 C7.5 6.5 9.5 7.5 9.5 10.5" stroke="currentColor" />
+    </svg>
+  );
+}
+
+// Envelope — contact/message icon.
+function ContactIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
+         style={{ flexShrink: 0 }}>
+      <rect x="0.5" y="2" width="10" height="7" stroke="currentColor" />
+      <path d="M0.5 2.5 L5.5 6 L10.5 2.5" stroke="currentColor" />
+    </svg>
   );
 }
 
@@ -1278,13 +1429,13 @@ function MatchRow({ row, first, thresholds }: { row: PositionMatchRow; first: bo
                      fontSize: 12, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
         {row.bundle_slug && (
           <>
-            <MatchNavLink href={`/v/${row.bundle_slug}`} external>
+            <MatchNavLink href={`/v/${row.bundle_slug}`} external icon={<ProfileIcon />}>
               {t("company.positions.matches.view_profile")}
             </MatchNavLink>
             <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
           </>
         )}
-        <MatchNavLink href={`/accounts/${row.account_id}/contact`}>
+        <MatchNavLink href={`/accounts/${row.account_id}/contact`} icon={<ContactIcon />}>
           {t("company.positions.matches.contact")}
         </MatchNavLink>
       </span>
@@ -1382,9 +1533,8 @@ function CurveBadge({ curve }: { curve?: import("@/lib/companyDashboardApi").Pos
 
 // ── status chip ────────────────────────────────────────────────────────────
 
-function PositionStatusChip({ status, expiresAt }: { status: Position["status"]; expiresAt: string | null }) {
+function PositionStatusChip({ status }: { status: Position["status"] }) {
   const t = useT();
-  const fmt = useFmt();
   const palette = status === "active"
     ? { bg: "rgba(74,124,78,0.12)", fg: "var(--ok)",   bd: "rgba(74,124,78,0.4)" }
     : status === "expired"
@@ -1398,11 +1548,23 @@ function PositionStatusChip({ status, expiresAt }: { status: Position["status"];
       fontSize: 9, letterSpacing: "0.14em",
     }}>
       {t(`company.positions.status.${status}`)}
-      {status === "active" && expiresAt && (
-        <span style={{ marginLeft: 6, opacity: 0.8, fontFeatureSettings: '"tnum"' }}>
-          · {t("company.positions.status.expires", { date: fmt.date(expiresAt) })}
-        </span>
-      )}
+    </span>
+  );
+}
+
+// "expira DD/MM/YYYY" — texto plano, ancorado à direita do cabeçalho da
+// vaga. Só renderiza para vagas ativas com data de expiração definida.
+function PositionExpiresLine({ status, expiresAt }: {
+  status: Position["status"]; expiresAt: string | null;
+}) {
+  const t = useT();
+  const fmt = useFmt();
+  if (status !== "active" || !expiresAt) return null;
+  return (
+    <span className="font-mono"
+          style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.04em",
+                   fontFeatureSettings: '"tnum"', whiteSpace: "nowrap" }}>
+      {t("company.positions.status.expires", { date: fmt.date(expiresAt) })}
     </span>
   );
 }

@@ -384,17 +384,31 @@ function DevCard({ dev }: { dev: DevSummary }) {
         </div>
       )}
 
-      {/* ações no rodapé do card */}
-      <div className="mt-auto flex flex-wrap items-center pt-4" style={{ gap: 8 }}>
-        <SaveDevButton accountId={dev.account_id} size="sm" />
-        <Link to={contactPath} style={linkButtonStyle({ primary: true })}>
-          {t("directory.card.contact")}
+      {/* ações no rodapé do card — link style igual ao CompanyNav */}
+      <div className="mt-auto flex flex-wrap items-center font-mono pt-4"
+           style={{ gap: 10, fontSize: 12, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
+        <SaveDevButton accountId={dev.account_id} />
+        <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
+        <Link to={contactPath}
+              style={{ display: "inline-flex", alignItems: "center", gap: 6,
+                       color: "var(--muted)", textDecoration: "none",
+                       transition: "color 120ms ease" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
+          <ContactIcon /> {t("directory.card.contact")}
         </Link>
         {profileUrl && (
-          <a href={profileUrl} target="_blank" rel="noopener noreferrer"
-             style={linkButtonStyle({ primary: false })}>
-            {t("directory.card.view_profile")}
-          </a>
+          <>
+            <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
+            <a href={profileUrl} target="_blank" rel="noopener noreferrer"
+               style={{ display: "inline-flex", alignItems: "center", gap: 6,
+                        color: "var(--muted)", textDecoration: "none",
+                        transition: "color 120ms ease" }}
+               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
+              <ProfileIcon /> {t("directory.card.view_profile")}
+            </a>
+          </>
         )}
       </div>
     </div>
@@ -474,18 +488,25 @@ function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   );
 }
 
-function linkButtonStyle({ primary }: { primary: boolean }): React.CSSProperties {
-  return {
-    font: "inherit", fontSize: 12,
-    padding: "5px 12px",
-    background:  primary ? "var(--text)" : "transparent",
-    color:       primary ? "var(--bg)"   : "var(--text)",
-    border:      `1px solid ${primary ? "var(--text)" : "var(--rule)"}`,
-    borderRadius: 0,
-    letterSpacing: "0.02em",
-    textDecoration: "none",
-    whiteSpace: "nowrap",
-  };
+// 11px stroke icons matching CompanyNav idiom — leading glyph for the
+// link-style action row in result cards.
+function ContactIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
+         style={{ flexShrink: 0 }}>
+      <rect x="0.5" y="2" width="10" height="7" stroke="currentColor" />
+      <path d="M0.5 2.5 L5.5 6 L10.5 2.5" stroke="currentColor" />
+    </svg>
+  );
+}
+function ProfileIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
+         style={{ flexShrink: 0 }}>
+      <circle cx="5.5" cy="3.5" r="2" stroke="currentColor" />
+      <path d="M1.5 10.5 C1.5 7.5 3.5 6.5 5.5 6.5 C7.5 6.5 9.5 7.5 9.5 10.5" stroke="currentColor" />
+    </svg>
+  );
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────

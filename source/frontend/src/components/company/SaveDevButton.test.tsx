@@ -29,21 +29,21 @@ describe("SaveDevButton", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("começa em '+ salvar' e passa para 'salvo ✓' após POST com sucesso", async () => {
+  it("começa em 'salvar' e passa para 'salvo' após POST com sucesso", async () => {
     mockedSaveDev.mockResolvedValue({ ok: true });
     const user = userEvent.setup();
     render(<SaveDevButton accountId={42} />);
 
-    expect(screen.getByRole("button", { name: /\+ salvar/i })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /\+ salvar/i }));
+    expect(screen.getByRole("button", { name: /salvar/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /salvar/i }));
 
     expect(mockedSaveDev).toHaveBeenCalledWith(42, null);
-    await waitFor(() => expect(screen.getByText(/salvo ✓/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/salvo/i)).toBeInTheDocument());
   });
 
-  it("começa em 'salvo ✓' quando alreadySaved=true", () => {
+  it("começa em 'salvo' quando alreadySaved=true", () => {
     render(<SaveDevButton accountId={1} alreadySaved />);
-    expect(screen.getByText(/salvo ✓/i)).toBeInTheDocument();
+    expect(screen.getByText(/salvo/i)).toBeInTheDocument();
   });
 
   it("mostra 'login necessário' em CompanyAuthError", async () => {
@@ -51,7 +51,7 @@ describe("SaveDevButton", () => {
     const user = userEvent.setup();
     render(<SaveDevButton accountId={1} />);
 
-    await user.click(screen.getByRole("button", { name: /\+ salvar/i }));
+    await user.click(screen.getByRole("button", { name: /salvar/i }));
     await waitFor(() => expect(screen.getByText(/login necessário/i)).toBeInTheDocument());
   });
 
@@ -60,7 +60,7 @@ describe("SaveDevButton", () => {
     const user = userEvent.setup();
     render(<SaveDevButton accountId={1} />);
 
-    await user.click(screen.getByRole("button", { name: /\+ salvar/i }));
+    await user.click(screen.getByRole("button", { name: /salvar/i }));
     await waitFor(() => expect(screen.getByText(/falha ao salvar/i)).toBeInTheDocument());
   });
 });
