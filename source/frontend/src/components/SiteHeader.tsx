@@ -55,7 +55,14 @@ export function SiteHeader() {
         className="mt-6 font-mono uppercase"
         style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
       >
-        {t("home.head.daemon")} <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.real_sessions")}{" "}
+        <Link
+          to="/como-funciona"
+          className="hover:underline"
+          style={{ color: "var(--muted)" }}
+        >
+          {t("home.head.daemon")}
+        </Link>{" "}
+        <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.real_sessions")}{" "}
         <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.open_source")}{" "}
         <span style={{ color: "var(--accent)" }}>·</span>{" "}
         <Link
