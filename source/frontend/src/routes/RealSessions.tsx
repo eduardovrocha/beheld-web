@@ -213,9 +213,7 @@ export function RealSessions() {
           >
             {t("rs.02.body")}
           </p>
-          <div style={{ maxWidth: 640 }}>
-            <SessionCard />
-          </div>
+          <SessionCard />
         </section>
 
         <section className="py-12" style={{ borderTop: "1px solid var(--rule)" }}>
