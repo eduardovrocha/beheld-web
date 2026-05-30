@@ -113,7 +113,7 @@ export function MeetB3() {
     <div className="b3-page">
       <div
         className="mx-auto mb-12 pb-14 pt-16"
-        style={{ maxWidth: 1032, padding: "64px 32px 56px", borderBottom: "1px solid var(--rule)" }}
+        style={{ maxWidth: 1032, padding: "64px 32px 56px" }}
       >
         <SiteHeader />
       </div>
