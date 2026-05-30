@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { useT } from "@/i18n/I18nProvider";
 
-const INSTALL_CMD = "curl beheld.dev/install | sh";
+const INSTALL_CMD = "curl -fsSL beheld.dev/install.sh | sh";
 const GITHUB_URL = "https://github.com/eduardovrocha/beheld";
 
 // ── Logo (lens) — mirrors mock SVG ──────────────────────────────────────────
@@ -207,51 +207,62 @@ function TermSummary({ k, v, delta }: { k: string; v: string; delta?: string }) 
 
 // ── Install block (hero left column) ────────────────────────────────────────
 
-function InstallBlock() {
+// Reusable install card — `$ curl … | sh` + COPIAR/copiado. button.
+// Shared between the hero (InstallBlock) and the final CTA block.
+function InstallCard() {
   const t = useT();
   const [copied, setCopied] = useState(false);
   const onCopy = async () => {
     try {
       await navigator.clipboard.writeText(INSTALL_CMD);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setTimeout(() => setCopied(false), 1400);
     } catch {
       /* ignore */
     }
   };
   return (
-    <>
+    <div
+      className="p-5"
+      style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}
+    >
       <div
-        className="mb-3.5 p-5"
-        style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}
+        className="mb-2.5 font-mono uppercase"
+        style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.18em" }}
       >
-        <div
-          className="mb-2.5 font-mono uppercase"
-          style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.18em" }}
+        {t("home.install.label")}
+      </div>
+      <div className="flex items-center gap-2.5 font-mono" style={{ color: "var(--text)", fontSize: 13 }}>
+        <span className="font-medium" style={{ color: "var(--accent)" }}>
+          $
+        </span>
+        <span>{INSTALL_CMD}</span>
+        <button
+          type="button"
+          onClick={onCopy}
+          className={`ml-auto cursor-pointer font-mono transition-colors ${copied ? "" : "uppercase"}`}
+          style={{
+            border: `1px solid ${copied ? "var(--ok)" : "var(--rule)"}`,
+            color: copied ? "var(--ok)" : "var(--muted)",
+            padding: "5px 11px",
+            fontSize: 10,
+            letterSpacing: "0.14em",
+            background: "transparent",
+          }}
         >
-          {t("home.install.label")}
-        </div>
-        <div className="flex items-center gap-2.5 font-mono" style={{ color: "var(--text)", fontSize: 13 }}>
-          <span className="font-medium" style={{ color: "var(--accent)" }}>
-            $
-          </span>
-          <span>{INSTALL_CMD}</span>
-          <button
-            type="button"
-            onClick={onCopy}
-            className="ml-auto cursor-pointer font-mono uppercase transition-colors"
-            style={{
-              border: `1px solid ${copied ? "var(--ok)" : "var(--rule)"}`,
-              color: copied ? "var(--ok)" : "var(--muted)",
-              padding: "5px 11px",
-              fontSize: 10,
-              letterSpacing: "0.14em",
-              background: "transparent",
-            }}
-          >
-            {copied ? t("home.install.copied") : t("home.install.copy")}
-          </button>
-        </div>
+          {copied ? t("home.install.copied") : t("home.install.copy")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function InstallBlock() {
+  const t = useT();
+  return (
+    <>
+      <div className="mb-3.5">
+        <InstallCard />
       </div>
       <div
         className="mb-6 font-mono"
@@ -457,6 +468,95 @@ function ChainRow({
   );
 }
 
+// ── "What beheld doesn't do" card (section dont) ────────────────────────────
+
+function DontDoCard({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div
+      className="p-6"
+      style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}
+    >
+      <div
+        className="mb-3.5 font-mono"
+        style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1 }}
+      >
+        ✗
+      </div>
+      <div
+        className="mb-2 font-semibold"
+        style={{ color: "var(--text)", fontSize: 15, letterSpacing: "-0.01em", lineHeight: 1.35 }}
+      >
+        {title}
+      </div>
+      <div style={{ color: "var(--muted)", fontSize: 12.5, lineHeight: 1.75 }}>{desc}</div>
+    </div>
+  );
+}
+
+// ── FAQ item (section faq) ──────────────────────────────────────────────────
+
+function FaqItem({
+  q,
+  children,
+  last,
+}: {
+  q: string;
+  children: React.ReactNode;
+  last?: boolean;
+}) {
+  return (
+    <div
+      className="py-7"
+      style={{ borderBottom: last ? undefined : "1px solid var(--rule-soft)" }}
+    >
+      <div
+        className="font-semibold"
+        style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.65 }}
+      >
+        {q}
+      </div>
+      <div
+        className="mt-3.5"
+        style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.95 }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ── Happened item (section happened) ────────────────────────────────────────
+
+function HappenedItem({
+  title,
+  sub,
+  last,
+}: {
+  title: string;
+  sub: string;
+  last?: boolean;
+}) {
+  return (
+    <div
+      className="py-6"
+      style={{ borderBottom: last ? undefined : "1px solid var(--rule-soft)" }}
+    >
+      <div
+        className="font-semibold"
+        style={{ color: "var(--text)", fontSize: 15, letterSpacing: "-0.005em", lineHeight: 1.55 }}
+      >
+        {title}
+      </div>
+      <div
+        className="mt-1.5"
+        style={{ color: "var(--muted-soft)", fontSize: 13.5, lineHeight: 1.8 }}
+      >
+        {sub}
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ───────────────────────────────────────────────────────────────
 
 export function Home() {
@@ -567,6 +667,23 @@ export function Home() {
               </>
             }
           />
+        </div>
+      </section>
+
+      {/* ═══ DONT · what beheld does NOT do ════════════════════════════ */}
+      <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
+        <SectionHead
+          num="✗"
+          title={t("home.dont.title")}
+          right={t("home.dont.right")}
+        />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <DontDoCard title={t("home.dont.i1.title")} desc={t("home.dont.i1.desc")} />
+          <DontDoCard title={t("home.dont.i2.title")} desc={t("home.dont.i2.desc")} />
+          <DontDoCard title={t("home.dont.i3.title")} desc={t("home.dont.i3.desc")} />
+          <DontDoCard title={t("home.dont.i4.title")} desc={t("home.dont.i4.desc")} />
+          <DontDoCard title={t("home.dont.i5.title")} desc={t("home.dont.i5.desc")} />
+          <DontDoCard title={t("home.dont.i6.title")} desc={t("home.dont.i6.desc")} />
         </div>
       </section>
 
@@ -712,7 +829,7 @@ export function Home() {
       </section>
 
       {/* ═══ 04 · VERIFICATION CHAIN ════════════════════════════════════ */}
-      <section className="py-16">
+      <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="04"
           title={t("home.s04.title")}
@@ -746,6 +863,70 @@ export function Home() {
             detail="fully_verifiable"
             last
           />
+        </div>
+      </section>
+
+      {/* ═══ FAQ · the right questions ══════════════════════════════════ */}
+      <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
+        <SectionHead
+          num="?"
+          title={t("home.faq.title")}
+          right={t("home.faq.right")}
+        />
+        <div>
+          <FaqItem q={t("home.faq.q1.q")}>{t("home.faq.q1.a")}</FaqItem>
+          <FaqItem q={t("home.faq.q2.q")}>{t("home.faq.q2.a")}</FaqItem>
+          <FaqItem q={t("home.faq.q3.q")}>
+            {t("home.faq.q3.a_pre")}
+            <code style={{ color: "var(--text)" }}>beheld snapshot</code>
+            {t("home.faq.q3.a_post")}
+          </FaqItem>
+          <FaqItem q={t("home.faq.q4.q")}>{t("home.faq.q4.a")}</FaqItem>
+          <FaqItem q={t("home.faq.q5.q")}>{t("home.faq.q5.a")}</FaqItem>
+          <FaqItem q={t("home.faq.q6.q")}>{t("home.faq.q6.a")}</FaqItem>
+          <FaqItem q={t("home.faq.q7.q")} last>
+            {t("home.faq.q7.a")}
+          </FaqItem>
+        </div>
+      </section>
+
+      {/* ═══ HAPPENED · if this has happened to you ═════════════════════ */}
+      <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
+        <SectionHead
+          num="·"
+          title={t("home.happened.title")}
+          right={t("home.happened.right")}
+        />
+        <div>
+          <HappenedItem title={t("home.happened.i1.title")} sub={t("home.happened.i1.sub")} />
+          <HappenedItem title={t("home.happened.i2.title")} sub={t("home.happened.i2.sub")} />
+          <HappenedItem title={t("home.happened.i3.title")} sub={t("home.happened.i3.sub")} />
+          <HappenedItem title={t("home.happened.i4.title")} sub={t("home.happened.i4.sub")} last />
+        </div>
+      </section>
+
+      {/* ═══ CTA · final ════════════════════════════════════════════════ */}
+      <section className="py-20">
+        <div
+          className="font-semibold"
+          style={{ color: "var(--text)", fontSize: 22, letterSpacing: "-0.02em", lineHeight: 1.45 }}
+        >
+          {t("home.cta.l1")}
+        </div>
+        <div
+          className="mt-1.5"
+          style={{ color: "var(--muted)", fontSize: 16, lineHeight: 1.65 }}
+        >
+          {t("home.cta.l2")}
+        </div>
+        <div className="mb-5 mt-8">
+          <InstallCard />
+        </div>
+        <div
+          className="font-mono"
+          style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em" }}
+        >
+          {t("home.cta.tagline")}
         </div>
       </section>
 
