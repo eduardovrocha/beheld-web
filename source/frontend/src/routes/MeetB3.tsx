@@ -112,14 +112,14 @@ export function MeetB3() {
   return (
     <div className="b3-page">
       <div
-        className="mx-auto pt-16"
+        className="mx-auto mb-12 pb-14 pt-16"
         style={{ maxWidth: 1032, padding: "64px 32px 56px", borderBottom: "1px solid var(--rule)" }}
       >
         <SiteHeader />
       </div>
       <header
-        className="b3-hero mx-auto pb-20 pt-20 text-center"
-        style={{ maxWidth: 1032, padding: "80px 32px 80px", borderBottom: "1px solid var(--rule)" }}
+        className="b3-hero mx-auto text-center"
+        style={{ maxWidth: 1032, padding: "8px 32px 64px", borderBottom: "1px solid var(--rule)", marginTop: -110 }}
       >
         <div className="mb-10 flex justify-center" style={{ color: "var(--accent)" }}>
           {/* The lens IS the B3 mascot — escalada como protagonista do hero. */}
