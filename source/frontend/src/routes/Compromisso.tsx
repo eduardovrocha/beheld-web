@@ -4,11 +4,28 @@ import remarkGfm from "remark-gfm";
 
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import compromissoMd from "@/content/COMPROMISSO.md?raw";
+import enMd from "@/content/COMPROMISSO.en.md?raw";
+import esMd from "@/content/COMPROMISSO.es.md?raw";
+import ptMd from "@/content/COMPROMISSO.md?raw";
+import { useI18n } from "@/i18n/I18nProvider";
+import type { Locale } from "@/i18n/dict";
 
-const OG_TITLE = "compromisso · forever free for developers — beheld";
-const OG_DESC =
-  "o beheld é de graça pra desenvolvedor. era no primeiro dia, é hoje, e segue sendo enquanto o projeto existir.";
+const DOCS: Record<Locale, string> = { pt: ptMd, en: enMd, es: esMd };
+
+const META: Record<Locale, { title: string; desc: string }> = {
+  pt: {
+    title: "compromisso · forever free for developers — Beheld",
+    desc: "o Beheld é de graça pra desenvolvedor. era no primeiro dia, é hoje, e segue sendo enquanto o projeto existir.",
+  },
+  en: {
+    title: "compromisso · forever free for developers — Beheld",
+    desc: "Beheld is free for developers. it was free on day one, it's free today, and it stays free for as long as the project exists.",
+  },
+  es: {
+    title: "compromisso · forever free for developers — Beheld",
+    desc: "Beheld es gratis para desarrolladores. lo era el primer día, lo es hoy, y sigue siéndolo mientras el proyecto exista.",
+  },
+};
 
 function setMeta(name: string, content: string, attr: "name" | "property" = "name") {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${name}"]`);
@@ -22,14 +39,18 @@ function setMeta(name: string, content: string, attr: "name" | "property" = "nam
 }
 
 export function Compromisso() {
+  const { locale } = useI18n();
+  const md = DOCS[locale];
+  const meta = META[locale];
+
   useEffect(() => {
     const prevTitle = document.title;
-    document.title = OG_TITLE;
+    document.title = meta.title;
     const created: HTMLMetaElement[] = [];
     const pairs: Array<[string, string, "name" | "property"]> = [
-      ["description", OG_DESC, "name"],
-      ["og:title", OG_TITLE, "property"],
-      ["og:description", OG_DESC, "property"],
+      ["description", meta.desc, "name"],
+      ["og:title", meta.title, "property"],
+      ["og:description", meta.desc, "property"],
       ["og:type", "article", "property"],
     ];
     for (const [n, c, a] of pairs) {
@@ -41,7 +62,7 @@ export function Compromisso() {
       document.title = prevTitle;
       created.forEach((el) => el.remove());
     };
-  }, []);
+  }, [meta.title, meta.desc]);
 
   return (
     <div className="compromisso-page">
@@ -55,7 +76,7 @@ export function Compromisso() {
         className="compromisso-article mx-auto"
         style={{ maxWidth: 680, padding: "8px 32px 32px" }}
       >
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{compromissoMd}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{md}</ReactMarkdown>
       </article>
       <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
         <SiteFooter />
