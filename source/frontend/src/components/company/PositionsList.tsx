@@ -1024,7 +1024,7 @@ function SectionsView({ sections, fallback }: { sections?: Sections; fallback?: 
       );
     }
     return (
-      <p style={{ color: "var(--muted-soft)", fontSize: 13, lineHeight: 1.7, fontStyle: "italic" }}>
+      <p style={{ color: "var(--muted-soft)", fontSize: 13, lineHeight: 1.7 }}>
         {t("company.positions.sections_view.empty")}
       </p>
     );

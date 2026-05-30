@@ -123,8 +123,7 @@ function SavedDevCard({ dev, onUpdateNote, onRemove }: {
         <div className="mt-3">
           <p style={{ color: dev.note ? "var(--text)" : "var(--muted-soft)",
                        fontSize: 13.5, lineHeight: 1.55,
-                       fontFamily: dev.note ? "'Newsreader', Georgia, serif" : "inherit",
-                       fontStyle: dev.note ? "normal" : "italic" }}>
+                       fontFamily: dev.note ? "'Newsreader', Georgia, serif" : "inherit" }}>
             {dev.note || t("company.saved.no_note")}
           </p>
           <button type="button" onClick={() => setEditing(true)}

@@ -195,7 +195,7 @@ em, i, .italic { font-style: normal !important; }
   line-height: 1.95;
 }
 .compromisso-article strong { font-weight: 600; color: var(--text); }
-.compromisso-article em { font-style: italic !important; }
+/* italics globally disabled — `em` na compromisso-article fica reto também */
 .compromisso-article a { color: var(--accent); }
 .compromisso-article a:hover { text-decoration: underline; }
 .compromisso-article code {

@@ -63,7 +63,6 @@ function SessionCard() {
           style={{
             color: "var(--accent)",
             fontSize: 13,
-            fontStyle: "italic",
             lineHeight: 1.5,
           }}
         >
