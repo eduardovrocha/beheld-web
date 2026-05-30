@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-import { B3Icon, CompromissoIcon, DaemonIcon, OpenSourceIcon, SessionsIcon } from "@/components/icons";
+import { B3Icon, CompromissoIcon, DaemonIcon, HomeIcon, OpenSourceIcon, SessionsIcon } from "@/components/icons";
 import { LensLogo } from "@/components/LensLogo";
 import { useT } from "@/i18n/I18nProvider";
 
@@ -37,6 +37,15 @@ export function SiteHeader() {
         className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 font-mono uppercase"
         style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
       >
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 hover:underline"
+          style={{ color: "var(--muted)" }}
+        >
+          <HomeIcon />
+          <span>home</span>
+        </Link>
+        <span style={{ color: "var(--accent)" }}>·</span>
         <Link
           to="/b3"
           className="inline-flex items-center gap-1.5 hover:underline"
