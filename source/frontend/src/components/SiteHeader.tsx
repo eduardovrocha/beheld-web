@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 
+import { CompromissoIcon, DaemonIcon, OpenSourceIcon, SessionsIcon } from "@/components/icons";
 import { useT } from "@/i18n/I18nProvider";
+
+const GITHUB_URL = "https://github.com/eduardovrocha/beheld";
 
 function LensLogo() {
   return (
@@ -52,32 +55,45 @@ export function SiteHeader() {
         </div>
       </div>
       <div
-        className="mt-6 font-mono uppercase"
+        className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 font-mono uppercase"
         style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
       >
         <Link
           to="/como-funciona"
-          className="hover:underline"
+          className="inline-flex items-center gap-1.5 hover:underline"
           style={{ color: "var(--muted)" }}
         >
-          {t("home.head.daemon")}
-        </Link>{" "}
-        <span style={{ color: "var(--accent)" }}>·</span>{" "}
+          <DaemonIcon />
+          <span>{t("home.head.daemon")}</span>
+        </Link>
+        <span style={{ color: "var(--accent)" }}>·</span>
         <Link
           to="/sessoes-reais"
-          className="hover:underline"
+          className="inline-flex items-center gap-1.5 hover:underline"
           style={{ color: "var(--muted)" }}
         >
-          {t("home.head.real_sessions")}
-        </Link>{" "}
-        <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.open_source")}{" "}
-        <span style={{ color: "var(--accent)" }}>·</span>{" "}
+          <SessionsIcon />
+          <span>{t("home.head.real_sessions")}</span>
+        </Link>
+        <span style={{ color: "var(--accent)" }}>·</span>
+        <a
+          href={GITHUB_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 hover:underline"
+          style={{ color: "var(--muted)" }}
+        >
+          <OpenSourceIcon />
+          <span>{t("home.head.open_source")}</span>
+        </a>
+        <span style={{ color: "var(--accent)" }}>·</span>
         <Link
           to="/compromisso"
-          className="hover:underline"
+          className="inline-flex items-center gap-1.5 hover:underline"
           style={{ color: "var(--muted)" }}
         >
-          compromisso
+          <CompromissoIcon />
+          <span>compromisso</span>
         </Link>
       </div>
     </div>
