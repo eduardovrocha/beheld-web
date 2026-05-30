@@ -156,3 +156,139 @@ em, i, .italic { font-style: normal !important; }
 .no-scrollbar::-webkit-scrollbar {
   display: none;                /* WebKit */
 }
+
+/* ── /compromisso · reading view for COMPROMISSO.md ──────────────────────── */
+.compromisso-article {
+  color: var(--text);
+  font-family: 'Switzer', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16.5px;
+  line-height: 1.85;
+}
+.compromisso-article h1 {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 56px;
+  text-align: center;
+}
+.compromisso-article h2 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-top: 64px;
+  margin-bottom: 24px;
+  line-height: 1.3;
+}
+.compromisso-article h3 {
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-top: 40px;
+  margin-bottom: 16px;
+}
+.compromisso-article p {
+  margin-bottom: 22px;
+  line-height: 1.85;
+}
+.compromisso-article strong { font-weight: 600; color: var(--text); }
+.compromisso-article em { font-style: italic !important; }
+.compromisso-article a { color: var(--accent); }
+.compromisso-article a:hover { text-decoration: underline; }
+.compromisso-article code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.9em;
+  color: var(--accent);
+  background: rgba(138, 111, 62, 0.08);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+}
+html.dark .compromisso-article code {
+  background: rgba(201, 169, 110, 0.10);
+}
+.compromisso-article pre {
+  background: var(--term-bg);
+  border: 1px solid var(--term-rule);
+  color: var(--term-text);
+  padding: 22px 26px;
+  margin: 28px 0;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.7;
+  border-radius: 4px;
+}
+.compromisso-article pre code {
+  background: none;
+  padding: 0;
+  color: var(--term-text);
+  font-size: inherit;
+  white-space: pre;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.compromisso-article hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 56px 0;
+}
+.compromisso-article blockquote {
+  border-left: 2px solid var(--accent);
+  padding: 4px 0 4px 22px;
+  margin: 28px 0;
+  color: var(--muted);
+}
+.compromisso-article blockquote p { margin-bottom: 12px; }
+.compromisso-article blockquote p:last-child { margin-bottom: 0; }
+.compromisso-article ul, .compromisso-article ol {
+  list-style: none;
+  padding-left: 0;
+  margin: 16px 0 26px;
+}
+.compromisso-article li {
+  position: relative;
+  padding-left: 22px;
+  margin-bottom: 10px;
+  line-height: 1.85;
+}
+.compromisso-article ul li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+/* Print stylesheet — clean document for the carta on paper. */
+@media print {
+  html { background: white !important; border-top: none !important; }
+  body { background-image: none !important; color: black !important; zoom: 1 !important; }
+  .constellation { display: none !important; }
+  .compromisso-page > div > footer,
+  .fixed { display: none !important; }
+  .compromisso-article {
+    max-width: none !important;
+    color: black !important;
+    font-size: 11.5pt !important;
+    line-height: 1.6 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .compromisso-article a,
+  .compromisso-article h1,
+  .compromisso-article h2,
+  .compromisso-article h3,
+  .compromisso-article strong { color: black !important; }
+  .compromisso-article a { text-decoration: none !important; }
+  .compromisso-article pre {
+    border: 1px solid #999 !important;
+    background: #f5f5f5 !important;
+    color: black !important;
+    page-break-inside: avoid;
+  }
+  .compromisso-article pre code { color: black !important; }
+  .compromisso-article hr { border-top: 1px solid #999 !important; }
+  .compromisso-article blockquote { border-color: #999 !important; color: #333 !important; }
+  .compromisso-article code { background: none !important; color: black !important; }
+}

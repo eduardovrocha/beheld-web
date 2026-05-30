@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
+import { SiteFooter } from "@/components/SiteFooter";
 import { useT } from "@/i18n/I18nProvider";
 
 const INSTALL_CMD = "curl -fsSL beheld.dev/install.sh | sh";
-const GITHUB_URL = "https://github.com/eduardovrocha/beheld";
 
 // ── Logo (lens) — mirrors mock SVG ──────────────────────────────────────────
 
@@ -271,7 +272,11 @@ function InstallBlock() {
         {t("home.install.platforms")}
       </div>
 
-      <div className="inline-flex items-center gap-2">
+      <Link
+        to="/compromisso"
+        aria-label={`ler o compromisso · ${t("home.forever_free")}`}
+        className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
+      >
         <span
           className="font-mono uppercase"
           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}
@@ -285,7 +290,7 @@ function InstallBlock() {
         >
           {t("home.forever_free")}
         </span>
-      </div>
+      </Link>
     </>
   );
 }
@@ -595,7 +600,15 @@ export function Home() {
             style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
           >
             {t("home.head.daemon")} <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.real_sessions")}{" "}
-            <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.open_source")}
+            <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.open_source")}{" "}
+            <span style={{ color: "var(--accent)" }}>·</span>{" "}
+            <Link
+              to="/compromisso"
+              className="hover:opacity-80 transition-opacity"
+              style={{ color: "var(--muted)" }}
+            >
+              compromisso
+            </Link>
           </div>
         </div>
 
@@ -931,39 +944,7 @@ export function Home() {
       </section>
 
       {/* ═══ FOOTER ═════════════════════════════════════════════════════ */}
-      <footer
-        className="mt-6 grid items-end gap-8 py-16 sm:grid-cols-2"
-        style={{ borderTop: "1px solid var(--rule)" }}
-      >
-        <div className="font-mono" style={{ color: "var(--text)", fontSize: 13 }}>
-          <span style={{ color: "var(--accent)" }}>$</span> {INSTALL_CMD}
-        </div>
-        <div
-          className="text-right font-mono uppercase"
-          style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", lineHeight: 2 }}
-        >
-          <div style={{ color: "var(--accent)", fontWeight: 500 }}>{t("home.forever_free")}</div>
-          <div className="space-x-1">
-            <a
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:underline"
-              style={{ color: "var(--muted)" }}
-            >
-              GitHub
-            </a>
-            <span>·</span>
-            <a href="#" className="hover:underline" style={{ color: "var(--muted)" }}>
-              {t("home.footer.docs")}
-            </a>
-            <span>·</span>
-            <a href="#" className="hover:underline" style={{ color: "var(--muted)" }}>
-              {t("home.footer.manifesto")}
-            </a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

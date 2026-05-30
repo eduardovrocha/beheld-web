@@ -7,6 +7,7 @@ import { CompanyLogin } from "./routes/CompanyLogin";
 import { CompanyVerify } from "./routes/CompanyVerify";
 import { CompanyDashboardPage } from "./routes/company/Dashboard";
 import { CompanyMessages } from "./routes/CompanyMessages";
+import { Compromisso } from "./routes/Compromisso";
 import { Dashboard } from "./routes/Dashboard";
 import { Directory } from "./routes/Directory";
 import { Home } from "./routes/Home";
@@ -18,6 +19,7 @@ export default function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/compromisso" element={<Compromisso />} />
         <Route path="/v/:id" element={<VerifyPublic />} />
         <Route path="/verify" element={<VerifyLocal />} />
         <Route path="/dashboard" element={<Dashboard />} />
