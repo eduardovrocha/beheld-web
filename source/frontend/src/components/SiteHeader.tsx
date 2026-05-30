@@ -62,7 +62,14 @@ export function SiteHeader() {
         >
           {t("home.head.daemon")}
         </Link>{" "}
-        <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.real_sessions")}{" "}
+        <span style={{ color: "var(--accent)" }}>·</span>{" "}
+        <Link
+          to="/sessoes-reais"
+          className="hover:underline"
+          style={{ color: "var(--muted)" }}
+        >
+          {t("home.head.real_sessions")}
+        </Link>{" "}
         <span style={{ color: "var(--accent)" }}>·</span> {t("home.head.open_source")}{" "}
         <span style={{ color: "var(--accent)" }}>·</span>{" "}
         <Link

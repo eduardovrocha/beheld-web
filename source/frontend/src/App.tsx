@@ -12,6 +12,7 @@ import { Dashboard } from "./routes/Dashboard";
 import { Directory } from "./routes/Directory";
 import { Home } from "./routes/Home";
 import { HowItWorks } from "./routes/HowItWorks";
+import { RealSessions } from "./routes/RealSessions";
 import { VerifyLocal } from "./routes/VerifyLocal";
 import { VerifyPublic } from "./routes/VerifyPublic";
 
@@ -23,6 +24,8 @@ export default function App() {
         <Route path="/compromisso" element={<Compromisso />} />
         <Route path="/como-funciona" element={<HowItWorks />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/sessoes-reais" element={<RealSessions />} />
+        <Route path="/real-sessions" element={<RealSessions />} />
         <Route path="/v/:id" element={<VerifyPublic />} />
         <Route path="/verify" element={<VerifyLocal />} />
         <Route path="/dashboard" element={<Dashboard />} />
