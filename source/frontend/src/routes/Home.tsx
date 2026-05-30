@@ -12,7 +12,7 @@ function LensLogo() {
     <svg
       viewBox="0 0 240 100"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="beheld lens logo"
+      aria-label="Beheld lens logo"
       className="h-16 w-auto"
       style={{ color: "var(--lens)" }}
     >
@@ -468,7 +468,7 @@ function ChainRow({
   );
 }
 
-// ── "What beheld doesn't do" card (section dont) ────────────────────────────
+// ── "What Beheld doesn't do" card (section dont) ────────────────────────────
 
 function DontDoCard({ title, desc }: { title: string; desc: string }) {
   return (
@@ -579,7 +579,7 @@ export function Home() {
               className="font-semibold"
               style={{ color: "var(--text)", fontSize: 44, letterSpacing: "-0.025em", lineHeight: 1 }}
             >
-              beheld
+              Beheld
               <span style={{ color: "var(--accent)", fontWeight: 400 }}>.dev</span>
             </div>
             <div
@@ -670,7 +670,7 @@ export function Home() {
         </div>
       </section>
 
-      {/* ═══ DONT · what beheld does NOT do ════════════════════════════ */}
+      {/* ═══ DONT · what Beheld does NOT do ════════════════════════════ */}
       <section className="py-16" style={{ borderBottom: "1px solid var(--rule)" }}>
         <SectionHead
           num="✗"
