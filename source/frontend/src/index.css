@@ -172,7 +172,6 @@ em, i, .italic { font-style: normal !important; }
   color: var(--accent);
   font-weight: 500;
   margin-bottom: 56px;
-  text-align: center;
 }
 .compromisso-article h2 {
   font-size: 22px;

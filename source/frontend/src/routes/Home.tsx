@@ -275,7 +275,7 @@ function InstallBlock() {
       <Link
         to="/compromisso"
         aria-label={`ler o compromisso · ${t("home.forever_free")}`}
-        className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
+        className="inline-flex items-center gap-2 hover:underline"
       >
         <span
           className="font-mono uppercase"
@@ -604,7 +604,7 @@ export function Home() {
             <span style={{ color: "var(--accent)" }}>·</span>{" "}
             <Link
               to="/compromisso"
-              className="hover:opacity-80 transition-opacity"
+              className="hover:underline"
               style={{ color: "var(--muted)" }}
             >
               compromisso
