@@ -535,6 +535,8 @@
   "home.install.copy": "copy",
   "home.install.platforms": "macOS and Linux · zero dependencies · local daemon",
   "home.install.product": "product",
+  "home.install.counter": "I'm in {count} machines",
+  "home.install.counter_aria": "registered install counter",
   "home.term.observed": "observed signals · last 90d",
   "home.term.sessions_90d": "sessions 90d",
   "home.term.sessions_delta": "8 repos in L1",

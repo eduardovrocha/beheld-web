@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { InstallCard } from "@/components/InstallCard";
+import { InstallCounter } from "@/components/InstallCounter";
 import { SectionHead } from "@/components/SectionHead";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -177,6 +178,13 @@ function InstallBlock() {
           {t("home.forever_free")}
         </span>
       </Link>
+
+      {/* Contador de instalações cross-repo. Renderiza só quando a API
+          responde com sucesso; falha silenciosa = componente ausente.
+          Disclosure completo em /compromisso § Contador de instalações. */}
+      <div className="mt-2">
+        <InstallCounter />
+      </div>
     </>
   );
 }

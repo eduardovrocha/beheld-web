@@ -112,3 +112,40 @@ compromisso público versionado:
 ### A.5 — resposta padrão a "qual a pegadinha?"
 
 > Não tem pegadinha pro dev. É de graça pra sempre, e está escrito num documento versionado no repositório, com cláusula de sucessão. O Beheld se sustenta cobrando, mais pra frente, de empresas que querem buscar devs no diretório. Você nunca é o produto.
+
+---
+
+## Contador de instalações
+
+O contador na página inicial mostra quantas máquinas registraram o B3H31D em algum momento.
+
+Funciona assim:
+
+- Na primeira execução de `beheld init`, geramos um UUID v4 aleatório na sua máquina, gravado em `~/.beheld/install-id` com permissões `0o600`.
+- Esse UUID é enviado uma única vez, junto com o nome do sistema operacional (`macos` ou `linux`) e a versão do beheld, para `https://beheld.dev/api/install/register`.
+- Nada além disso é enviado. Sem IP. Sem hostname. Sem qualquer identificador pessoal.
+- Atualizações e reinstalações **não** repetem o envio — o UUID já existe em disco e a presença do arquivo é a fonte de verdade.
+
+O payload exato:
+
+```json
+{ "id": "<uuid-v4>", "os": "macos", "version": "0.x.y" }
+```
+
+### Como desligar
+
+Defina `BEHELD_NO_TELEMETRY=1` no seu shell antes de rodar `beheld init`. Nada será enviado, nada será gravado em disco, e nenhuma linha sobre o contador aparece no output. O opt-out é invisível por design.
+
+### O que o contador mede
+
+*Instalações observadas*, não usuários ativos. O contador só sobe; nunca desce. Não rastreamos uninstall — fazer isso exigiria telemetria recorrente, que não estamos dispostos a coletar.
+
+Se você deletar `~/.beheld/` inteiro e rodar `beheld init` de novo, conta como nova instalação. É inevitável e aceitável; ocorre raramente.
+
+### O que está garantido em código
+
+- Schema da tabela `installs` tem **apenas** os 4 campos: `id`, `os`, `version`, `timestamps`. Teste `spec/requests/installs_spec.rb` falha se algum campo for adicionado sem atualizar este documento.
+- O controller `InstallsController` não toca em `request.ip`, `request.user_agent`, `request.headers`, ou `request.env`. Teste lê o source e falha se alguma dessas referências for adicionada.
+- O cliente CLI (`packages/cli/src/install/counter.ts`) só lê `BEHELD_DATA_DIR` e `BEHELD_NO_TELEMETRY` do environment. Teste regex falha se outra variável de ambiente for tocada.
+
+Qualquer expansão dessa lista exige bump deste documento, bump dos testes de privacidade do servidor e do cliente, e bump do disclosure visível no `beheld init`. A lista é cláusula pétrea.

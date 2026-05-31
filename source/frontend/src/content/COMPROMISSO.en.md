@@ -112,3 +112,40 @@ versioned public commitment:
 ### A.5 — standard answer to "what's the catch?"
 
 > There's no catch for the dev. It's free forever, and it's written in a versioned document in the repository, with a succession clause. Beheld sustains itself by charging, further down the road, companies that want to search the developer directory. You're never the product.
+
+---
+
+## Install counter
+
+The counter on the home page shows how many machines have registered B3H31D at some point.
+
+How it works:
+
+- On the first run of `beheld init`, we generate a random UUID v4 on your machine and write it to `~/.beheld/install-id` with permissions `0o600`.
+- That UUID is sent once, together with the OS name (`macos` or `linux`) and the beheld version, to `https://beheld.dev/api/install/register`.
+- Nothing else is sent. No IP. No hostname. No personal identifier.
+- Updates and reinstalls **do not** repeat the send — the UUID already exists on disk and the file's presence is the source of truth.
+
+The exact payload:
+
+```json
+{ "id": "<uuid-v4>", "os": "macos", "version": "0.x.y" }
+```
+
+### How to disable
+
+Set `BEHELD_NO_TELEMETRY=1` in your shell before running `beheld init`. Nothing will be sent, nothing will be written to disk, and no counter-related line will appear in the output. Opt-out is invisible by design.
+
+### What the counter measures
+
+*Observed installs*, not active users. The counter only goes up; it never goes down. We don't track uninstall — doing so would require recurring telemetry, which we are not willing to collect.
+
+If you delete `~/.beheld/` entirely and run `beheld init` again, it counts as a new install. This is unavoidable and acceptable; it happens rarely.
+
+### What's guaranteed in code
+
+- The `installs` table schema has **only** 4 fields: `id`, `os`, `version`, `timestamps`. Test `spec/requests/installs_spec.rb` fails if any field is added without updating this document.
+- The `InstallsController` does not touch `request.ip`, `request.user_agent`, `request.headers`, or `request.env`. The test reads the source and fails if any of those references are added.
+- The CLI client (`packages/cli/src/install/counter.ts`) only reads `BEHELD_DATA_DIR` and `BEHELD_NO_TELEMETRY` from the environment. A regex test fails if any other env variable is touched.
+
+Any expansion of this list requires a bump of this document, a bump of the server and client privacy tests, and a bump of the disclosure visible in `beheld init`. The list is an entrenched clause.
