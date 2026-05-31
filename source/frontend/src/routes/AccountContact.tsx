@@ -30,8 +30,7 @@ type Phase =
   | { kind: "loading" }
   | { kind: "ready"; target: ContactTarget["account"] }
   | { kind: "unavailable" }
-  | { kind: "sending"; target: ContactTarget["account"] }
-  | { kind: "sent"; handle: string };
+  | { kind: "sending"; target: ContactTarget["account"] };
 
 export function AccountContact() {
   const t = useT();
@@ -87,12 +86,29 @@ export function AccountContact() {
     setPhase({ kind: "sending", target });
 
     try {
+      const trimmedJob  = jobTitle.trim();
+      const trimmedBody = body.trim();
       const result = await sendContact(account_id!, {
-        job_title: jobTitle.trim(),
-        body:      body.trim(),
+        job_title: trimmedJob,
+        body:      trimmedBody,
       });
       if (result.ok) {
-        setPhase({ kind: "sent", handle: target.handle });
+        // Optimistic append: a mensagem que acabamos de mandar entra no
+        // histórico local imediatamente, sem refetch nem navegação. Status
+        // 'pending' espelha o que o backend gravou (sem resposta ainda).
+        const justSent: ContactPreviousMessage = {
+          id:           result.message_id,
+          job_title:    trimmedJob || null,
+          body:         trimmedBody,
+          reply_body:   null,
+          sent_at:      new Date().toISOString(),
+          responded_at: null,
+          status:       "pending",
+        };
+        setPrevMessages((prev) => [...prev, justSent]);
+        setBody("");
+        setFocusedKey(justSent.job_title ?? "__none__");
+        setPhase({ kind: "ready", target });
       } else {
         setError(result.message);
         setPhase({ kind: "ready", target });
@@ -125,25 +141,6 @@ export function AccountContact() {
           </p>
           <div style={{ marginTop: 16 }}>
             <Link to="/directory" style={linkStyle()}>{t("contact.unavailable.back")}</Link>
-          </div>
-        </Card>
-      </Shell>
-    );
-  }
-
-  if (phase.kind === "sent") {
-    return (
-      <Shell>
-        <Header title={t("contact.sent.title")} />
-        <Card>
-          <p style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.7 }}>
-            {t("contact.sent.body_prefix")}<strong style={{ color: "var(--accent)" }}>{phase.handle}</strong>{t("contact.sent.body_suffix")}
-          </p>
-          <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, marginTop: 12 }}>
-            {t("contact.sent.note_prefix")}<span style={{ color: "var(--text)" }}>{t("contact.action_respond")}</span>{t("contact.sent.note_suffix")}
-          </p>
-          <div style={{ marginTop: 24, display: "flex", gap: 12 }}>
-            <Link to="/directory" style={primaryLinkStyle()}>{t("contact.sent.back")}</Link>
           </div>
         </Card>
       </Shell>
@@ -536,13 +533,3 @@ function linkStyle(): React.CSSProperties {
   };
 }
 
-function primaryLinkStyle(): React.CSSProperties {
-  return {
-    fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-    fontSize: 11, color: "var(--bg)", letterSpacing: "0.14em",
-    textTransform: "uppercase",
-    background: "var(--text)", border: "1px solid var(--text)",
-    padding: "6px 14px",
-    textDecoration: "none",
-  };
-}
