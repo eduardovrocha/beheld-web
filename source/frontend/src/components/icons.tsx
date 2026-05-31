@@ -60,6 +60,29 @@ export function OpenSourceIcon({ size = 13 }: { size?: number }) {
   );
 }
 
+// Corner-up-left (feather) — ação de responder mensagem.
+export function ReplyIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="9 14 4 9 9 4" />
+      <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+    </svg>
+  );
+}
+
+// Archive (feather) — ação de ignorar (arquiva sem revelar contatos).
+export function ArchiveIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="21 8 21 21 3 21 3 8" />
+      <rect x="1" y="3" width="22" height="5" />
+      <line x1="10" y1="12" x2="14" y2="12" />
+    </svg>
+  );
+}
+
 // Copy (feather) — botão de copiar comando de install (estado idle).
 export function CopyIcon({ size = 12 }: { size?: number }) {
   return (

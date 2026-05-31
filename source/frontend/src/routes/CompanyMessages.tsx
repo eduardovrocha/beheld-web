@@ -14,6 +14,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { FloatingBack } from "@/components/company/FloatingBack";
+import { ArchiveIcon, ReplyIcon } from "@/components/icons";
 import { useT, useFmt } from "@/i18n/I18nProvider";
 import {
   clearSessionToken,
@@ -341,20 +342,28 @@ function MessageBlock({ m, busy, canRespond, onRespond, onIgnore }: {
       )}
 
       {m.state === "pending" && !composing && (
-        <div className="mt-3 flex items-center gap-3">
-          <PrimaryButton disabled={busy || !canRespond} onClick={() => setComposing(true)}>
-            {t("dashboard.messages.respond")}
-          </PrimaryButton>
-          <button onClick={onIgnore} disabled={busy}
+        <div className="mt-3 flex items-center gap-5">
+          <button type="button" onClick={() => setComposing(true)} disabled={busy || !canRespond}
+                  className="inline-flex items-center gap-1.5 font-mono uppercase hover:underline"
                   style={{
-                    background: "none", border: "none", cursor: busy ? "not-allowed" : "pointer",
-                    fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-                    fontSize: 11, color: "var(--muted)", letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                    textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
-                    padding: 0,
+                    background: "none", border: "none", padding: 0,
+                    color: "var(--accent)", fontSize: 11, letterSpacing: "0.14em",
+                    cursor: (busy || !canRespond) ? "not-allowed" : "pointer",
+                    opacity: (busy || !canRespond) ? 0.5 : 1,
                   }}>
-            {t("dashboard.messages.ignore")}
+            <ReplyIcon />
+            <span>{t("dashboard.messages.respond")}</span>
+          </button>
+          <button type="button" onClick={onIgnore} disabled={busy}
+                  className="inline-flex items-center gap-1.5 font-mono uppercase hover:underline"
+                  style={{
+                    background: "none", border: "none", padding: 0,
+                    color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em",
+                    cursor: busy ? "not-allowed" : "pointer",
+                    opacity: busy ? 0.5 : 1,
+                  }}>
+            <ArchiveIcon />
+            <span>{t("dashboard.messages.ignore")}</span>
           </button>
         </div>
       )}
