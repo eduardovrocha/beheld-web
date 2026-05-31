@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_28_010000) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_31_170637) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -90,6 +90,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_28_010000) do
     t.index ["account_id"], name: "index_dev_sessions_on_account_id"
     t.index ["expires_at"], name: "index_dev_sessions_on_expires_at"
     t.index ["token"], name: "index_dev_sessions_on_token", unique: true
+  end
+
+  create_table "installs", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "os", null: false
+    t.string "version", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "magic_links", force: :cascade do |t|

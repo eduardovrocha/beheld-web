@@ -33,6 +33,10 @@ gem "bootsnap", require: false
 # Cross-origin Ajax from browser frontends consuming this API
 gem "rack-cors"
 
+# Rate-limiting middleware. Usado pra proteger POST /api/install/register
+# (10 chamadas por IP por hora) — endpoint público, sem autenticação.
+gem "rack-attack"
+
 # Ed25519 verification of signed bundles uploaded to the portal.
 gem "ed25519", "~> 1.3"
 

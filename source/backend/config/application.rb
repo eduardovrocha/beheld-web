@@ -55,5 +55,9 @@ module Backend
                           key: "_beheld_session_store",
                           same_site: :lax
     config.middleware.use ActionDispatch::Flash
+
+    # Rate-limit pra endpoints públicos sem autenticação.
+    # Config detalhada em config/initializers/rack_attack.rb.
+    config.middleware.use Rack::Attack
   end
 end

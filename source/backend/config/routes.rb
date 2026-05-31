@@ -22,6 +22,13 @@ Rails.application.routes.draw do
   # for identity attestations. See documents/platform-key-ops.md.
   get "api/platform-keys" => "platform_keys#index", as: :api_platform_keys
 
+  # Cross-repo install counter (B3H31D).
+  # Payload imutável: { id: uuid-v4, os: macos|linux, version: semver }.
+  # Sem IP, sem hostname, sem fingerprint. Cláusula pétrea — alterar exige
+  # bump do disclosure em /compromisso.
+  post "api/install/register" => "installs#register", as: :api_install_register
+  get  "api/install/count"    => "installs#count",    as: :api_install_count
+
   # GitHub OAuth flow for identity attestation (Phase 5 / F5.6.1).
   get  "api/auth/github/start"    => "auth#github_start",    as: :api_auth_github_start
   get  "api/auth/github/callback" => "auth#github_callback", as: :api_auth_github_callback
