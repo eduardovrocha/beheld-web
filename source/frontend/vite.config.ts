@@ -13,5 +13,14 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     watch: { usePolling: true }, // reliable HMR inside Docker bind mounts
+    // Proxy /api/* pro Rails da network docker compartilhada.
+    // Override por env VITE_API_TARGET pra apontar pra outro host
+    // (ex: http://localhost:3000 quando rodando fora do container).
+    proxy: {
+      "/api": {
+        target: process.env.VITE_API_TARGET ?? "http://beheld-backend-dev:3000",
+        changeOrigin: true,
+      },
+    },
   },
 });
