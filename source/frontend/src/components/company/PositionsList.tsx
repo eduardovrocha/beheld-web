@@ -798,12 +798,13 @@ function primaryChip(active: boolean): React.CSSProperties {
     letterSpacing: "0.14em",
     textTransform: "uppercase",
     padding: "4px 10px",
-    background: active ? "var(--accent)" : "transparent",
-    color:      active ? "var(--bg)"     : "var(--text)",
-    border: `1px solid ${active ? "var(--accent)" : "var(--rule)"}`,
+    background: active ? "var(--rule-soft)" : "transparent",
+    color: "var(--text)",
+    border: "none",
     borderRadius: 0,
     cursor: "pointer",
     fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
+    transition: "background 120ms ease",
   };
 }
 
