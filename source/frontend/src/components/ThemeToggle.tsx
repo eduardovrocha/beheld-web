@@ -10,12 +10,12 @@ import { useEffect, useState } from "react";
 
 import { useT } from "@/i18n/I18nProvider";
 
-type Mode = "auto" | "light" | "dark";
+type Mode = "auto" | "light" | "dark" | "github";
 
 function readSaved(): Mode {
   try {
     const v = localStorage.getItem("dp-theme");
-    if (v === "light" || v === "dark") return v;
+    if (v === "light" || v === "dark" || v === "github") return v;
   } catch (_) {}
   return "auto";
 }
@@ -53,7 +53,11 @@ export function ThemeToggle() {
   }, []);
 
   function cycle() {
-    const next: Mode = mode === "auto" ? "light" : mode === "light" ? "dark" : "auto";
+    const next: Mode =
+      mode === "auto" ? "light" :
+      mode === "light" ? "dark" :
+      mode === "dark" ? "github" :
+      "auto";
     setMode(next);
     try {
       if (next === "auto") localStorage.removeItem("dp-theme");
@@ -63,8 +67,16 @@ export function ThemeToggle() {
   }
 
   const effectiveDark = mode === "dark" || (mode === "auto" && systemDark);
-  const prefix = mode === "auto" ? "·" : effectiveDark ? "—" : "+";
-  const label = mode === "auto" ? t("theme.auto") : effectiveDark ? "dark" : "light";
+  const prefix =
+    mode === "auto"   ? "·" :
+    mode === "github" ? "★" :
+    effectiveDark     ? "—" :
+                        "+";
+  const label =
+    mode === "auto"   ? t("theme.auto") :
+    mode === "github" ? "github" :
+    effectiveDark     ? "dark" :
+                        "light";
 
   return (
     <button

@@ -37,6 +37,50 @@
   --term-band-med: #c97d2a;
   --term-band-high: #4a7c4e;
 }
+/* ── GitHub Light theme — Primer palette ─────────────────────────────────
+   Ativado quando html[data-theme="github"] está setado. Standalone — não
+   compõe com .dark (mode mutuamente exclusivo no ThemeToggle).
+*/
+html[data-theme="github"] {
+  --bg:          #ffffff;
+  --surface:     #f6f8fa;
+  --surface-2:   #f6f8fa;
+  --rule:        #d0d7de;
+  --rule-soft:   #d8dee4;
+  --text:        #1f2328;
+  --muted:       #636c76;
+  --muted-soft:  #6e7781;
+  --accent:      #0969da;      /* Primer blue */
+  --accent-deep: #0550ae;
+  --ok:          #1a7f37;
+  --warn:        #9a6700;
+  --lens:        #1f2328;
+  --card-bg:     #ffffff;
+
+  /* Terminal — github light: bg subtle gray, dark text */
+  --term-bg:       #f6f8fa;
+  --term-text:     #1f2328;
+  --term-rule:     #d0d7de;
+  --term-prompt:   #1a7f37;
+  --term-muted:    #636c76;
+  --term-key:      #24292f;
+  --term-accent:   #0969da;
+  --term-dim:      #8c959f;
+  --term-ok:       #1a7f37;
+  --term-bar-bg:   rgba(9, 105, 218, 0.12);
+  --term-bar-tint: rgba(0, 0, 0, 0.02);
+
+  /* Score bands — GitHub Primer semantic */
+  --term-band-low:  #cf222e;
+  --term-band-med:  #9a6700;
+  --term-band-high: #1a7f37;
+}
+
+/* GitHub não tem ruído no canvas — clean white. */
+html[data-theme="github"] body {
+  background-image: none;
+}
+
 html.dark {
   --bg: #0d1117;
   --surface: #11161e;

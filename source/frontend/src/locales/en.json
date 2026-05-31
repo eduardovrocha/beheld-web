@@ -5,7 +5,7 @@
   "theme.auto": "auto",
   "theme.light": "light",
   "theme.dark": "dark",
-  "theme.aria": "Toggle theme (auto / light / dark)",
+  "theme.aria": "Toggle theme (auto / light / dark / github)",
   "locale.aria": "Switch language",
   "home.title": "Verifiable technical profiles for developers",
   "home.subtitle_html": "DevProfile is a local daemon that builds a technical profile from your Claude Code and Continue.dev work. Produces <strong>Ed25519-signed snapshots</strong> that anyone can verify in the browser.",

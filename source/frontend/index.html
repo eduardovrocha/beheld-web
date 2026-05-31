@@ -24,16 +24,14 @@
       (function () {
         try {
           var saved = localStorage.getItem("dp-theme");
-          var resolved =
-            saved === "dark" ? "dark"
-            : saved === "light" ? "light"
-            : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
-                ? "dark"
-                : "light";
-          if (resolved === "dark") document.documentElement.classList.add("dark");
-          if (saved === "dark" || saved === "light") {
-            document.documentElement.setAttribute("data-theme", saved);
-          }
+          var explicit = saved === "dark" || saved === "light" || saved === "github" ? saved : null;
+          // GitHub é um tema standalone (não usa .dark). Light/dark padrão segue o sistema.
+          var wantsDark =
+            explicit === "dark" ? true
+            : (explicit === "light" || explicit === "github") ? false
+            : !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          if (wantsDark) document.documentElement.classList.add("dark");
+          if (explicit) document.documentElement.setAttribute("data-theme", explicit);
         } catch (_) {}
       })();
     </script>

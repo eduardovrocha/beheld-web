@@ -5,7 +5,7 @@
   "theme.auto": "auto",
   "theme.light": "claro",
   "theme.dark": "escuro",
-  "theme.aria": "Alternar tema (auto / claro / escuro)",
+  "theme.aria": "Alternar tema (auto / claro / escuro / github)",
   "locale.aria": "Alternar idioma",
   "home.title": "Perfis técnicos verificáveis para desenvolvedores",
   "home.subtitle_html": "DevProfile é um daemon local que monta um perfil técnico do seu trabalho com Claude Code e Continue.dev. Gera <strong>snapshots assinados</strong> em Ed25519 que qualquer pessoa pode verificar no navegador.",
