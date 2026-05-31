@@ -41,11 +41,11 @@ export function InstallCard() {
         <button
           type="button"
           onClick={onCopy}
-          className={`ml-auto inline-flex cursor-pointer items-center gap-1.5 font-mono transition-colors ${copied ? "" : "uppercase"}`}
+          className={`ml-auto inline-flex cursor-pointer items-center gap-1.5 font-mono transition-colors hover:underline ${copied ? "" : "uppercase"}`}
           style={{
-            border: `1px solid ${copied ? "var(--ok)" : "var(--rule)"}`,
+            border: "none",
             color: copied ? "var(--ok)" : "var(--muted)",
-            padding: "5px 11px",
+            padding: 0,
             fontSize: 10,
             letterSpacing: "0.14em",
             background: "transparent",
