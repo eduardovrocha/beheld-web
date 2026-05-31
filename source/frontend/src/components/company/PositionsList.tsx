@@ -782,13 +782,12 @@ function listRowStyle(active: boolean, archived: boolean): React.CSSProperties {
     background: active ? "var(--rule-soft)" : "transparent",
     border: "none",
     borderTop: "1px solid var(--rule-soft)",
-    borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
     padding: "10px 16px",
     cursor: "pointer",
     font: "inherit",
     color: "var(--text)",
     opacity: archived ? 0.6 : 1,
-    transition: "background 120ms ease, border-color 120ms ease",
+    transition: "background 120ms ease",
   };
 }
 
