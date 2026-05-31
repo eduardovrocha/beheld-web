@@ -16,6 +16,7 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+import { DevNav } from "@/components/dev/DevNav";
 import { TabStrip, type TabDef } from "@/components/TabStrip";
 import { VerifiedIcon } from "@/components/icons";
 import { useT, useTp, useFmt } from "@/i18n/I18nProvider";
@@ -150,10 +151,15 @@ export function Dashboard() {
 
   const { account, bundles, notifications, messages } = data;
   const activeTab = TABS.find((tab) => tab.id === active) ?? TABS[0];
+  // Slug do bundle publicado mais relevante (visível, mais recente) — usado
+  // pelo DevNav pra linkar pro perfil público em /v/<slug>. Sem nenhum
+  // visível, o link some.
+  const primarySlug = bundles.find((b) => b.visible)?.url_slug ?? null;
 
   return (
     <Shell>
-      <Hero handle={account.handle} fingerprint={account.fingerprint} subtitle={t(activeTab.subtitleKey)} />
+      <Hero handle={account.handle} fingerprint={account.fingerprint}
+            subtitle={t(activeTab.subtitleKey)} slug={primarySlug} />
 
       <TabStrip<TabId>
         tabs={TABS.map((tab) => ({
@@ -247,8 +253,8 @@ function Shell({ children }: { children: ReactNode }) {
   );
 }
 
-function Hero({ handle, fingerprint, subtitle }: {
-  handle: string; fingerprint: string; subtitle: string;
+function Hero({ handle, fingerprint, subtitle, slug }: {
+  handle: string; fingerprint: string; subtitle: string; slug?: string | null;
 }) {
   const t = useT();
   return (
@@ -261,8 +267,12 @@ function Hero({ handle, fingerprint, subtitle }: {
           style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
         {handle}
       </h1>
+      <div className="mt-3 flex flex-wrap items-baseline gap-3 font-mono"
+           style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
+        <DevNav current="dashboard" slug={slug ?? undefined} bare />
+      </div>
       {fingerprint && (
-        <div className="mt-3 font-mono"
+        <div className="mt-2 font-mono"
              style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
           {t("dashboard.hero.fingerprint_label")} <span style={{ color: "var(--accent)" }}>{fingerprint.slice(0, 24)}…</span>
         </div>

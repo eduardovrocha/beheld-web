@@ -739,6 +739,9 @@
   "b3.title": "meet B3",
   "b3.right": "witness",
 
+  "dev.nav.dashboard": "Dashboard",
+  "dev.nav.profile": "Public profile",
+
   "profile.identity.verified": "Identity verified",
   "profile.identity.via_github": "GitHub OAuth",
   "profile.identity.unverified": "Identity not verified",

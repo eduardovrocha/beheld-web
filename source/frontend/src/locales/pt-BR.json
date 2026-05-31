@@ -739,6 +739,9 @@
   "b3.title": "conheça o B3",
   "b3.right": "testemunho",
 
+  "dev.nav.dashboard": "Dashboard",
+  "dev.nav.profile": "Perfil público",
+
   "profile.identity.verified": "Identidade verificada",
   "profile.identity.via_github": "GitHub OAuth",
   "profile.identity.unverified": "Identidade não verificada",
