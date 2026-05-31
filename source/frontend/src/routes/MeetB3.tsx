@@ -1,60 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
+import { InstallCard } from "@/components/InstallCard";
 import { LensLogo } from "@/components/LensLogo";
 import { SectionHead } from "@/components/SectionHead";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useT } from "@/i18n/I18nProvider";
-
-const INSTALL_CMD = "curl -fsSL beheld.dev/install.sh | sh";
-
-function InstallCard() {
-  const t = useT();
-  const [copied, setCopied] = useState(false);
-  const onCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(INSTALL_CMD);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1400);
-    } catch {
-      /* ignore */
-    }
-  };
-  return (
-    <div
-      className="p-5"
-      style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}
-    >
-      <div
-        className="mb-2.5 font-mono uppercase"
-        style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.18em" }}
-      >
-        {t("home.install.label")}
-      </div>
-      <div className="flex items-center gap-2.5 font-mono" style={{ color: "var(--text)", fontSize: 13 }}>
-        <span className="font-medium" style={{ color: "var(--accent)" }}>
-          $
-        </span>
-        <span>{INSTALL_CMD}</span>
-        <button
-          type="button"
-          onClick={onCopy}
-          className={`ml-auto cursor-pointer font-mono transition-colors ${copied ? "" : "uppercase"}`}
-          style={{
-            border: `1px solid ${copied ? "var(--ok)" : "var(--rule)"}`,
-            color: copied ? "var(--ok)" : "var(--muted)",
-            padding: "5px 11px",
-            fontSize: 10,
-            letterSpacing: "0.14em",
-            background: "transparent",
-          }}
-        >
-          {copied ? t("home.install.copied") : t("home.install.copy")}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 const META = {
   pt: {
