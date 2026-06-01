@@ -11,9 +11,18 @@
 # an immutable history.
 #
 # Telemetry sources (spec section 9, with `languages` removed):
-#   ecosystems  →  bundle.bundle_data.payload.l1.ecosystems    (keys with true)
-#   test_ratio  →  bundle.bundle_data.payload.l1.avg_test_ratio × 100
+#   ecosystems  →  bundle.bundle_data.payload.core.ecosystems (R1.3) OR
+#                  bundle.bundle_data.payload.l1.ecosystems   (legacy v2)
+#                  (keys with true)
+#   test_ratio  →  bundle.bundle_data.payload.core.avg_test_ratio (R1.3) OR
+#                  bundle.bundle_data.payload.l1.avg_test_ratio   (legacy)
+#                  × 100
 #   recency     →  Time.current - bundle.last_bundle_at  (days, float)
+#
+# The core/enrichment fallback to legacy l1/l2 lives in BundleSignals.from
+# so this file stays oblivious to wire schema. R1.3 wire support is added
+# there once and consumed structurally by all three positions services
+# (Matcher, EvolutionCurve, the controller views).
 #
 # Stop conditions enforced inline:
 #   - score is clamped to [0.0, 100.0] before persistence

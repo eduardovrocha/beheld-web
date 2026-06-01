@@ -9,7 +9,10 @@
     end
 
   scores = (@bundle_data["payload"] || {})["scores"] || {}
-  signals = (@bundle_data["payload"] || {})["signals"] || (@bundle_data["payload"] || {})["l2"] || {}
+  # R1.3 — fallback chain across all three portal schema labels:
+  # v3 enrichment → v2 l2 → v1 signals. Same shape, different name.
+  inner_payload = @bundle_data["payload"] || {}
+  signals = inner_payload["enrichment"] || inner_payload["l2"] || inner_payload["signals"] || {}
 %>
 
 <section class="card" id="verify-status" data-bundle='<%= @bundle_data.to_json %>'>

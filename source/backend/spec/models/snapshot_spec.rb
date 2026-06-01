@@ -61,9 +61,52 @@ RSpec.describe Snapshot, type: :model do
     }
   end
 
-  def wrap(inner)
+  # R1.3 v3 inner payload — `core` is required, `enrichment` is optional.
+  let(:v3_inner_payload) do
     {
-      "version" => inner.key?("l1") ? "2" : "1",
+      "created_at" => "2026-05-14T00:00:00+00:00",
+      "beheld_version" => "0.4.0",
+      "previous_hash" => nil,
+      "scores" => base_scores,
+      "core" => {
+        "total_repos" => 12,
+        "total_commits" => 4832,
+        "ecosystems" => { "rails" => true, "python" => true },
+        "platforms" => { "docker" => true },
+        "avg_test_ratio" => 0.42,
+      },
+      "enrichment" => {
+        "platforms" => { "docker" => 10 },
+        "ecosystems" => { "node" => 5 },
+        "workflow_distribution" => { "tdd" => 0.2 },
+        "harness_sources" => [
+          { "harness" => "claude_code", "capture_fidelity" => "native_hook", "sessions" => 100 },
+        ],
+        "sessions_analyzed" => 100,
+      },
+    }
+  end
+
+  # R1.3 v3 with `core` only (no enrichment — capture-mode where no harness
+  # ran, but git history is still present).
+  let(:v3_core_only_payload) do
+    {
+      "created_at" => "2026-05-14T00:00:00+00:00",
+      "beheld_version" => "0.4.0",
+      "previous_hash" => nil,
+      "scores" => base_scores,
+      "core" => { "ecosystems" => { "go" => true }, "avg_test_ratio" => 0.18 },
+    }
+  end
+
+  def wrap(inner)
+    version =
+      if    inner.key?("core") then "7"
+      elsif inner.key?("l1")   then "5"
+      else                          "1"
+      end
+    {
+      "version" => version,
       "payload" => inner,
       "hash" => "sha256:" + ("a" * 64),
       "signature" => "ed25519:" + ("b" * 128),
@@ -95,6 +138,20 @@ RSpec.describe Snapshot, type: :model do
     it "prefere :v2 quando ambos l1+l2 e signals estão presentes (futuro misto)" do
       mixed = v2_inner_payload.merge("signals" => {})
       expect(Snapshot.schema_version(mixed)).to eq(:v2)
+    end
+
+    # ── R1.3 — v3 (core / enrichment) ────────────────────────────────────
+    it "retorna :v3 quando core presente (R1.3 BUNDLE_VERSION 6+7)" do
+      expect(Snapshot.schema_version(v3_inner_payload)).to eq(:v3)
+    end
+
+    it "retorna :v3 com core mesmo sem enrichment (capture-mode legítimo)" do
+      expect(Snapshot.schema_version(v3_core_only_payload)).to eq(:v3)
+    end
+
+    it "prefere :v3 quando core coexiste com l1+l2 (bundle defensivamente híbrido)" do
+      hybrid = v2_inner_payload.merge("core" => v3_inner_payload["core"])
+      expect(Snapshot.schema_version(hybrid)).to eq(:v3)
     end
   end
 
@@ -138,6 +195,15 @@ RSpec.describe Snapshot, type: :model do
       bad = v2_inner_payload.merge("scores" => 50)
       expect(Snapshot.valid_payload?(bad)).to be(false)
     end
+
+    # ── R1.3 — v3 payload acceptance ─────────────────────────────────────
+    it "aceita payload v3 com core + enrichment" do
+      expect(Snapshot.valid_payload?(v3_inner_payload)).to be(true)
+    end
+
+    it "aceita payload v3 só com core (enrichment opcional)" do
+      expect(Snapshot.valid_payload?(v3_core_only_payload)).to be(true)
+    end
   end
 
   # ── persistence: schema_version auto-assignment ────────────────────────────
@@ -159,6 +225,24 @@ RSpec.describe Snapshot, type: :model do
         payload: wrap(v2_inner_payload),
       )
       expect(b.schema_version).to eq("v2")
+    end
+
+    it "grava schema_version='v3' ao salvar bundle com core" do
+      b = Snapshot.create!(
+        bundle_hash: "sha256:" + ("9" * 64),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(v3_inner_payload),
+      )
+      expect(b.schema_version).to eq("v3")
+    end
+
+    it "grava schema_version='v3' para bundle com só core (sem enrichment)" do
+      b = Snapshot.create!(
+        bundle_hash: "sha256:" + ("8" * 64),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(v3_core_only_payload),
+      )
+      expect(b.schema_version).to eq("v3")
     end
 
     it "rejeita save quando schema é :unknown" do
@@ -200,6 +284,33 @@ RSpec.describe Snapshot, type: :model do
       expect(view[:signals]).to be_a(Hash)
       expect(view).not_to have_key(:l1)
       expect(view).not_to have_key(:l2)
+    end
+
+    it "inclui core e enrichment para bundle v3 (sem signals/l1/l2)" do
+      b = Snapshot.create!(
+        bundle_hash: "sha256:" + ("1" * 64),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(v3_inner_payload),
+      )
+      view = b.public_view
+      expect(view[:schema_version]).to eq("v3")
+      expect(view[:core]).to be_a(Hash)
+      expect(view[:enrichment]).to be_a(Hash)
+      expect(view).not_to have_key(:l1)
+      expect(view).not_to have_key(:l2)
+      expect(view).not_to have_key(:signals)
+    end
+
+    it "inclui só core para bundle v3 sem enrichment (compact remove nil)" do
+      b = Snapshot.create!(
+        bundle_hash: "sha256:" + ("2" * 64),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(v3_core_only_payload),
+      )
+      view = b.public_view
+      expect(view[:schema_version]).to eq("v3")
+      expect(view[:core]).to be_a(Hash)
+      expect(view).not_to have_key(:enrichment)
     end
   end
 end

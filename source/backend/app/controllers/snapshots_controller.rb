@@ -9,9 +9,10 @@
 #   422: validation errors (bad hash/pubkey format, missing fields,
 #        unrecognized schema)
 #
-# The controller accepts both v1 (signals) and v2 (l1+l2) inner payloads.
-# Identification is delegated to `Snapshot.schema_version`; the persisted
-# `schema_version` column lets renderers pick the right layout.
+# The controller accepts v1 (signals), v2 (l1+l2), and v3 (core + optional
+# enrichment) inner payloads. Identification is delegated to
+# `Snapshot.schema_version`; the persisted `schema_version` column lets
+# renderers pick the right layout.
 
 class SnapshotsController < ApplicationController
   REQUIRED_TOP_LEVEL_FIELDS = %w[version payload hash signature public_key].freeze
@@ -33,7 +34,7 @@ class SnapshotsController < ApplicationController
       return render(
         json: {
           error: "invalid payload",
-          detail: "payload must contain scores + (l1 & l2) or (signals)",
+          detail: "payload must contain scores + core (R1.3 v3) or (l1 & l2) or (signals)",
           schema_version: Snapshot.schema_version(inner_payload).to_s,
         },
         status: :unprocessable_entity,

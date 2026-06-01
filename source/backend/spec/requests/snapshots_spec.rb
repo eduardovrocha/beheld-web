@@ -61,6 +61,32 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
     }
   end
 
+  # R1.3 — v3 (core/enrichment) inner payload.
+  let(:v3_inner) do
+    {
+      "created_at" => "2026-05-14T00:00:00+00:00",
+      "beheld_version" => "0.4.0",
+      "previous_hash" => nil,
+      "scores" => base_scores,
+      "core" => {
+        "total_repos" => 12,
+        "total_commits" => 4832,
+        "ecosystems" => { "rails" => true, "python" => true },
+        "platforms" => { "docker" => true },
+        "avg_test_ratio" => 0.42,
+      },
+      "enrichment" => {
+        "platforms" => { "docker" => 10 },
+        "ecosystems" => { "node" => 5 },
+        "workflow_distribution" => { "tdd" => 0.2 },
+        "harness_sources" => [
+          { "harness" => "claude_code", "capture_fidelity" => "native_hook", "sessions" => 100 },
+        ],
+        "sessions_analyzed" => 100,
+      },
+    }
+  end
+
   let(:l1_empty_inner) do
     v2_inner.merge(
       "l1" => v2_inner["l1"].merge(
@@ -77,8 +103,13 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
   end
 
   def wrap(inner, hash_seed: "a")
+    version =
+      if    inner.key?("core") then "7"
+      elsif inner.key?("l1")   then "5"
+      else                          "1"
+      end
     {
-      "version" => inner.key?("l1") ? "2" : "1",
+      "version" => version,
       "payload" => inner,
       "hash" => "sha256:" + (hash_seed * 64)[0, 64],
       "signature" => "ed25519:" + ("b" * 128),
@@ -107,6 +138,33 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
       body = JSON.parse(response.body)
       expect(body["schema_version"]).to eq("v2")
       expect(Snapshot.find_by(short_id: body["id"]).schema_version).to eq("v2")
+    end
+
+    # R1.3 — v3 (core/enrichment, BUNDLE_VERSION 6+7) acceptance.
+    # NOTE: hash_seed must stay in [0-9a-f] — bundle_hash format gate.
+    it "aceita bundle v3 com core+enrichment e grava schema_version='v3'" do
+      post "/bundles",
+           params: wrap(v3_inner, hash_seed: "1a").to_json,
+           headers: { "Content-Type" => "application/json" }
+      expect(response).to have_http_status(:created)
+      body = JSON.parse(response.body)
+      expect(body["schema_version"]).to eq("v3")
+      expect(Snapshot.find_by(short_id: body["id"]).schema_version).to eq("v3")
+    end
+
+    it "aceita bundle v3 só com core (enrichment opcional)" do
+      core_only = {
+        "created_at" => "2026-05-14T00:00:00+00:00",
+        "beheld_version" => "0.4.0",
+        "previous_hash" => nil,
+        "scores" => base_scores,
+        "core" => { "ecosystems" => { "go" => true }, "avg_test_ratio" => 0.18 },
+      }
+      post "/bundles",
+           params: wrap(core_only, hash_seed: "2b").to_json,
+           headers: { "Content-Type" => "application/json" }
+      expect(response).to have_http_status(:created)
+      expect(JSON.parse(response.body)["schema_version"]).to eq("v3")
     end
 
     it "rejeita bundle com payload sem signals nem l1+l2" do
@@ -200,6 +258,36 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
       get "/v/#{b.short_id}/summary"
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body)["schema_version"]).to eq("v1")
+    end
+
+    it "devolve payload v3 contendo core e enrichment (JSON via Accept header)" do
+      b = Snapshot.create!(
+        bundle_hash: "sha256:" + ("c" * 64),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(v3_inner, hash_seed: "c"),
+      )
+      get "/v/#{b.short_id}", headers: { "Accept" => "application/json" }
+      expect(response).to have_http_status(:ok)
+      body = JSON.parse(response.body)
+      expect(body.dig("payload", "core")).to be_a(Hash)
+      expect(body.dig("payload", "enrichment")).to be_a(Hash)
+      expect(body.dig("payload", "l1")).to be_nil
+      expect(body.dig("payload", "l2")).to be_nil
+      expect(body.dig("payload", "signals")).to be_nil
+    end
+
+    it "rotula schema_version no /v/:id/summary para v3" do
+      b = Snapshot.create!(
+        bundle_hash: "sha256:" + ("3" * 64),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(v3_inner, hash_seed: "3"),
+      )
+      get "/v/#{b.short_id}/summary"
+      expect(response).to have_http_status(:ok)
+      data = JSON.parse(response.body)
+      expect(data["schema_version"]).to eq("v3")
+      expect(data["core"]).to be_a(Hash)
+      expect(data["enrichment"]).to be_a(Hash)
     end
 
     it "rotula schema_version no /v/:id/summary para v2" do

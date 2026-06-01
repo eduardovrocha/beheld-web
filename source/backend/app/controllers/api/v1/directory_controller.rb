@@ -4,6 +4,10 @@
 # (directory: true, bundles not revoked) — but returns JSON instead of an
 # HTML view. Authenticated by the signed `_beheld_company_session` cookie
 # the company minted via `POST /api/v1/sessions/company/verify`.
+#
+# R1.3 — primary reads target the v3 `payload.core.*` path, falling back to
+# legacy v2 `payload.l1.*` via SQL COALESCE / OR. Keeps both schemas
+# matchable while the population migrates.
 
 module Api
   module V1
@@ -61,21 +65,28 @@ module Api
         raw.compact_blank.uniq
       end
 
+      # R1.3 — match v3 (core) OR legacy v2 (l1). `jsonb_exists_any` returns
+      # false on NULL operands, so OR-ing two probes is safe regardless of
+      # which schema the row carries.
       def filter_by_ecosystems(scope, ecosystems)
         return scope if ecosystems.empty?
         conn = ActiveRecord::Base.connection
         literal = ecosystems.map { |e| conn.quote(e) }.join(",")
         scope.where(
-          "jsonb_exists_any(bundles.bundle_data #> '{payload,l1,ecosystems}', ARRAY[#{literal}]::text[])",
+          "jsonb_exists_any(bundles.bundle_data #> '{payload,core,ecosystems}', ARRAY[#{literal}]::text[]) " \
+          "OR jsonb_exists_any(bundles.bundle_data #> '{payload,l1,ecosystems}', ARRAY[#{literal}]::text[])",
         )
       end
 
+      # R1.3 — COALESCE picks v3 core first, falls back to legacy l1.
       def filter_by_test_ratio(scope, min, max)
         min_f = parse_ratio(min)
         max_f = parse_ratio(max)
         return scope if min_f.nil? && max_f.nil?
 
-        expr = "(bundles.bundle_data #>> ARRAY['payload','l1','avg_test_ratio'])::float"
+        expr = "COALESCE(" \
+          "(bundles.bundle_data #>> ARRAY['payload','core','avg_test_ratio'])::float, " \
+          "(bundles.bundle_data #>> ARRAY['payload','l1','avg_test_ratio'])::float)"
         scope = scope.where("#{expr} >= ?", min_f) if min_f
         scope = scope.where("#{expr} <= ?", max_f) if max_f
         scope
@@ -105,9 +116,14 @@ module Api
         }
       end
 
+      # R1.3 — union of v3 (core) and legacy v2 (l1) ecosystem maps so a
+      # mixed-schema population still surfaces every available filter chip.
       def collect_ecosystems(accounts)
         accounts
-          .flat_map { |a| a.bundles.flat_map { |b| extract_keys(b.bundle_data, %w[payload l1 ecosystems]) } }
+          .flat_map { |a| a.bundles.flat_map { |b|
+            extract_keys(b.bundle_data, %w[payload core ecosystems]) +
+              extract_keys(b.bundle_data, %w[payload l1 ecosystems])
+          } }
           .compact.uniq.sort
       end
 
@@ -117,10 +133,14 @@ module Api
         node.is_a?(Hash) ? node.keys : []
       end
 
+      # R1.3 — read the v3 `core` block when present, fall back to legacy
+      # `l1`. The key names inside the block (`ecosystems`, `platforms`,
+      # `avg_test_ratio`) are unchanged between schemas, so the per-field
+      # lookups stay identical once we pick the right parent hash.
       def dev_json(account)
-        bundle = account.bundles.max_by(&:last_bundle_at)
+        bundle  = account.bundles.max_by(&:last_bundle_at)
         payload = (bundle&.bundle_data || {})["payload"] || {}
-        l1      = payload["l1"] || {}
+        block   = payload["core"].is_a?(Hash) ? payload["core"] : (payload["l1"] || {})
 
         {
           account_id:     account.id,
@@ -129,9 +149,9 @@ module Api
           # Devolve todos os ecossistemas (cap alto de segurança). O card do
           # diretório rola o excedente no carrossel horizontal, então não há
           # motivo pra truncar em 5 e perder sinais técnicos.
-          ecosystems:     (l1["ecosystems"] || {}).keys.first(24),
-          platforms:      (l1["platforms"]  || {}).keys.first(5),
-          test_ratio:     l1["avg_test_ratio"],
+          ecosystems:     (block["ecosystems"] || {}).keys.first(24),
+          platforms:      (block["platforms"]  || {}).keys.first(5),
+          test_ratio:     block["avg_test_ratio"],
           last_bundle_at: bundle&.last_bundle_at&.iso8601,
           status:         bundle&.status&.to_s,
         }

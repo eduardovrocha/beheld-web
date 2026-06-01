@@ -59,9 +59,15 @@ module Positions
     # bundles sem o sinal; aqui tratamos 0.0 como ponto válido apenas se o
     # bundle de fato carrega `avg_test_ratio` — caso contrário, nil (não
     # poluir a curva com zeros artificiais).
+    #
+    # R1.3 — checa primeiro payload.core.avg_test_ratio (BUNDLE_VERSION 6+7),
+    # depois payload.l1.avg_test_ratio (legacy v2). A unidade final (0–100)
+    # ainda vem do BundleSignals.from(bundle).test_ratio que carrega a
+    # mesma cadeia de fallback canonicamente.
     def self.extract(bundle, signal)
       return nil unless signal == "test_ratio"
-      raw = bundle.bundle_data&.dig("payload", "l1", "avg_test_ratio")
+      raw = bundle.bundle_data&.dig("payload", "core", "avg_test_ratio") ||
+            bundle.bundle_data&.dig("payload", "l1", "avg_test_ratio")
       return nil unless raw.is_a?(Numeric)
       BundleSignals.from(bundle).test_ratio
     end

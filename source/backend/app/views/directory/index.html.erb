@@ -5,16 +5,19 @@
   portal_host = ENV.fetch("PORTAL_PUBLIC_URL", "https://beheld.dev").sub(%r{/+\z}, "")
   pt_months = %w[jan fev mar abr mai jun jul ago set out nov dez]
 
+  # R1.3 — `core` is the v3 path; `l1` is the legacy v2 fallback. The key
+  # names inside the block (ecosystems / platforms / avg_test_ratio) are
+  # identical between schemas, so a single parent pick is enough.
   display_for = ->(account) {
     bundle = account.bundles.max_by(&:last_bundle_at)
     payload = (bundle&.bundle_data || {})["payload"] || {}
-    l1      = payload["l1"] || {}
+    block   = payload["core"].is_a?(Hash) ? payload["core"] : (payload["l1"] || {})
     {
       bundle:        bundle,
       handle:        account.attestation&.github_login.presence || "dev-#{account.fingerprint.first(8)}",
-      ecosystems:    (l1["ecosystems"] || {}).keys,
-      platforms:     (l1["platforms"]  || {}).keys,
-      test_ratio:    l1["avg_test_ratio"],
+      ecosystems:    (block["ecosystems"] || {}).keys,
+      platforms:     (block["platforms"]  || {}).keys,
+      test_ratio:    block["avg_test_ratio"],
       last_activity: bundle && (pt_months[bundle.last_bundle_at.month - 1].capitalize + " " + bundle.last_bundle_at.year.to_s),
       status:        bundle&.status,
     }

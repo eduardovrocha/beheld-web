@@ -10,8 +10,12 @@
 <%
   inner = (@bundle_data["payload"] || {})
   scores = inner["scores"] || {}
-  l1     = inner["l1"]     || {}
-  l2     = inner["l2"]     || inner["signals"] || {}
+  # R1.3 — v3 bundles serialize the structured layer under `core` and the
+  # session-derived layer under `enrichment`. Legacy v2 still uses l1/l2;
+  # the very first portal schema (v1) used a flat `signals` hash. Pick
+  # whichever is present so the template logic below stays oblivious.
+  l1     = inner["core"]       || inner["l1"]       || {}
+  l2     = inner["enrichment"] || inner["l2"]       || inner["signals"] || {}
   beheld_version = inner["beheld_version"]
   bundle_created_at = inner["created_at"]
   pt_months = %w[jan fev mar abr mai jun jul ago set out nov dez]

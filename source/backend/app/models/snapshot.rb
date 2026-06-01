@@ -1,14 +1,19 @@
-# Stored .dpbundle (Phase 5 / F5.4-5; Phase 6 / F6.8 retrocompat).
+# Stored .dpbundle (Phase 5 / F5.4-5; Phase 6 / F6.8 retrocompat; R1.3 v3+).
 #
 # `payload` holds the entire bundle JSON as received from the CLI — including
 # the signed inner payload plus the proof half (hash, signature, public_key).
 # Re-verification by the browser (Web Crypto API) uses this exact bytes payload.
 #
-# Schema versions:
-#   v1 — Phase 5. Inner payload has a `signals` hash with all signals merged.
-#   v2 — Phase 6. Inner payload has `l1` (git history) and `l2` (sessions) as
-#        two distinct top-level objects.
-# Both are accepted; the `schema_version` column tells consumers which layout
+# Portal schema versions (decoupled from bundle wire BUNDLE_VERSION):
+#   v1 — Phase 5. Inner payload has a `signals` hash with all signals merged
+#                 (bundle BUNDLE_VERSION 1-4).
+#   v2 — Phase 6. Inner payload has `l1` (git history) and `l2` (sessions)
+#                 (bundle BUNDLE_VERSION 5).
+#   v3 — R1.3.    Inner payload has `core` and (optionally) `enrichment`
+#                 (bundle BUNDLE_VERSION 6 and 7 — both produce v3 rendering;
+#                 the difference between 6 and 7 is whether scores can be
+#                 null in JSON, which the renderer handles inline).
+# All are accepted; the `schema_version` column tells consumers which layout
 # to render.
 
 class Snapshot < ApplicationRecord
@@ -24,7 +29,8 @@ class Snapshot < ApplicationRecord
   validates :bundle_hash,    presence: true, uniqueness: true, format: { with: HASH_FORMAT }
   validates :public_key,     presence: true, format: { with: PUBKEY_FORMAT }
   validates :payload,        presence: true
-  validates :schema_version, inclusion: { in: %w[v1 v2] }
+  # R1.3 — v3 accepted alongside legacy v1/v2 (no auto-rewrite of existing rows).
+  validates :schema_version, inclusion: { in: %w[v1 v2 v3] }
 
   before_validation :assign_short_id, on: :create
   before_validation :assign_default_ttl, on: :create
@@ -44,16 +50,21 @@ class Snapshot < ApplicationRecord
   # ── schema detection ────────────────────────────────────────────────────
 
   # `payload` here is the INNER signed payload (i.e. the `payload` key of the
-  # outer bundle JSON). Returns :v2, :v1, or :unknown.
+  # outer bundle JSON). Returns :v3 (R1.3 — core/enrichment), :v2 (l1/l2),
+  # :v1 (signals), or :unknown.
   def self.schema_version(payload)
     return :unknown unless payload.is_a?(Hash)
+    # R1.3 — v3 detected by presence of `core` (enrichment is optional).
+    # Checked first so a malformed bundle carrying both shapes — should
+    # never happen but defensive — is treated as the newer schema.
+    return :v3 if payload.key?("core")
     return :v2 if payload.key?("l1") && payload.key?("l2")
     return :v1 if payload.key?("signals")
     :unknown
   end
 
   # Defensive payload check used by the controller before accepting an upload.
-  # Both v1 and v2 are valid — the difference is rendering only.
+  # v1, v2, and v3 are all valid — the difference is rendering only.
   def self.valid_payload?(payload)
     version = schema_version(payload)
     return false if version == :unknown
@@ -69,8 +80,9 @@ class Snapshot < ApplicationRecord
   end
 
   # Lightweight subset for the public profile (`/v/:id`) display — strips the
-  # proof fields by default and surfaces both layered (l1+l2) and legacy
-  # (signals) shapes so the renderer can pick whichever is present.
+  # proof fields by default and surfaces v3 (core/enrichment), legacy v2
+  # (l1+l2), and v1 (signals) shapes so the renderer can pick whichever is
+  # present. `.compact` removes nil entries so the JSON stays tight per shape.
   def public_view
     inner = payload["payload"] || {}
     {
@@ -80,6 +92,10 @@ class Snapshot < ApplicationRecord
       ttl_days_remaining: ttl_days_remaining,
       schema_version: schema_version,
       scores: inner["scores"],
+      # R1.3 — v3 shape
+      core: inner["core"],
+      enrichment: inner["enrichment"],
+      # legacy v2 shape (preserved for existing bundles)
       signals: inner["signals"],
       l1: inner["l1"],
       l2: inner["l2"],

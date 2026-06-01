@@ -87,4 +87,49 @@ RSpec.describe Positions::BundleSignals do
     b = build_bundle(payload: { "l1" => {} })
     expect(described_class.from(b)).to be_frozen
   end
+
+  # ── R1.3 — fallback chain v3 (core) → legacy v2 (l1) ──────────────────────
+  describe "R1.3 core/l1 fallback chain" do
+    it "lê ecosystems de payload.core quando presente" do
+      b = build_bundle(payload: { "core" => { "ecosystems" => { "rails" => true, "ruby" => true } } })
+      expect(described_class.from(b).ecosystems).to match_array(%w[rails ruby])
+    end
+
+    it "lê avg_test_ratio de payload.core quando presente" do
+      b = build_bundle(payload: { "core" => { "avg_test_ratio" => 0.55 } })
+      expect(described_class.from(b).test_ratio).to eq(55.0)
+    end
+
+    it "prefere payload.core sobre payload.l1 quando ambos coexistem" do
+      b = build_bundle(payload: {
+        "core" => { "ecosystems" => { "go" => true }, "avg_test_ratio" => 0.40 },
+        "l1"   => { "ecosystems" => { "python" => true }, "avg_test_ratio" => 0.10 },
+      })
+      s = described_class.from(b)
+      expect(s.ecosystems).to eq(%w[go])
+      expect(s.test_ratio).to eq(40.0)
+    end
+
+    it "cai pra payload.l1 quando payload.core está ausente (bundle legacy v2)" do
+      b = build_bundle(payload: { "l1" => { "ecosystems" => { "rails" => true }, "avg_test_ratio" => 0.20 } })
+      s = described_class.from(b)
+      expect(s.ecosystems).to eq(%w[rails])
+      expect(s.test_ratio).to eq(20.0)
+    end
+
+    it "cai pra payload.l1 quando payload.core existe mas é vazio" do
+      b = build_bundle(payload: {
+        "core" => {},
+        "l1"   => { "ecosystems" => { "rails" => true }, "avg_test_ratio" => 0.25 },
+      })
+      s = described_class.from(b)
+      expect(s.ecosystems).to eq(%w[rails])
+      expect(s.test_ratio).to eq(25.0)
+    end
+
+    it "ignora payload.core não-Hash (defensivo)" do
+      b = build_bundle(payload: { "core" => "lixo", "l1" => { "ecosystems" => { "rails" => true } } })
+      expect(described_class.from(b).ecosystems).to eq(%w[rails])
+    end
+  end
 end

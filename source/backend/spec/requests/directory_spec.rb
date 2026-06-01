@@ -122,6 +122,63 @@ RSpec.describe "Directory", type: :request do
       expect(response.body).to     include("dev-#{high.fingerprint.first(8)}")
     end
 
+    # ── R1.3 — v3 (core) bundles match the same way as legacy l1 ─────────
+    def make_v3_dev(directory: true, ecosystems: %w[rails], avg_test_ratio: 0.4,
+                    last_bundle_at: 1.day.ago)
+      account = create(:account, directory: directory)
+      create(
+        :bundle,
+        account:        account,
+        last_bundle_at: last_bundle_at,
+        revoked_at:     nil,
+        bundle_data: {
+          "version" => "7",
+          "payload" => {
+            "core" => {
+              "ecosystems"     => ecosystems.index_with { true },
+              "platforms"      => { "docker" => true },
+              "avg_test_ratio" => avg_test_ratio,
+            },
+          },
+        },
+      )
+      account
+    end
+
+    it "narrows by ecosystem on v3 (payload.core) bundles" do
+      legacy_dev = make_dev(directory: true, ecosystems: %w[rails])
+      v3_dev     = make_v3_dev(ecosystems: %w[python])
+
+      login_as(company)
+      get "/directory", params: { ecosystems: %w[python] }
+
+      expect(response.body).not_to include("dev-#{legacy_dev.fingerprint.first(8)}")
+      expect(response.body).to     include("dev-#{v3_dev.fingerprint.first(8)}")
+    end
+
+    it "respects test_ratio_min on v3 (payload.core) bundles" do
+      legacy_low = make_dev(directory: true, avg_test_ratio: 0.10, ecosystems: %w[a])
+      v3_high    = make_v3_dev(avg_test_ratio: 0.80, ecosystems: %w[b])
+
+      login_as(company)
+      get "/directory", params: { test_ratio_min: 0.5 }
+
+      expect(response.body).not_to include("dev-#{legacy_low.fingerprint.first(8)}")
+      expect(response.body).to     include("dev-#{v3_high.fingerprint.first(8)}")
+    end
+
+    it "mixes v3 and legacy v2 ecosystems in the available filter chips" do
+      make_dev(directory: true, ecosystems: %w[rails])
+      make_v3_dev(ecosystems: %w[go])
+
+      login_as(company)
+      get "/directory"
+
+      # Both ecosystems should surface as filter checkboxes.
+      expect(response.body).to include("rails")
+      expect(response.body).to include("go")
+    end
+
     it "never exposes dev contact fields (email_contact, phone_contact)" do
       make_dev(
         directory:     true,

@@ -11,9 +11,12 @@
 %>
 <% inner    = @snapshot.payload["payload"] || {} %>
 <% scores   = inner["scores"] || {} %>
-<% l1       = inner["l1"] || {} %>
-<% l2       = inner["l2"] || inner["signals"] || {} %>
-<% is_v2    = @snapshot.schema_version == "v2" %>
+<%# R1.3 — v3 publishes the structured layer under `core` and the session
+    layer under `enrichment`. Legacy v2 still uses `l1`/`l2`. The local
+    bindings keep the historical names so the rest of the template stays
+    untouched; the data shape inside is identical. %>
+<% l1       = inner["core"]       || inner["l1"] || {} %>
+<% l2       = inner["enrichment"] || inner["l2"] || inner["signals"] || {} %>
 <% trend    = trend_points(@snapshot) %>
 <% stats    = trend_stats(trend) %>
 

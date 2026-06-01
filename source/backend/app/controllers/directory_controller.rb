@@ -2,9 +2,12 @@
 # directory (`Account.directory = true`) and currently have an active bundle
 # on the portal.
 #
-# Filters speak the same language as bundle signals:
-#   - ecosystems / languages → `payload.l1.ecosystems` (presence map)
-#   - test_ratio_{min,max}   → `payload.l1.avg_test_ratio` (0..1 float)
+# Filters speak the same language as bundle signals. R1.3 — primary path is
+# the v3 `payload.core.*`; legacy v2 bundles fall back to `payload.l1.*`.
+# The fallback runs in raw SQL via `COALESCE` over both JSONB paths so the
+# index/full-table scan stays a single expression.
+#   - ecosystems / languages → COALESCE(payload.core.ecosystems, payload.l1.ecosystems)
+#   - test_ratio_{min,max}   → COALESCE(payload.core.avg_test_ratio, payload.l1.avg_test_ratio)
 #   - status                 → fresh (< 30d) vs outdated (≥ 30d)
 #
 # Never returns email_contact / phone_contact — the dashboard view never
@@ -23,7 +26,10 @@ class DirectoryController < ActionController::Base
   RESULT_LIMIT = 50
   PUBLISHED_FRESHNESS = 30.days
 
-  # Path inside bundle_data → l1.ecosystems map (deep JSONB lookup).
+  # R1.3 — primary v3 paths (BUNDLE_VERSION 6+7).
+  CORE_ECOSYSTEMS_PATH  = %w[payload core ecosystems].freeze
+  CORE_TEST_RATIO_PATH  = %w[payload core avg_test_ratio].freeze
+  # Legacy v2 fallbacks (BUNDLE_VERSION ≤ 5).
   L1_ECOSYSTEMS_PATH    = %w[payload l1 ecosystems].freeze
   L1_TEST_RATIO_PATH    = %w[payload l1 avg_test_ratio].freeze
 
@@ -62,21 +68,30 @@ class DirectoryController < ActionController::Base
   # so Rails' bind-placeholder parser doesn't choke on the literal `?`.
   # Each ecosystem name is quoted through the adapter to keep the inline
   # `text[]` array injection-safe.
+  #
+  # R1.3 — match if EITHER the v3 core map OR the legacy l1 map contains any
+  # of the requested ecosystems. `jsonb_exists_any` returns false on NULL
+  # operands, so OR-ing two probes is safe regardless of schema.
   def filter_by_ecosystems(scope, ecosystems)
     return scope if ecosystems.empty?
     conn = ActiveRecord::Base.connection
     literal = ecosystems.map { |e| conn.quote(e) }.join(",")
     scope.where(
-      "jsonb_exists_any(bundles.bundle_data #> '{payload,l1,ecosystems}', ARRAY[#{literal}]::text[])",
+      "jsonb_exists_any(bundles.bundle_data #> '{payload,core,ecosystems}', ARRAY[#{literal}]::text[]) " \
+      "OR jsonb_exists_any(bundles.bundle_data #> '{payload,l1,ecosystems}', ARRAY[#{literal}]::text[])",
     )
   end
 
+  # R1.3 — read core first; fall back to l1 via COALESCE so a single SQL
+  # expression covers both schemas in one pass.
   def filter_by_test_ratio(scope, min, max)
     min_f = parse_ratio(min)
     max_f = parse_ratio(max)
     return scope if min_f.nil? && max_f.nil?
 
-    expr = "(bundles.bundle_data #>> ARRAY['payload','l1','avg_test_ratio'])::float"
+    expr = "COALESCE(" \
+      "(bundles.bundle_data #>> ARRAY['payload','core','avg_test_ratio'])::float, " \
+      "(bundles.bundle_data #>> ARRAY['payload','l1','avg_test_ratio'])::float)"
     scope = scope.where("#{expr} >= ?", min_f) if min_f
     scope = scope.where("#{expr} <= ?", max_f) if max_f
     scope
@@ -111,10 +126,15 @@ class DirectoryController < ActionController::Base
   end
 
   # Build the union of ecosystems present across the current result set.
-  # Sorted alphabetically and unique-d.
+  # Sorted alphabetically and unique-d. R1.3 — merges v3 (core) and legacy
+  # v2 (l1) ecosystem maps per bundle so a mixed-schema population still
+  # surfaces every available filter chip.
   def collect_ecosystems(accounts)
     accounts
-      .flat_map { |a| a.bundles.flat_map { |b| extract_keys(b.bundle_data, L1_ECOSYSTEMS_PATH) } }
+      .flat_map { |a| a.bundles.flat_map { |b|
+        extract_keys(b.bundle_data, CORE_ECOSYSTEMS_PATH) +
+          extract_keys(b.bundle_data, L1_ECOSYSTEMS_PATH)
+      } }
       .compact
       .uniq
       .sort
