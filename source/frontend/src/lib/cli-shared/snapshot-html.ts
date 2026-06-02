@@ -1,16 +1,13 @@
 // HTML renderer for `beheld snapshot --html`.
 //
-// MIRROR of packages/cli/src/ui/snapshot-html.ts — copied verbatim into the
-// frontend so the /v/:slug page is byte-identical to the local .html the CLI
-// produces. The CLI is the source of truth; this copy exists because the
-// frontend container only bind-mounts `web/source/frontend` and can't reach
-// the sibling `packages/cli` tree at runtime. Keep them in sync.
+// Produces a self-contained, single-file HTML retrato técnico that mirrors
+// the design at documents/retrato-publico.html (Inter + Newsreader, warm
+// cream palette, signature verifiable client-side via embedded bundle JSON).
 //
-// Produces a self-contained, single-file HTML retrato técnico (Inter +
-// Newsreader, warm cream palette, signature verifiable client-side via
-// embedded bundle JSON).
+// All identity strings come from the engine (IdentityGenerator with the
+// minimal signals adapter); this file is pure templating.
 
-import { computeTier, type TrustTier } from "./tier";
+import { computeTier, type TrustTier } from "../lib/tier";
 
 interface BundlePayload {
   scores?: { prompt_quality?: number; test_maturity?: number; tech_breadth?: number; growth_rate?: number; overall?: number };
@@ -138,7 +135,7 @@ const PEAK_LABEL: Record<string, string> = {
 // Tolerant of `undefined`/`null` — older bundles in the wild may not carry
 // every wrapper field (e.g. `hash`, `public_key` got lost on some legacy
 // rows). Coerce to "" so a missing field renders an empty `<code>` rather
-// than crashing the whole SPA inside a `useMemo`.
+// than crashing the renderer.
 function escapeHtml(s: string | null | undefined): string {
   if (s == null) return "";
   return String(s)
@@ -188,9 +185,29 @@ const SCORE_LABELS: Record<string, string> = {
 const SCORE_DIMENSIONS = ["prompt_quality", "test_maturity", "tech_breadth", "growth_rate"] as const;
 
 function renderScoresSection(scores: BundlePayload["scores"] | undefined): string {
-  if (!scores || typeof scores.overall !== "number") return "";
+  // R1.2c — overall may legitimately be null in a v7 bundle (every
+  // dimension absent at scoring time). Only render the section when
+  // we have ANY numeric score to display. If the bundle has scores
+  // but overall is null AND no per-dimension is numeric, hide the
+  // entire section (saves the public retrato from showing an empty
+  // grid). Bundles without scores at all still return "" upstream.
+  if (!scores) return "";
+  const hasAnyNumeric =
+    typeof scores.overall === "number" ||
+    SCORE_DIMENSIONS.some((dim) => typeof scores[dim] === "number");
+  if (!hasAnyNumeric) return "";
   const rows = SCORE_DIMENSIONS.map((dim) => {
-    const val = scores[dim] ?? 0;
+    const val = scores[dim];
+    if (typeof val !== "number") {
+      // R1.2c — per-dimension absent: render "—" with an empty bar so
+      // the row still reads as a dimension that wasn't observed.
+      return `
+      <div class="score-row score-row-absent">
+        <div class="score-name">${escapeHtml(SCORE_LABELS[dim])}</div>
+        <div class="score-bar"></div>
+        <div class="score-val">—</div>
+      </div>`;
+    }
     const clamped = Math.max(0, Math.min(100, val));
     return `
       <div class="score-row">
@@ -199,12 +216,13 @@ function renderScoresSection(scores: BundlePayload["scores"] | undefined): strin
         <div class="score-val">${val}</div>
       </div>`;
   }).join("");
-  const overall = scores.overall ?? 0;
+  const overallNum =
+    typeof scores.overall === "number" ? String(scores.overall) : "—";
   return `
     <section class="scores" aria-label="Scores">
       <div class="label">Scores</div>
       <div class="score-overall">
-        <span class="score-overall-num">${overall}</span>
+        <span class="score-overall-num">${overallNum}</span>
         <span class="score-overall-of">/100</span>
         <span class="score-overall-tag">geral</span>
       </div>
@@ -301,20 +319,23 @@ function renderStackSection(stack: BundleStackSection | null | undefined): strin
     </section>`;
 }
 
-// F6.12 / v5 — Perfil técnico + Insights, both read from bundle.payload
-// (l2 for perfil técnico, payload.insights for the bullets).
+// F6.12 / v6 — Perfil técnico + Insights, both read from bundle.payload
+// (enrichment for perfil técnico, payload.insights for the bullets).
+// Local structural type — narrower than the canonical BundleEnrichmentSection
+// since the renderer only needs three fields and tolerates v5 bundles where
+// they live under payload.l2.
 
-interface BundleL2 {
+interface EnrichmentRendererView {
   platforms?: Record<string, number>;
   workflow_distribution?: Record<string, number>;
   sessions_analyzed?: number;
 }
 
-function renderPerfilTecnicoSection(l2: BundleL2 | undefined): string {
-  if (!l2) return "";
-  const platforms = l2.platforms ?? {};
-  const wf = l2.workflow_distribution ?? {};
-  const sessions = l2.sessions_analyzed ?? 0;
+function renderPerfilTecnicoSection(enrichment: EnrichmentRendererView | undefined): string {
+  if (!enrichment) return "";
+  const platforms = enrichment.platforms ?? {};
+  const wf = enrichment.workflow_distribution ?? {};
+  const sessions = enrichment.sessions_analyzed ?? 0;
 
   // Top 5 platforms by count.
   const platLabel = Object.entries(platforms)
@@ -340,6 +361,58 @@ function renderPerfilTecnicoSection(l2: BundleL2 | undefined): string {
       <div class="perfil-row"><span class="key">Plataformas</span><span class="val">${escapeHtml(hasPlat ? platLabel : "—")}</span></div>
       <div class="perfil-row"><span class="key">Workflow</span><span class="val">${escapeHtml(hasWf ? wfLabel : "—")}</span></div>
       <div class="perfil-row"><span class="key">Total sessões</span><span class="val">${sessions.toLocaleString("pt-BR")}</span></div>
+    </section>`;
+}
+
+// R2/R3 — Capture Sources (harness_sources) — surfaces which harnesses
+// contributed enrichment to the bundle + each one's capture_fidelity tier.
+// Renders one chip per HarnessSource entry with the trust tier encoded as
+// a CSS class so the portal can color-code high/med/low fidelity.
+
+interface HarnessSourceView {
+  harness?: string;
+  capture_fidelity?: string;
+  sessions?: number;
+}
+
+function fidelityTier(fidelity: string): "high" | "med" | "low" {
+  switch (fidelity) {
+    case "native_hook":
+    case "editor_extension":
+      return "high";
+    case "local_log_tail":
+    case "statusline":
+      return "med";
+    case "inferred":
+    default:
+      return "low";
+  }
+}
+
+function renderCaptureSourcesSection(
+  sources: HarnessSourceView[] | undefined,
+): string {
+  if (!Array.isArray(sources) || sources.length === 0) return "";
+  const chips = sources
+    .filter((s) => typeof s?.harness === "string" && s.harness.length > 0)
+    .map((s) => {
+      const harness = s.harness as string;
+      const fidelity = (s.capture_fidelity ?? "inferred").trim();
+      const sessions = Math.max(0, Math.floor(s.sessions ?? 0));
+      const tier = fidelityTier(fidelity);
+      return `
+        <span class="capture-chip capture-chip-${tier}" title="${escapeHtml(fidelity)} · ${sessions} sess${sessions === 1 ? "ão" : "ões"}">
+          <strong>${escapeHtml(harness)}</strong>
+          <span class="capture-chip-sep">·</span>${escapeHtml(fidelity)}
+          <span class="capture-chip-sep">·</span>${sessions}
+        </span>`;
+    })
+    .join("");
+  if (chips.length === 0) return "";
+  return `
+    <section class="capture-sources" aria-label="Fontes de captura">
+      <div class="label">Fontes de captura</div>
+      <div class="capture-chip-row">${chips}</div>
     </section>`;
 }
 
@@ -539,7 +612,11 @@ export function renderSnapshotHtml(data: SnapshotHtmlData): string {
 
   const platformLabel = joinLabels(data.signals.tooling?.platforms, PLATFORM_LABEL, "—", 3);
 
-  const repoCount = data.bundle.payload.l1?.total_repos ?? 0;
+  // R1.1 — schema v6 uses payload.core; pre-R1.1 bundles still use payload.l1.
+  // The HTML renderer reads either so legacy bundles (re-rendered offline) keep
+  // working.
+  const corePayload = (data.bundle.payload as { core?: { total_repos?: number }; l1?: { total_repos?: number } });
+  const repoCount = corePayload.core?.total_repos ?? corePayload.l1?.total_repos ?? 0;
   const ttlDays = data.ttlDays ?? 28;
 
   const emergentBlock = data.emergent
@@ -560,8 +637,18 @@ export function renderSnapshotHtml(data: SnapshotHtmlData): string {
   // (attestation, rekor, signature) — no bundle change, no version bump.
   const tierBadge = renderTierBadge(data.bundle);
   const trustDetailsBlock = renderTrustDetails(data.bundle);
+  // R1.1 — schema v6 uses payload.enrichment; v5 used payload.l2. Read either.
+  const enrichmentPayload = data.bundle.payload as {
+    enrichment?: EnrichmentRendererView;
+    l2?: EnrichmentRendererView;
+  };
   const perfilTecnicoBlock = renderPerfilTecnicoSection(
-    (data.bundle.payload as { l2?: BundleL2 }).l2,
+    enrichmentPayload.enrichment ?? enrichmentPayload.l2,
+  );
+  // R2/R3 — harness_sources lives only in v6+ payload.enrichment, never in
+  // legacy v5 payload.l2. Pass undefined for legacy bundles → section omitted.
+  const captureSourcesBlock = renderCaptureSourcesSection(
+    (enrichmentPayload.enrichment as { harness_sources?: HarnessSourceView[] } | undefined)?.harness_sources,
   );
   const stackPayload = (data.bundle.payload as { stack?: BundleStackSection | null }).stack ?? null;
   const stackBlock = renderStackSection(stackPayload);
@@ -831,6 +918,48 @@ export function renderSnapshotHtml(data: SnapshotHtmlData): string {
     .perfil-row .key { color: var(--ink-soft); }
     .perfil-row .val { color: var(--ink); }
 
+    /* R2/R3 — Capture Sources: one chip per harness_sources[] entry, with
+       trust tier encoded via CSS class. Visual language matches the tier
+       badges in the verification block. */
+    .capture-sources { margin-top: 32px; }
+    .capture-sources .label {
+      font-size: 13px; font-weight: 500; color: var(--ink-soft);
+      margin-bottom: 12px;
+    }
+    .capture-chip-row {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .capture-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--rule);
+      font-size: 12px;
+      font-feature-settings: "tnum";
+      line-height: 1.4;
+    }
+    .capture-chip strong {
+      font-weight: 600; color: var(--ink);
+    }
+    .capture-chip-sep {
+      color: var(--ink-soft);
+      opacity: 0.6;
+    }
+    .capture-chip-high {
+      background: rgba(34, 197, 94, 0.08);
+      border-color: rgba(34, 197, 94, 0.35);
+      color: var(--ink);
+    }
+    .capture-chip-med {
+      background: var(--rule-soft);
+      color: var(--ink-soft);
+    }
+    .capture-chip-low {
+      background: rgba(234, 179, 8, 0.10);
+      border-color: rgba(234, 179, 8, 0.40);
+      color: var(--ink);
+    }
+
     /* F6.12 / v5 — Insights: bullets from bundle.payload.insights.insights. */
     .insights { margin-top: 48px; }
     .insights .label {
@@ -962,6 +1091,7 @@ export function renderSnapshotHtml(data: SnapshotHtmlData): string {
     </section>${emergentBlock}
 ${scoresBlock}
 ${perfilTecnicoBlock}
+${captureSourcesBlock}
 ${stackBlock}
 ${insightsBlock}
 
