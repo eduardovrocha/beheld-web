@@ -237,6 +237,63 @@ RSpec.describe "Bundles + V endpoints (Phase 6 retrocompat)", type: :request do
       expect(body.dig("payload", "signals")).to be_nil
     end
 
+    # ── R2/R3 portal display — Capture Sources section ──────────────────
+    it "renderiza Capture Sources com harness · fidelity · sessions para bundle v3" do
+      multi_source_inner = v3_inner.deep_dup
+      multi_source_inner["enrichment"]["harness_sources"] = [
+        { "harness" => "claude_code",  "capture_fidelity" => "native_hook",      "sessions" => 30 },
+        { "harness" => "cursor",       "capture_fidelity" => "local_log_tail",   "sessions" => 12 },
+        { "harness" => "windsurf",     "capture_fidelity" => "native_hook",      "sessions" => 5 },
+      ]
+      b = Snapshot.create!(
+        bundle_hash: "sha256:" + ("d" * 64),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(multi_source_inner, hash_seed: "d"),
+      )
+      get "/v/#{b.short_id}"
+      expect(response).to have_http_status(:ok)
+      expect(response.content_type).to start_with("text/html")
+      expect(response.body).to include("Capture Sources")
+      expect(response.body).to include("claude_code")
+      expect(response.body).to include("native_hook")
+      expect(response.body).to include("cursor")
+      expect(response.body).to include("local_log_tail")
+      expect(response.body).to include("windsurf")
+      # Session counts surface inside the chip text — match the literal
+      # numbers next to their sibling divider so unrelated 30/12/5 in
+      # other markup (timing badges, etc.) don't trigger false positives.
+      expect(response.body).to match(/claude_code.*native_hook.*30/m)
+      expect(response.body).to match(/cursor.*local_log_tail.*12/m)
+      expect(response.body).to match(/windsurf.*native_hook.*5/m)
+    end
+
+    it "marca capture_fidelity='inferred' com chip-warn (low trust)" do
+      inferred_inner = v3_inner.deep_dup
+      inferred_inner["enrichment"]["harness_sources"] = [
+        { "harness" => "unknown", "capture_fidelity" => "inferred", "sessions" => 4 },
+      ]
+      b = Snapshot.create!(
+        bundle_hash: "sha256:" + ("e" * 64),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(inferred_inner, hash_seed: "e"),
+      )
+      get "/v/#{b.short_id}"
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("inferred")
+      expect(response.body).to include("chip-warn")
+    end
+
+    it "omite a seção Capture Sources quando harness_sources está ausente (bundle legacy v2)" do
+      b = Snapshot.create!(
+        bundle_hash: "sha256:" + ("aaaa1111" * 8),
+        public_key: "ed25519:" + "k" * 43,
+        payload: wrap(v2_inner, hash_seed: "9a"),
+      )
+      get "/v/#{b.short_id}"
+      expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("Capture Sources")
+    end
+
     it "renderiza HTML por padrão (Phase 6 / Obj 2 — SSR sem JS obrigatório)" do
       b = Snapshot.create!(
         bundle_hash: "sha256:" + ("0123456789abcdef" * 4),

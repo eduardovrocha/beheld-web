@@ -305,6 +305,53 @@
             </div>
           </div>
         <% end %>
+
+        <%# R2/R3 — capture sources. One chip per harness contributing
+            enrichment, with the capture_fidelity surfaced inline so a
+            recruiter inspecting the bundle can see how the signal was
+            obtained without leaving the page. Trust tier maps to chip
+            color: native_hook (accent) > editor_extension (default) >
+            local_log_tail/statusline (muted) > inferred (warn). %>
+        <% sources = l2["harness_sources"] %>
+        <% if sources.is_a?(Array) && sources.any? %>
+          <div class="chip-block">
+            <div class="chip-label">
+              Capture Sources
+              <span class="chip-label-sub">harness · fidelity · sessions</span>
+            </div>
+            <div class="chip-row">
+              <% sources.each do |src| %>
+                <%
+                  harness  = src["harness"].to_s
+                  fidelity = src["capture_fidelity"].to_s
+                  sessions = src["sessions"].to_i
+                  chip_class =
+                    case fidelity
+                    when "native_hook"      then "chip"          # high trust
+                    when "editor_extension" then "chip"          # high trust
+                    when "local_log_tail"   then "chip-muted"    # medium
+                    when "statusline"       then "chip-muted"    # medium
+                    when "inferred"         then "chip-warn"     # low — flagged
+                    else                         "chip-muted"
+                    end
+                  fidelity_tip = case fidelity
+                    when "native_hook"      then "Captured via the harness's first-party hook API — highest fidelity."
+                    when "editor_extension" then "Captured via the harness's official editor extension."
+                    when "local_log_tail"   then "Reconstructed by tailing local log files — schema not guaranteed."
+                    when "statusline"       then "Captured at the harness's status line; one-line summary per action."
+                    when "inferred"         then "Source string not recognised; entries inferred — treat as least trustworthy."
+                    else                         "Unknown capture fidelity."
+                    end
+                %>
+                <span class="<%= chip_class %>" tabindex="0" aria-label="<%= harness %> via <%= fidelity %>: <%= fidelity_tip %>">
+                  <strong><%= harness %></strong>
+                  <span class="chip-divider">·</span><%= fidelity %>
+                  <span class="chip-divider">·</span><%= sessions %>
+                </span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       <% else %>
         <div class="empty-card">
           <div class="badge">L1_ONLY Profile</div>
