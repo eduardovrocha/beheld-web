@@ -7,7 +7,7 @@
 // All identity strings come from the engine (IdentityGenerator with the
 // minimal signals adapter); this file is pure templating.
 
-import { computeTier, type TrustTier } from "../lib/tier";
+import { computeTier, type TrustTier } from "./tier";
 
 interface BundlePayload {
   scores?: { prompt_quality?: number; test_maturity?: number; tech_breadth?: number; growth_rate?: number; overall?: number };
