@@ -127,23 +127,16 @@ export function RealSessions() {
 
   return (
     <div className="rs-page">
-      <div
-        className="mx-auto mb-12 pb-14 pt-16"
-        style={{ maxWidth: 1032, padding: "64px 32px 56px", borderBottom: "1px solid var(--rule)" }}
-      >
-        <SiteHeader />
+      <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
+        <div className="pt-16">
+          <SiteHeader />
+        </div>
       </div>
 
       <main className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
         <p
-          className="mb-16"
-          style={{
-            color: "var(--text)",
-            fontSize: 17,
-            lineHeight: 1.7,
-            letterSpacing: "-0.005em",
-            maxWidth: 720,
-          }}
+          className="mb-12 font-mono uppercase text-center"
+          style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em", fontWeight: 500 }}
         >
           {t("rs.hero")}
         </p>

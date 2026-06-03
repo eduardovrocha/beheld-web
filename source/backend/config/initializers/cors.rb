@@ -44,6 +44,11 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       headers:     :any,
       methods:     %i[get post put patch delete options head],
       credentials: true
+    resource "/v/*",
+      headers:     :any,
+      methods:     %i[get options head],
+      credentials: true,
+      expose:      ["X-Beheld-Account-Id", "X-Beheld-Company-Name"]
   end
 
   # Public reads — every other path stays wildcard-permissive.
@@ -52,6 +57,6 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     resource "*",
       headers: :any,
       methods: %i[get post put patch delete options head],
-      expose:  ["Authorization", "X-Beheld-Account-Id"]
+      expose:  ["Authorization", "X-Beheld-Account-Id", "X-Beheld-Company-Name"]
   end
 end

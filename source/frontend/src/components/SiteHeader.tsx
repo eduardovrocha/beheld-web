@@ -6,7 +6,13 @@ import { useT } from "@/i18n/I18nProvider";
 
 const GITHUB_URL = "https://github.com/eduardovrocha/beheld";
 
-export function SiteHeader() {
+export function SiteHeader({
+  titleMain = "Beheld",
+  titleAccent = ".dev",
+}: {
+  titleMain?: string;
+  titleAccent?: string;
+} = {}) {
   const t = useT();
   return (
     <div
@@ -22,8 +28,8 @@ export function SiteHeader() {
           className="font-semibold hover:opacity-90"
           style={{ color: "var(--text)", fontSize: 44, letterSpacing: "-0.025em", lineHeight: 1 }}
         >
-          Beheld
-          <span style={{ color: "var(--accent)", fontWeight: 400 }}>.dev</span>
+          {titleMain}
+          <span style={{ color: "var(--accent)", fontWeight: 400 }}>{titleAccent}</span>
         </Link>
         <div
           className="font-normal uppercase"

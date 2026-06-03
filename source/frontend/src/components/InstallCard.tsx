@@ -25,7 +25,7 @@ export function InstallCard() {
   return (
     <div
       className="p-5"
-      style={{ background: "var(--card-bg)", border: "1px solid var(--rule)" }}
+      style={{ maxWidth: 640 }}
     >
       <div
         className="mb-2.5 font-mono uppercase"

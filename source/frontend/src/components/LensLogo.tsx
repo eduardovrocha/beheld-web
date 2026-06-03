@@ -1,9 +1,9 @@
 /**
- * Lente — identidade do B3H31D. Reusada no SiteHeader (size 64) e na view
- * MeetB3 em escala maior (size 180+). currentColor permite herdar --lens
- * ou outra cor de contexto.
+ * Lente — identidade do B3H31D. Reusada no SiteHeader (size 260) e na view
+ * MeetB3 no mesmo tamanho. currentColor permite herdar --lens ou outra cor
+ * de contexto.
  */
-export function LensLogo({ size = 64 }: { size?: number }) {
+export function LensLogo({ size = 260 }: { size?: number }) {
   return (
     <svg
       viewBox="0 0 240 100"

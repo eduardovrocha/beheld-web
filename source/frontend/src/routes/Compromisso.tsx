@@ -66,15 +66,14 @@ export function Compromisso() {
 
   return (
     <div className="compromisso-page">
-      <div
-        className="mx-auto mb-12 pb-14 pt-16"
-        style={{ maxWidth: 1032, padding: "64px 32px 56px", borderBottom: "1px solid var(--rule)" }}
-      >
-        <SiteHeader />
+      <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
+        <div className="pt-16">
+          <SiteHeader />
+        </div>
       </div>
       <article
         className="compromisso-article mx-auto"
-        style={{ maxWidth: 680, padding: "8px 32px 32px" }}
+        style={{ maxWidth: 1032, padding: "8px 32px 32px" }}
       >
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{md}</ReactMarkdown>
       </article>

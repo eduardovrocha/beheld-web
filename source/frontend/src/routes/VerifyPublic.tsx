@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
+import { CompanyNav } from "@/components/company/CompanyNav";
 import { SaveDevButton } from "@/components/company/SaveDevButton";
+import { SiteHeader } from "@/components/SiteHeader";
 import { useT } from "@/i18n/I18nProvider";
 import { fetchBundleWithAccount } from "@/lib/api";
 import { verifyAttestation, type AttestationCheck } from "@/lib/attestationVerify";
@@ -25,6 +27,7 @@ export function VerifyPublic() {
 
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [accountId, setAccountId] = useState<number | null>(null);
+  const [companyName, setCompanyName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VerifyResult | null>(null);
   const [attestation, setAttestation] = useState<AttestationCheck | null>(null);
@@ -35,6 +38,7 @@ export function VerifyPublic() {
     let cancelled = false;
     setBundle(null);
     setAccountId(null);
+    setCompanyName(null);
     setError(null);
     setResult(null);
     setAttestation(null);
@@ -42,10 +46,11 @@ export function VerifyPublic() {
 
     (async () => {
       try {
-        const { bundle: b, accountId: aid } = await fetchBundleWithAccount(id);
+        const { bundle: b, accountId: aid, companyName: cn } = await fetchBundleWithAccount(id);
         if (cancelled) return;
         setBundle(b);
         setAccountId(aid);
+        setCompanyName(cn);
         const [r, keys] = await Promise.all([verifyBundle(b), fetchPlatformKeys()]);
         if (cancelled) return;
         setResult(r);
@@ -64,28 +69,64 @@ export function VerifyPublic() {
     };
   }, [id]);
 
-  if (!id) return <ErrorBox title={t("verify.public.error.title")} message={t("verify.public.error.id_missing")} />;
-  if (error) return <ErrorBox title={t("verify.public.error.title")} message={error} />;
-  if (!bundle) {
-    return (
-      <div className="space-y-3">
+  // Suppress lint warnings — computed by verify hooks for future SPA interactions;
+  // the CLI's HTML already runs its own client-side verification.
+  void result; void verifying; void attestation;
+
+  let content: React.ReactNode;
+  if (!id) {
+    content = <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}><ErrorBox title={t("verify.public.error.title")} message={t("verify.public.error.id_missing")} /></div>;
+  } else if (error) {
+    content = <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}><ErrorBox title={t("verify.public.error.title")} message={error} /></div>;
+  } else if (!bundle) {
+    content = (
+      <div className="mx-auto space-y-3" style={{ maxWidth: 1032, padding: "0 32px" }}>
         <div className="h-8 w-72 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800/60" />
         <div className="h-44 w-full animate-pulse rounded-2xl bg-slate-200/60 dark:bg-slate-800/40" />
         <div className="h-44 w-full animate-pulse rounded-2xl bg-slate-200/60 dark:bg-slate-800/40" />
       </div>
     );
+  } else {
+    content = (
+      <>
+        {accountId !== null && <FloatingSaveDev accountId={accountId} />}
+        <SnapshotIframe bundle={bundle} />
+      </>
+    );
   }
 
-  // Suppress lint warnings — these are computed by the verify hooks so the
-  // SPA can also expose them once we wire on-page interactions; the CLI's
-  // HTML already runs its own client-side verification.
-  void result; void verifying; void attestation;
-
   return (
-    <>
-      {accountId !== null && <FloatingSaveDev accountId={accountId} />}
-      <SnapshotIframe bundle={bundle} />
-    </>
+    <div>
+      <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
+        {companyName ? (
+          <CompanyHeader name={companyName} />
+        ) : (
+          <div className="pt-16">
+            <SiteHeader />
+          </div>
+        )}
+      </div>
+      {content}
+    </div>
+  );
+}
+
+function CompanyHeader({ name }: { name: string }) {
+  return (
+    <header className="mb-10 pt-16">
+      <div className="mb-3 font-mono uppercase"
+           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
+        empresa · perfil
+      </div>
+      <h1 className="font-semibold"
+          style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
+        {name}
+      </h1>
+      <div className="mt-3 flex flex-wrap items-baseline gap-3 font-mono"
+           style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
+        <CompanyNav bare />
+      </div>
+    </header>
   );
 }
 

@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 
 import { InstallCard } from "@/components/InstallCard";
-import { LensLogo } from "@/components/LensLogo";
 import { SectionHead } from "@/components/SectionHead";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -62,46 +61,20 @@ export function MeetB3() {
 
   return (
     <div className="b3-page">
-      <div
-        className="mx-auto mb-12 pb-14 pt-16"
-        style={{ maxWidth: 1032, padding: "64px 32px 56px" }}
-      >
-        <SiteHeader />
-      </div>
-      <header
-        className="b3-hero mx-auto text-center"
-        style={{ maxWidth: 1032, padding: "8px 32px 64px", borderBottom: "1px solid var(--rule)", marginTop: -110 }}
-      >
-        <div className="mb-10 flex justify-center" style={{ color: "var(--accent)" }}>
-          {/* The lens IS the B3 mascot — escalada como protagonista do hero. */}
-          <LensLogo size={260} />
+      <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
+        <div className="pt-16">
+          <SiteHeader titleMain="B3" titleAccent="H31D" />
         </div>
-        <h1
-          className="font-semibold"
-          style={{
-            color: "var(--text)",
-            fontSize: 56,
-            letterSpacing: "-0.03em",
-            lineHeight: 1,
-          }}
-        >
-          B3<span style={{ color: "var(--accent)", fontWeight: 400 }}>H31D</span>
-        </h1>
+      </div>
+
+      <main className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
         <p
-          className="mx-auto mt-8"
-          style={{
-            color: "var(--muted)",
-            fontSize: 17,
-            lineHeight: 1.6,
-            letterSpacing: "-0.005em",
-            maxWidth: 540,
-          }}
+          className="mb-12 font-mono uppercase text-center"
+          style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em", fontWeight: 500 }}
         >
           {t("b3.hero")}
         </p>
-      </header>
 
-      <main className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
         <section className="py-12" style={{ borderTop: "1px solid var(--rule)" }}>
           <SectionHead num="01" title={t("b3.01.label")} right={t("b3.right")} />
           <p style={{ color: "var(--muted)", fontSize: 15, lineHeight: 1.95, maxWidth: 720 }}>

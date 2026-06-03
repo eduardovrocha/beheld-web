@@ -185,6 +185,74 @@ function InstallBlock() {
       <div className="mt-2">
         <InstallCounter />
       </div>
+
+      <div className="mt-6 flex items-center gap-4">
+        <span className="font-mono uppercase" style={{ color: "var(--muted)", fontSize: 9, letterSpacing: "0.14em" }}>
+          ferramentas suportadas
+        </span>
+        <div className="flex items-center gap-3">
+          {/* Claude Code */}
+          <a href="https://claude.ai/code" target="_blank" rel="noreferrer" title="Claude Code" className="flex items-center" style={{ color: "var(--muted)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M16.604 8.516l-5.14 9.373c-.093.17-.356.149-.419-.033L8.081 9.78a.19.19 0 01.097-.228l8.217-4.044c.186-.092.371.13.209.279l.001-.001-.001.73z" fill="currentColor"/>
+              <path d="M14.533 7.554L8.487 4.422c-.18-.093-.367.12-.214.275l3.462 3.504a.19.19 0 00.197.047l2.592-.885" fill="currentColor" opacity=".6"/>
+            </svg>
+          </a>
+          {/* Continue.dev */}
+          <a href="https://continue.dev" target="_blank" rel="noreferrer" title="Continue.dev" className="flex items-center" style={{ color: "var(--muted)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M8 5v14l11-7L8 5z" fill="currentColor" opacity=".7"/>
+              <rect x="3" y="5" width="3" height="14" rx="1" fill="currentColor"/>
+            </svg>
+          </a>
+          {/* Windsurf */}
+          <a href="https://windsurf.com" target="_blank" rel="noreferrer" title="Windsurf" className="flex items-center" style={{ color: "var(--muted)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 18c2-3 4-8 8-12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M8 18c2-3 4-7 8-11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity=".7"/>
+              <path d="M12 18c2-2.5 4-6 8-10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity=".45"/>
+            </svg>
+          </a>
+          {/* Gemini CLI */}
+          <a href="https://github.com/google-gemini/gemini-cli" target="_blank" rel="noreferrer" title="Gemini CLI" className="flex items-center" style={{ color: "var(--muted)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2C12 2 8 8 8 12s4 10 4 10c0 0 4-6 4-10S12 2 12 2z" fill="currentColor" opacity=".7"/>
+              <path d="M2 12c0 0 6 4 10 4s10-4 10-4c0 0-6-4-10-4S2 12 2 12z" fill="currentColor" opacity=".45"/>
+            </svg>
+          </a>
+          {/* Codex CLI */}
+          <a href="https://github.com/openai/codex" target="_blank" rel="noreferrer" title="Codex CLI" className="flex items-center" style={{ color: "var(--muted)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M12 3v18M3 12h18" stroke="currentColor" strokeWidth="1.5" opacity=".5"/>
+              <circle cx="12" cy="12" r="3.5" fill="currentColor" opacity=".6"/>
+            </svg>
+          </a>
+          {/* Cursor */}
+          <a href="https://cursor.com" target="_blank" rel="noreferrer" title="Cursor" className="flex items-center" style={{ color: "var(--muted)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 3l14 9-6 2-3 7L5 3z" fill="currentColor" opacity=".7"/>
+              <path d="M13 14l4 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity=".5"/>
+            </svg>
+          </a>
+          {/* Copilot CLI */}
+          <a href="https://githubnext.com/projects/copilot-cli" target="_blank" rel="noreferrer" title="Copilot CLI" className="flex items-center" style={{ color: "var(--muted)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 4C8 4 5 7 5 10c0 2 1 3.5 2.5 4.5L7 20h10l-.5-5.5C18 13.5 19 12 19 10c0-3-3-6-7-6z" fill="currentColor" opacity=".5"/>
+              <circle cx="9.5" cy="10" r="1.5" fill="currentColor"/>
+              <circle cx="14.5" cy="10" r="1.5" fill="currentColor"/>
+            </svg>
+          </a>
+          {/* Copilot VS Code */}
+          <a href="https://github.com/features/copilot" target="_blank" rel="noreferrer" title="Copilot VS Code" className="flex items-center" style={{ color: "var(--muted)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 4C8 4 5 7 5 10c0 2 1 3.5 2.5 4.5L7 20h10l-.5-5.5C18 13.5 19 12 19 10c0-3-3-6-7-6z" fill="currentColor" opacity=".7"/>
+              <circle cx="9.5" cy="10" r="1.5" fill="currentColor"/>
+              <circle cx="14.5" cy="10" r="1.5" fill="currentColor"/>
+            </svg>
+          </a>
+        </div>
+      </div>
     </>
   );
 }

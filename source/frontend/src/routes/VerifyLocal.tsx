@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 
 import { ProfileCard } from "@/components/ProfileCard";
+import { SiteHeader } from "@/components/SiteHeader";
 import { useT } from "@/i18n/I18nProvider";
 import { verifyAttestation, type AttestationCheck } from "@/lib/attestationVerify";
 import { fetchPlatformKeys } from "@/lib/platformKeys";
@@ -52,7 +53,14 @@ export function VerifyLocal() {
   );
 
   return (
-    <div className="space-y-8">
+    <div>
+      <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
+        <div className="pt-16">
+          <SiteHeader />
+        </div>
+      </div>
+      <div className="mx-auto" style={{ maxWidth: 1032, padding: "0 32px" }}>
+      <div className="space-y-8">
       <header className="space-y-2">
         <h1
           className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 [&_code]:text-emerald-600 dark:[&_code]:text-emerald-400"
@@ -116,6 +124,8 @@ export function VerifyLocal() {
           />
         </div>
       )}
+      </div>
+      </div>
     </div>
   );
 }

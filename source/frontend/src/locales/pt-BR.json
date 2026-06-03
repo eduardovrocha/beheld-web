@@ -544,7 +544,7 @@
   "home.term.trajectory_value": "7 anos",
   "home.term.trajectory_delta": "contínua desde 2017",
   "home.term.footnote": "→ test ratio é 4.2× mediana global · bundle ed25519 · rev. 47",
-  "home.letter.eyebrow": "— sobre o produto",
+  "home.letter.eyebrow": "— além de um currículo",
   "home.letter.body_p1": "O LinkedIn não viu você trabalhar. O recrutador não sabe que você escreveu aquele test antes do código. O gerente que te rejeitou não sabe que seu ",
   "home.letter.body_em": "test ratio é quatro vezes a mediana global",
   "home.letter.body_p2": ". O Beheld sabe. E pode mostrar — se você deixar.",
@@ -674,7 +674,7 @@
   "home.cta.l2": "O Beheld só garante que ele seja visto como é.",
   "home.cta.tagline": "de graça. pra sempre. seu.",
 
-  "hiw.hero": "O B3H31D roda na sua máquina. Ele observa o que você faz com o Claude Code. Não julga.",
+  "hiw.hero": "B3H31D roda em localhost, observando atividades, entendendo o perfil do protagonista",
   "hiw.01.label": "o que ele observa",
   "hiw.01.body": "Cada vez que o Claude Code chama uma ferramenta, ele avisa o B3H31D — antes, depois e ao encerrar a sessão. Continue.dev entra pelo mesmo caminho. São esses eventos, e só eles, que viram sinal.",
   "hiw.02.label": "onde tudo vive",
@@ -703,7 +703,7 @@
   "hiw.title": "como funciona",
   "hiw.right": "daemon local",
 
-  "rs.hero": "Cada vez que você trabalha com o Claude Code, acontece uma sessão. O B3H31D registra o que dá pra observar nela — e nada do que está dentro do seu código.",
+  "rs.hero": "durante a interação com suas ferramentas, B3H31D observa a execução construindo o perfil das atividades",
   "rs.01.label": "o que é uma sessão real",
   "rs.01.body": "Não é um teste, não é uma entrevista. É um pedaço de trabalho de verdade: você abre o Claude Code, resolve algo, fecha. Cada chamada de ferramenta, a duração, o número de turnos — isso vira sinal. O conteúdo, não.",
   "rs.02.label": "o que o B3H31D vê numa sessão",
@@ -728,7 +728,7 @@
   "rs.card.value.duration": "47 min · 23 turnos",
   "rs.card.value.test": "sim — rspec",
 
-  "b3.hero": "Me chame de B3. Eu vivo na sua máquina e presto atenção.",
+  "b3.hero": "Me chame de B3H31D. Eu vivo na sua máquina e presto atenção.",
   "b3.01.label": "o nome",
   "b3.01.body": "B-3-H-3-1-D. Leia de novo, devagar: behold — contemplar, testemunhar. O nome não é estilo, é função. Eu existo para ver. Pode me chamar de B3.",
   "b3.02.label": "o que eu faço",
