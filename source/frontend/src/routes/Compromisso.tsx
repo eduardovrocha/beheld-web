@@ -14,15 +14,15 @@ const DOCS: Record<Locale, string> = { pt: ptMd, en: enMd, es: esMd };
 
 const META: Record<Locale, { title: string; desc: string }> = {
   pt: {
-    title: "compromisso · forever free for developers — Beheld",
+    title: "compromisso · forever free for developers, Beheld",
     desc: "o Beheld é de graça pra desenvolvedor. era no primeiro dia, é hoje, e segue sendo enquanto o projeto existir.",
   },
   en: {
-    title: "compromisso · forever free for developers — Beheld",
+    title: "compromisso · forever free for developers, Beheld",
     desc: "Beheld is free for developers. it was free on day one, it's free today, and it stays free for as long as the project exists.",
   },
   es: {
-    title: "compromisso · forever free for developers — Beheld",
+    title: "compromisso · forever free for developers, Beheld",
     desc: "Beheld es gratis para desarrolladores. lo era el primer día, lo es hoy, y sigue siéndolo mientras el proyecto exista.",
   },
 };

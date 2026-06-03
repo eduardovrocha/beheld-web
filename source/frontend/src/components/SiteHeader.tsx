@@ -7,7 +7,7 @@ import { useT } from "@/i18n/I18nProvider";
 const GITHUB_URL = "https://github.com/eduardovrocha/beheld";
 
 export function SiteHeader({
-  titleMain = "Beheld",
+  titleMain = "beheld",
   titleAccent = ".dev",
 }: {
   titleMain?: string;

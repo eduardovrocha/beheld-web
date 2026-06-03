@@ -549,21 +549,19 @@ export function Home() {
       {/* ═══ LETTER ═════════════════════════════════════════════════════ */}
       <section className="py-20" style={{ borderBottom: "1px solid var(--rule)" }}>
         <Eyebrow>{t("home.letter.eyebrow")}</Eyebrow>
-        <div className="mt-5" style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.95 }}>
+        <p className="mt-5" style={{ color: "var(--text)", fontSize: 15, lineHeight: 1.95 }}>
           {t("home.letter.body_p1")}
           <span style={{ color: "var(--accent)", fontWeight: 500 }}>
             {t("home.letter.body_em")}
           </span>
           {t("home.letter.body_p2")}
-        </div>
-        <div
+        </p>
+        <p
           className="mt-6 font-mono uppercase"
           style={{ color: "var(--muted)", fontSize: 11, letterSpacing: "0.14em" }}
         >
-          {t("home.letter.footnote")}{" "}
-          <span style={{ color: "var(--accent)" }}>·</span>{" "}
-          <span style={{ color: "var(--accent)", fontWeight: 500 }}>{t("home.forever_free")}</span>
-        </div>
+          {t("home.letter.body_p3")}
+        </p>
       </section>
 
       {/* ═══ 01 · CAPTURE ═══════════════════════════════════════════════ */}

@@ -225,7 +225,7 @@ export function HowItWorks() {
             className="mt-4 font-mono uppercase"
             style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em" }}
           >
-            — B3H31D
+            B3H31D
           </footer>
         </blockquote>
 

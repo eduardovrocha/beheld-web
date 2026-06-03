@@ -9,15 +9,15 @@ import { useT } from "@/i18n/I18nProvider";
 const META = {
   pt: {
     title: "conheça o B3 · a testemunha · Beheld",
-    desc: "Me chame de B3. Eu vivo na sua máquina e presto atenção. Não dou nota, não classifico — só registro o que vi.",
+    desc: "Me chame de B3. Eu vivo na sua máquina e presto atenção. Não dou nota, não classifico, só registro o que vi.",
   },
   en: {
     title: "meet B3 · the witness · Beheld",
-    desc: "Call me B3. I live on your machine and I pay attention. I don't grade, I don't classify — I just record what I saw.",
+    desc: "Call me B3. I live on your machine and I pay attention. I don't grade, I don't classify, I just record what I saw.",
   },
   es: {
     title: "conoce a B3 · el testigo · Beheld",
-    desc: "Llámame B3. Vivo en tu máquina y presto atención. No pongo nota, no clasifico — solo registro lo que vi.",
+    desc: "Llámame B3. Vivo en tu máquina y presto atención. No pongo nota, no clasifico, solo registro lo que vi.",
   },
 } as const;
 
@@ -111,7 +111,7 @@ export function MeetB3() {
             className="mt-4 font-mono uppercase"
             style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em" }}
           >
-            — B3H31D
+            B3H31D
           </footer>
         </blockquote>
 
