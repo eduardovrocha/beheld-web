@@ -28,7 +28,11 @@ export async function fetchBundle(id: string): Promise<Bundle> {
  * verifiers. Used by the SPA to wire features like "Save dev" that need a
  * stable Account reference.
  */
-export async function fetchBundleWithAccount(id: string): Promise<{ bundle: Bundle; accountId: number | null }> {
+export async function fetchBundleWithAccount(id: string): Promise<{
+  bundle: Bundle;
+  accountId: number | null;
+  companyName: string | null;
+}> {
   const r = await fetch(`${apiBase()}/v/${encodeURIComponent(id)}`, {
     headers: { Accept: "application/json" },
   });
@@ -38,7 +42,12 @@ export async function fetchBundleWithAccount(id: string): Promise<{ bundle: Bund
   const bundle = (await r.json()) as Bundle;
   const idHeader = r.headers.get("X-Beheld-Account-Id");
   const accountId = idHeader ? Number(idHeader) : null;
-  return { bundle, accountId: Number.isFinite(accountId) ? accountId : null };
+  const companyName = r.headers.get("X-Beheld-Company-Name");
+  return {
+    bundle,
+    accountId: Number.isFinite(accountId) ? accountId : null,
+    companyName,
+  };
 }
 
 export function badgeUrl(id: string): string {

@@ -46,6 +46,8 @@ class ProfilesController < ActionController::Base
       # verifiers. The SPA reads it to wire features like "Save dev" that
       # need a stable Account reference, not a signed-bundle field.
       response.set_header("X-Beheld-Account-Id", @account.id.to_s) if @account
+      company = Company.find_by(id: cookies.signed[CompanyAuthenticated::COOKIE_NAME])
+      response.set_header("X-Beheld-Company-Name", company.name) if company
       respond_to do |format|
         format.html { render :show }
         format.json { render json: @bundle_data }

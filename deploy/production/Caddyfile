@@ -34,12 +34,29 @@ beheld.dev {
     reverse_proxy 127.0.0.1:3000
   }
 
+  # ── Rails: bundle JSON — stable machine-readable suffix ───────────────────
+  # `/v/:id.json` is the explicit JSON path (no content negotiation needed).
+  # Recommended path for external verifiers + cosign / rekor-cli pipelines.
+  # Rewrites the request to `/v/:id` (stripping the `.json` suffix) before
+  # proxying so Rails serves it via the same ProfilesController#show path
+  # used by the content-negotiated route below. Header_up forces JSON.
+  @rails_bundle_json_explicit path_regexp jsonext ^/v/([A-Za-z0-9_\-]+)\.json$
+  handle @rails_bundle_json_explicit {
+    rewrite * /v/{re.jsonext.1}
+    reverse_proxy 127.0.0.1:3000 {
+      header_up Accept application/json
+    }
+  }
+
   # ── Rails: bundle JSON fetch — content-negotiated ─────────────────────────
   # The SPA's VerifyPublic component fetches `/v/:id` with
   # `Accept: application/json`. Browser direct-nav (Accept: text/html)
   # falls through to the SPA handler below for client-side rendering.
+  # The optional trailing slash in the regex tolerates `/v/:id/` so a
+  # canonical URL with or without slash routes identically (P0 fix from
+  # post-launch verification report).
   @rails_bundle_json {
-    path_regexp ^/v/[A-Za-z0-9_\-]+$
+    path_regexp ^/v/[A-Za-z0-9_\-]+/?$
     header_regexp Accept application/json
   }
   handle @rails_bundle_json {
