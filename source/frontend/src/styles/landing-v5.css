@@ -150,9 +150,9 @@
   }
 }
 .landing-v5 h1.title {
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-weight: 600;
-  font-size: clamp(32px, 4.4vw, 48px);
+  font-size: clamp(32px, 4.4vw, 33px);
   line-height: 1.06;
   letter-spacing: -0.02em;
   margin-bottom: 26px;
