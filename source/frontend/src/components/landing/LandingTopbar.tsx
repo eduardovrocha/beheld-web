@@ -22,12 +22,15 @@ import type { TKey } from "@/i18n/dict";
 
 type NavLink = { href: string; key: TKey };
 
+// Each entry maps to either a tab hash (LandingTabs listens for
+// `hashchange` and activates the matching panel), or to a regular
+// in-page anchor for the hero (`#top`) / CTA (`#cta`).
 const NAV: NavLink[] = [
   { href: "#top", key: "landing.nav.home" },
-  { href: "#b3h31d-intro", key: "landing.nav.b3" },
-  { href: "#daemon-local", key: "landing.nav.daemon" },
-  { href: "#sessoes-reais", key: "landing.nav.sessions" },
-  { href: "#nao", key: "landing.nav.oss" },
+  { href: "#manifesto", key: "landing.nav.b3" },
+  { href: "#daemon", key: "landing.nav.daemon" },
+  { href: "#sessoes", key: "landing.nav.sessions" },
+  { href: "#verificacao", key: "landing.nav.oss" },
   { href: "#cta", key: "landing.nav.commitment" },
 ];
 

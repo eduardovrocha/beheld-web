@@ -1,19 +1,18 @@
 /**
- * B3H31DQuote — pull-quote callout in B3H31D's first-person voice.
+ * B3H31DQuote — pull-quote in B3H31D's first-person voice.
  *
- * Three appearances in the landing:
- *   - the standalone intro quote after the Manifesto
- *   - the closing quote at the end of the DaemonLocalSection
- *   - the closing quote at the end of the RealSessionsSection
+ * Visual (per the landing v5 tabs spec):
+ *   - Background = --term-bg, left border 2px --accent.
+ *   - Paragraph body uses the same typography as DeepDiveCard
+ *     paragraphs: var(--sans), ~15px, line-height 1.65. The site
+ *     globally disables italics (see index.css), so the only visual
+ *     marker of "this is a quote" is the left accent border plus the
+ *     accent mono attribution.
+ *   - Attribution prefixed with "— " in --accent mono uppercase.
  *
- * Visual: a single block with a left accent border, large lede-sized
- * text in `--text`, and a mono `— B3H31D` attribution in `--accent`.
- * Spans the wrap width; sits inside its own `.block` section so the
- * hairlines top/bottom give it breathing room.
- *
- * Variant `lead` increases padding and font size for the prominent
- * standalone quote; default is `tight` for closing quotes inside
- * sections.
+ * Used three times: at the end of the Manifesto tab (intro quote),
+ * the end of the Daemon deep-dive, and the end of the Sessões
+ * deep-dive.
  */
 import { useT } from "@/i18n/I18nProvider";
 import type { TKey } from "@/i18n/dict";
@@ -23,38 +22,14 @@ export type B3H31DQuoteProps = {
   quoteKey: TKey;
   /** i18n key for the attribution text (e.g. "B3H31D"). */
   attrKey: TKey;
-  /** Anchor id for the standalone variant. */
+  /** Optional anchor id (rarely needed; tabs handle deep-linking). */
   id?: string;
-  /** "lead" for the standalone intro quote, "tight" inside sections. */
-  variant?: "lead" | "tight";
 };
 
-export function B3H31DQuote({
-  quoteKey,
-  attrKey,
-  id,
-  variant = "tight",
-}: B3H31DQuoteProps) {
+export function B3H31DQuote({ quoteKey, attrKey, id }: B3H31DQuoteProps) {
   const t = useT();
-  const className = variant === "lead" ? "b3-quote b3-quote--lead" : "b3-quote";
-
-  if (variant === "lead") {
-    // Lead variant gets its own section.block, since it stands alone
-    // between Manifesto and CaptureCards.
-    return (
-      <section id={id} className="block">
-        <blockquote className={`${className} reveal d1`}>
-          <p className="b3-quote__body">{t(quoteKey)}</p>
-          <footer className="b3-quote__attr">— {t(attrKey)}</footer>
-        </blockquote>
-      </section>
-    );
-  }
-
-  // Tight variant is meant to be nested at the end of another section
-  // — no <section> wrapper here.
   return (
-    <blockquote className={`${className} reveal d2`}>
+    <blockquote id={id} className="b3-quote reveal d2">
       <p className="b3-quote__body">{t(quoteKey)}</p>
       <footer className="b3-quote__attr">— {t(attrKey)}</footer>
     </blockquote>

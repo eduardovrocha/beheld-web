@@ -1,30 +1,36 @@
 /**
  * Home — landing v5.
  *
- * Single-page composition mirroring docs/landing-motion-mockup.html:
+ * Layout (single page, owns its own header/footer/Constellation —
+ * see App.tsx for the routing carve-out):
  *
  *   .landing-v5
  *     <Constellation />                    (ambient bg, portal'd)
- *     <LandingTopbar />                    (LensMark + nav + ThemeToggle)
+ *     <LandingTopbar />                    (LensMark + nav + toggles)
  *     <main class="wrap" id="top">
- *       <Hero />                           (eyebrow + h1 + lede + pill +
- *                                           install + tools + terminal)
- *       <Manifesto />
- *       <CaptureCards />                   (01 · O que o daemon captura)
- *       <NotDoingList />                   (O que o Beheld não faz)
- *       <ClaimedVsDemonstrated />          (02 · delta + self-declared)
- *       <HowItWorksSteps />                (03 · três passos)
- *       <VerificationChain />              (04 · cinco camadas)
- *       <FAQ />                            (As perguntas certas)
- *       <RealScenes />                     (Se isso já aconteceu)
- *       <CTASection />                     (install line + free)
+ *       <Hero />                           (always visible above the
+ *                                           4 tabs)
+ *       <LandingTabs panels={...}>         (4 tabs, fixed order)
+ *         01 Manifesto:   Manifesto + B3Quote(intro) + RealScenes
+ *         02 Daemon:      CaptureCards + DaemonLocalSection (which
+ *                         includes its own closing B3Quote and
+ *                         flow/never-table) + HowItWorksSteps
+ *         03 Sessões:     RealSessionsSection (includes the session
+ *                         example block + closing B3Quote) +
+ *                         ClaimedVsDemonstrated
+ *         04 Verificação: NotDoingList + VerificationChain + FAQ
+ *       </LandingTabs>
+ *       <CTASection />                     (always visible below)
  *     </main>
  *     <LandingFooter />
  *
- * Bypasses the global <Layout> on purpose: this page owns its own
- * header (with theme toggle) and footer, and we want the Constellation
- * to be the only ambient canvas (Layout would render a second one).
- * Wiring lives in App.tsx.
+ * Hero, CTA and footer are intentionally OUTSIDE the tabs — they
+ * frame the page and stay visible whichever tab is active.
+ *
+ * Reveals: the page-level useRevealMany still observes everything,
+ * but tab panels that are `hidden` won't intersect, so LandingTabs
+ * also force-applies `.in` to all `.reveal` descendants when a panel
+ * activates (see LandingTabs.tsx).
  */
 import { useEffect } from "react";
 
@@ -32,6 +38,7 @@ import { B3H31DQuote } from "@/components/landing/B3H31DQuote";
 import { Constellation } from "@/components/Constellation";
 import { DaemonLocalSection } from "@/components/landing/DaemonLocalSection";
 import { Hero } from "@/components/landing/Hero";
+import { LandingTabs, type PanelId } from "@/components/landing/LandingTabs";
 import { LandingTopbar } from "@/components/landing/LandingTopbar";
 import { RealSessionsSection } from "@/components/landing/RealSessionsSection";
 import {
@@ -55,22 +62,48 @@ import { useRevealMany } from "@/hooks/useReveal";
 import "@/styles/landing-v5.css";
 
 export function Home() {
-  // Observe every .reveal in the page once, so cascading delays
-  // (d1..d4) play as sections enter the viewport. We could attach
-  // useReveal per-component, but a single observer on the page root
-  // keeps the implementation lean and easy to disable for reduced
-  // motion (the hook already handles that).
   const rootRef = useRevealMany<HTMLDivElement>(".reveal", { threshold: 0.16 });
 
   useEffect(() => {
-    // Make sure hero reveals fire even if they start in-view (the
-    // observer fires on first observation regardless). No-op safety
-    // net: poke any unhit ones after a tick.
     const t = window.setTimeout(() => {
       document.querySelectorAll(".landing-v5 .hero .reveal").forEach((el) => el.classList.add("in"));
     }, 80);
     return () => window.clearTimeout(t);
   }, []);
+
+  const panels: Record<PanelId, React.ReactNode> = {
+    manifesto: (
+      <>
+        <Manifesto />
+        <B3H31DQuote
+          id="b3h31d-intro"
+          quoteKey="landing.b3h31d.intro_quote"
+          attrKey="landing.b3h31d.intro_quote_attr"
+        />
+        <RealScenes />
+      </>
+    ),
+    daemon: (
+      <>
+        <CaptureCards />
+        <DaemonLocalSection />
+        <HowItWorksSteps />
+      </>
+    ),
+    sessoes: (
+      <>
+        <RealSessionsSection />
+        <ClaimedVsDemonstrated />
+      </>
+    ),
+    verificacao: (
+      <>
+        <NotDoingList />
+        <VerificationChain />
+        <FAQ />
+      </>
+    ),
+  };
 
   return (
     <div className="landing-v5" ref={rootRef}>
@@ -78,22 +111,7 @@ export function Home() {
       <LandingTopbar />
       <main className="wrap" id="top">
         <Hero />
-        <Manifesto />
-        <B3H31DQuote
-          id="b3h31d-intro"
-          quoteKey="landing.b3h31d.intro_quote"
-          attrKey="landing.b3h31d.intro_quote_attr"
-          variant="lead"
-        />
-        <CaptureCards />
-        <DaemonLocalSection />
-        <NotDoingList />
-        <RealSessionsSection />
-        <ClaimedVsDemonstrated />
-        <HowItWorksSteps />
-        <VerificationChain />
-        <FAQ />
-        <RealScenes />
+        <LandingTabs panels={panels} />
         <CTASection />
       </main>
       <LandingFooter />

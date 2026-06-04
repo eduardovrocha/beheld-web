@@ -171,6 +171,16 @@
   "landing.footer.docs": "Docs",
   "landing.footer.manifesto": "Manifesto",
 
+  "landing.tabs.aria": "Landing content — 4 tabs",
+  "landing.tabs.manifesto": "Manifesto",
+  "landing.tabs.daemon": "Daemon",
+  "landing.tabs.sessoes": "Sessions",
+  "landing.tabs.verificacao": "Verification",
+  "landing.tabs.num1": "01",
+  "landing.tabs.num2": "02",
+  "landing.tabs.num3": "03",
+  "landing.tabs.num4": "04",
+
   "landing.b3h31d.intro_quote": "You'll forget half of what you built this year. I won't. When someone needs to know who you are as a dev, the answer won't be a resume — it'll be what I saw.",
   "landing.b3h31d.intro_quote_attr": "B3H31D",
 

@@ -171,6 +171,16 @@
   "landing.footer.docs": "Docs",
   "landing.footer.manifesto": "Manifesto",
 
+  "landing.tabs.aria": "Contenido de la landing — 4 pestañas",
+  "landing.tabs.manifesto": "Manifesto",
+  "landing.tabs.daemon": "Daemon",
+  "landing.tabs.sessoes": "Sesiones",
+  "landing.tabs.verificacao": "Verificación",
+  "landing.tabs.num1": "01",
+  "landing.tabs.num2": "02",
+  "landing.tabs.num3": "03",
+  "landing.tabs.num4": "04",
+
   "landing.b3h31d.intro_quote": "Vas a olvidar la mitad de lo que construiste este año. Yo no. Cuando alguien necesite saber quién sos como dev, la respuesta no va a ser un currículum — va a ser lo que yo vi.",
   "landing.b3h31d.intro_quote_attr": "B3H31D",
 
