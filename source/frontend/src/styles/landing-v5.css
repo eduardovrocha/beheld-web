@@ -432,10 +432,10 @@
   letter-spacing: 0.1em;
 }
 .landing-v5 .sechead h2 {
-  font-family: var(--sans);
+  font-family: var(--mono);
   font-weight: 600;
-  font-size: clamp(26px, 3.4vw, 36px);
-  letter-spacing: -0.015em;
+  font-size: clamp(26px, 3.4vw, 19px);
+  letter-spacing: 0;
   color: var(--text);
 }
 .landing-v5 .sechead .right {
