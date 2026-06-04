@@ -1102,6 +1102,194 @@
   .landing-v5 .obs-ex-grid dt:first-of-type { margin-top: 0; }
 }
 
+/* ── Compromisso (5th tab) ────────────────────────────────────────────── */
+.landing-v5 .compromisso {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.landing-v5 .comp-head { margin-bottom: 28px; }
+.landing-v5 .comp-eyebrow {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.landing-v5 .comp-intro {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0 0 40px;
+}
+.landing-v5 .comp-intro code,
+.landing-v5 .compromisso .ck {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: var(--term-bg);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--text);
+}
+
+.landing-v5 .comp-section {
+  margin: 36px 0;
+  padding-top: 28px;
+  border-top: 1px solid var(--rule);
+}
+.landing-v5 .comp-section:first-of-type { border-top: none; padding-top: 0; }
+.landing-v5 .comp-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.landing-v5 .comp-section-num {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  min-width: 30px;
+}
+.landing-v5 .comp-section-title {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: clamp(20px, 2.4vw, 24px);
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.landing-v5 .comp-section-body p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+.landing-v5 .comp-section-body p:last-child { margin-bottom: 0; }
+.landing-v5 .comp-section-body p code,
+.landing-v5 .comp-section-body p .ck {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: var(--term-bg);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--text);
+}
+
+.landing-v5 .comp-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 14px;
+}
+.landing-v5 .comp-bullets li {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted);
+  padding-left: 22px;
+  position: relative;
+  margin-bottom: 10px;
+}
+.landing-v5 .comp-bullets li::before {
+  content: "·";
+  color: var(--accent);
+  font-weight: 700;
+  position: absolute;
+  left: 8px;
+  top: -1px;
+  font-size: 18px;
+}
+
+/* Assinatura */
+.landing-v5 .comp-sig {
+  margin: 48px 0 32px;
+  padding: 24px;
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 11px 11px 0;
+  background: var(--term-bg);
+}
+.landing-v5 .comp-sig-heading {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.landing-v5 .comp-sig-code,
+.landing-v5 .comp-code-block {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text);
+  overflow-x: auto;
+  white-space: pre;
+}
+.landing-v5 .comp-sig-foot {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
+.landing-v5 .comp-sig-foot:last-of-type { margin-bottom: 16px; }
+.landing-v5 .comp-sig-meta {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+/* Contador de instalações (sub-block within tab) */
+.landing-v5 .comp-counter {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--rule);
+}
+.landing-v5 .comp-counter-title {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: -0.015em;
+  color: var(--text);
+  margin: 0 0 16px;
+}
+.landing-v5 .comp-counter-sub {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text);
+  margin: 24px 0 10px;
+}
+.landing-v5 .comp-counter p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+.landing-v5 .comp-counter p code,
+.landing-v5 .comp-counter p .ck {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: var(--term-bg);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--text);
+}
+
+@media (max-width: 600px) {
+  .landing-v5 .compromisso { padding: 0 4px; }
+  .landing-v5 .comp-section-head { flex-direction: column; gap: 4px; }
+  .landing-v5 .comp-section-num { min-width: 0; }
+}
+
 /* ── Focus visible — readable on every theme without breaking layout ── */
 .landing-v5 a:focus-visible,
 .landing-v5 button:focus-visible,

@@ -35,6 +35,7 @@
 import { useEffect } from "react";
 
 import { B3H31DQuote } from "@/components/landing/B3H31DQuote";
+import { CompromissoSection } from "@/components/landing/CompromissoSection";
 import { Constellation } from "@/components/Constellation";
 import { DaemonLocalSection } from "@/components/landing/DaemonLocalSection";
 import { Hero } from "@/components/landing/Hero";
@@ -103,6 +104,7 @@ export function Home() {
         <FAQ />
       </>
     ),
+    compromisso: <CompromissoSection />,
   };
 
   return (

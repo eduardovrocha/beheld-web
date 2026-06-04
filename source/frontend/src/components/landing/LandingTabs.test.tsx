@@ -16,6 +16,7 @@ function fixturePanels(): Record<PanelId, React.ReactNode> {
     daemon:      <div data-testid="content-daemon">D</div>,
     sessoes:     <div data-testid="content-sessoes">S</div>,
     verificacao: <div data-testid="content-verificacao">V</div>,
+    compromisso: <div data-testid="content-compromisso">C</div>,
   };
 }
 
@@ -34,10 +35,10 @@ describe("LandingTabs", () => {
   beforeEach(() => setHash(""));
   afterEach(() => setHash(""));
 
-  it("renders 4 tabs in fixed order with ARIA semantics", () => {
+  it("renders 5 tabs in fixed order with ARIA semantics", () => {
     const { getAllByRole } = render(<LandingTabs panels={fixturePanels()} />);
     const tabs = getAllByRole("tab");
-    expect(tabs.length).toBe(4);
+    expect(tabs.length).toBe(5);
     expect(tabs.map((t) => t.getAttribute("data-tab-id"))).toEqual(TAB_IDS);
 
     const tablist = getAllByRole("tablist");
@@ -85,22 +86,22 @@ describe("LandingTabs", () => {
     expect(window.location.hash).toBe("#sessoes");
 
     fireEvent.keyDown(tabs[2], { key: "End" });
-    expect(tabs[3].getAttribute("aria-selected")).toBe("true");
-    expect(window.location.hash).toBe("#verificacao");
+    expect(tabs[4].getAttribute("aria-selected")).toBe("true");
+    expect(window.location.hash).toBe("#compromisso");
 
-    fireEvent.keyDown(tabs[3], { key: "Home" });
+    fireEvent.keyDown(tabs[4], { key: "Home" });
     expect(tabs[0].getAttribute("aria-selected")).toBe("true");
     expect(window.location.hash).toBe("#manifesto");
 
     fireEvent.keyDown(tabs[0], { key: "ArrowLeft" });
-    expect(tabs[3].getAttribute("aria-selected")).toBe("true"); // wraps
+    expect(tabs[4].getAttribute("aria-selected")).toBe("true"); // wraps to compromisso
   });
 
-  it("hydrates from location.hash on mount", () => {
-    setHash("#verificacao");
+  it("hydrates from location.hash on mount (compromisso)", () => {
+    setHash("#compromisso");
     const { getAllByRole } = render(<LandingTabs panels={fixturePanels()} />);
     const tabs = getAllByRole("tab");
-    expect(tabs[3].getAttribute("aria-selected")).toBe("true");
+    expect(tabs[4].getAttribute("aria-selected")).toBe("true");
   });
 
   it("ignores garbage hashes (falls back to manifesto)", () => {
@@ -135,6 +136,7 @@ describe("LandingTabs", () => {
       daemon:      <div>D</div>,
       sessoes:     <div>S</div>,
       verificacao: <div>V</div>,
+      compromisso: <div>C</div>,
     };
     const { getAllByRole, getByTestId } = render(<LandingTabs panels={panels} />);
     const details = getByTestId("m-details") as HTMLDetailsElement;

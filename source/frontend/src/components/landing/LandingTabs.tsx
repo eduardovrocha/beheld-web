@@ -39,9 +39,20 @@ import {
 import { useT } from "@/i18n/I18nProvider";
 import type { TKey } from "@/i18n/dict";
 
-export type PanelId = "manifesto" | "daemon" | "sessoes" | "verificacao";
+export type PanelId =
+  | "manifesto"
+  | "daemon"
+  | "sessoes"
+  | "verificacao"
+  | "compromisso";
 
-export const TAB_IDS: PanelId[] = ["manifesto", "daemon", "sessoes", "verificacao"];
+export const TAB_IDS: PanelId[] = [
+  "manifesto",
+  "daemon",
+  "sessoes",
+  "verificacao",
+  "compromisso",
+];
 
 type TabSpec = {
   id: PanelId;
@@ -54,6 +65,7 @@ const TABS: TabSpec[] = [
   { id: "daemon",      numKey: "landing.tabs.num2", labelKey: "landing.tabs.daemon" },
   { id: "sessoes",     numKey: "landing.tabs.num3", labelKey: "landing.tabs.sessoes" },
   { id: "verificacao", numKey: "landing.tabs.num4", labelKey: "landing.tabs.verificacao" },
+  { id: "compromisso", numKey: "landing.tabs.num5", labelKey: "landing.tabs.compromisso" },
 ];
 
 export type LandingTabsProps = {
@@ -83,6 +95,7 @@ export function LandingTabs({ panels }: LandingTabsProps) {
     daemon: null,
     sessoes: null,
     verificacao: null,
+    compromisso: null,
   });
 
   const [active, setActive] = useState<PanelId>(() => readHashPanel());
