@@ -338,6 +338,7 @@ export function RealScenes() {
     <Section
       title={t("landing.scenes.title")}
       aside={t("landing.scenes.aside")}
+      noBorderTop
     >
       <div className="cenas">
         {SCENES.map((id, i) => (

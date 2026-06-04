@@ -852,6 +852,10 @@
   padding: 22px 24px 18px 26px;
   margin: 28px 0;
 }
+/* Intro quote (first child of the Manifesto panel) sits flush against
+   the Manifesto block above and CaptureCards/CTA below — drop the
+   default vertical margins so the visual rhythm there is tighter. */
+.landing-v5 #b3h31d-intro.b3-quote { margin-top: 0; margin-bottom: 0; }
 .landing-v5 .b3-quote__body {
   font-family: var(--sans);
   font-weight: 400;
