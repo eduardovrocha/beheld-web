@@ -246,9 +246,24 @@
   opacity: 0.85;
 }
 .landing-v5 .tool:hover { transform: translateY(-2px); opacity: 1; }
-.landing-v5 .tool img,
 .landing-v5 .tool svg { width: 22px; height: 22px; flex: none; }
-.landing-v5 .tool img { filter: none; }
+/* Icons are served as SVGs from /public/icons/ai-tools/. To keep them
+   monochromatic and theme-reactive, we render them as a CSS mask on
+   .tool-glyph and paint with `currentColor` (the parent <a>.tool's
+   color, which is var(--accent)). This avoids needing svgr or
+   dangerouslySetInnerHTML. */
+.landing-v5 .tool-glyph {
+  display: block;
+  width: 22px;
+  height: 22px;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+          mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+          mask-position: center;
+}
 
 /* ── Terminal snapshot ────────────────────────────────────────────────── */
 .landing-v5 .term {

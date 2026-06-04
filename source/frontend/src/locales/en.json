@@ -9,6 +9,8 @@
   "theme.aria": "Toggle theme",
   "theme.aria.toDark": "Switch to dark theme",
   "theme.aria.toGithub": "Switch to GitHub theme",
+  "landing.install.copy": "copy",
+  "landing.tools.label": "supported tools",
   "locale.aria": "Switch language",
   "home.title": "Verifiable technical profiles for developers",
   "home.subtitle_html": "DevProfile is a local daemon that builds a technical profile from your git history and your coding harness, Claude Code, Continue.dev, with Cursor, Gemini CLI, Codex and Copilot coming next. Produces <strong>Ed25519-signed snapshots</strong> that anyone can verify in the browser.",
