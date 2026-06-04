@@ -19,7 +19,7 @@
   "landing.nav.oss": "open source",
   "landing.nav.commitment": "compromiso",
 
-  "landing.hero.title_line1": "Guiado por las señales.",
+  "landing.hero.title_line1": "Guiado por señales.",
   "landing.hero.title_line2": "Decidido por ti.",
   "landing.hero.lede": "Un daemon local que observa tus sesiones reales y tu git, y firma un bundle verificable. Trabajo real, no un currículum lleno de palabras clave.",
   "landing.hero.install_label": "instalá en una línea",
@@ -166,7 +166,7 @@
 
   "landing.cta.free": "forever free for developers",
 
-  "landing.footer.tagline": "beheld.dev — Guiado por las señales. Decidido por ti.",
+  "landing.footer.tagline": "beheld.dev — Guiado por señales. Decidido por ti.",
   "landing.footer.github": "GitHub",
   "landing.footer.docs": "Docs",
   "landing.footer.manifesto": "Manifesto",

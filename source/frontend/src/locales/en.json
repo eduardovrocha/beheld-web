@@ -19,7 +19,7 @@
   "landing.nav.oss": "open source",
   "landing.nav.commitment": "commitment",
 
-  "landing.hero.title_line1": "Beheld by signal.",
+  "landing.hero.title_line1": "Guided by signals.",
   "landing.hero.title_line2": "Decided by you.",
   "landing.hero.lede": "A local daemon that watches your real sessions and your git, and signs a verifiable bundle. Real work, not a resume full of keywords.",
   "landing.hero.install_label": "install in one line",
@@ -166,7 +166,7 @@
 
   "landing.cta.free": "forever free for developers",
 
-  "landing.footer.tagline": "beheld.dev — Beheld by signal. Decided by you.",
+  "landing.footer.tagline": "beheld.dev — Guided by signals. Decided by you.",
   "landing.footer.github": "GitHub",
   "landing.footer.docs": "Docs",
   "landing.footer.manifesto": "Manifesto",
