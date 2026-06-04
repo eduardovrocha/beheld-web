@@ -2,8 +2,12 @@
  * Landing v5 — content sections (Manifesto → CTA → Footer).
  *
  * Grouped here for compactness; each section is an exported component
- * so it can be unit-tested in isolation (Fase 6). Copy is PT-BR
- * literal from the approved mockup. Anchor ids match the topbar nav.
+ * so it can be unit-tested in isolation. Copy comes from i18n
+ * (`landing.*` keys), with PT-BR canonical and EN/ES translations.
+ *
+ * Brand phrases ("Beheld by signal.", "Decided by you.", "forever
+ * free for developers", "B3H31D", "Ed25519", "L1", "L2", tier
+ * identifiers like "fully_verifiable") stay identical across locales.
  *
  * The components do NOT include the surrounding `.wrap` — the Home
  * route owns one `<main class="landing-v5 wrap">` that wraps them all.
@@ -14,25 +18,22 @@ import { InstallLine } from "@/components/landing/InstallLine";
 import { LensMark } from "@/components/LensMark";
 import { Section } from "@/components/landing/Section";
 import { useRevealMany } from "@/hooks/useReveal";
+import { useT } from "@/i18n/I18nProvider";
+import type { TKey } from "@/i18n/dict";
 
 // ─────────────────────────────────────────────────────────────────────────
 //  Manifesto · "Além do currículo"
 // ─────────────────────────────────────────────────────────────────────────
 
 export function Manifesto() {
+  const t = useT();
   return (
-    <Section title="Além do currículo">
+    <Section title={t("landing.manifesto.title")}>
       <p className="manifesto reveal d1">
-        Nenhuma plataforma viu você trabalhando de madrugada ou no fim de
-        semana. O recrutador não percebe o valor daquele teste escrito pra
-        garantir que o gateway de pagamento funciona em dev e produção de
-        forma isolada. Aquele gerente que te rejeitou não faz ideia de que
-        seu <b>test ratio é quatro vezes maior que a mediana global</b>. O
-        B3H31D sabe de tudo isso — e pode mostrar, caso você solicite.
-        <span className="punch">
-          Isso é trabalho real, não currículo inventado cheio de
-          palavras-chave.
-        </span>
+        {t("landing.manifesto.body1")}
+        <b>{t("landing.manifesto.body_em")}</b>
+        {t("landing.manifesto.body2")}
+        <span className="punch">{t("landing.manifesto.punch")}</span>
       </p>
     </Section>
   );
@@ -42,29 +43,24 @@ export function Manifesto() {
 //  01 · O que o daemon captura
 // ─────────────────────────────────────────────────────────────────────────
 
-type CaptureCard = { k: string; big: string; p: string };
-
-const CAPTURE_CARDS: CaptureCard[] = [
-  { k: "daemon", big: "local", p: "Sem cloud. Nada sai sem você assinar." },
-  { k: "sinais", big: "L1 + L2", p: "Histórico de commits + sessões de Harness e IDEs." },
-  { k: "bundle", big: "Ed25519", p: "Assinado offline · verificável sem o Beheld." },
-  { k: "custo pro dev", big: "$0", p: "Para sempre." },
-];
+type CardKey = "daemon" | "sinais" | "bundle" | "cost";
+const CARDS: CardKey[] = ["daemon", "sinais", "bundle", "cost"];
 
 export function CaptureCards() {
+  const t = useT();
   return (
     <Section
       id="captura"
       num="01"
-      title="O que o daemon captura"
-      aside="sem setup extra"
+      title={t("landing.cap.title")}
+      aside={t("landing.cap.aside")}
     >
       <div className="cap">
-        {CAPTURE_CARDS.map((c, i) => (
-          <div key={c.k} className={`capcard reveal d${(i % 4) + 1}`}>
-            <div className="k">{c.k}</div>
-            <div className="big">{c.big}</div>
-            <p>{c.p}</p>
+        {CARDS.map((c, i) => (
+          <div key={c} className={`capcard reveal d${(i % 4) + 1}`}>
+            <div className="k">{t(`landing.cap.${c}.k` as TKey)}</div>
+            <div className="big">{t(`landing.cap.${c}.big` as TKey)}</div>
+            <p>{t(`landing.cap.${c}.p` as TKey)}</p>
           </div>
         ))}
       </div>
@@ -76,50 +72,25 @@ export function CaptureCards() {
 //  O que o Beheld não faz
 // ─────────────────────────────────────────────────────────────────────────
 
-type NotItem = { title: string; body: string };
-
-const NOT_ITEMS: NotItem[] = [
-  {
-    title: "Não envia nada pra nuvem.",
-    body: "O daemon é local. O que sai, sai porque você assinou e mandou.",
-  },
-  {
-    title: "Não lê seu código.",
-    body: "Captura sinais, ecossistemas, disciplina de teste, padrão no tempo. Conteúdo de arquivo, mensagem de commit e nome de branch: nunca gravados.",
-  },
-  {
-    title: "Não te dá nota.",
-    body: "Não existe \"score de talento\". Ele relata o observável. Você lê.",
-  },
-  {
-    title: "Não conta pra ninguém.",
-    body: "Nenhum recrutador, gerente ou empresa vê nada até você gerar um bundle e publicar.",
-  },
-  {
-    title: "Não cobra de você.",
-    body: "Nunca. Sem tier premium escondido pra desbloquear depois.",
-  },
-  {
-    title: "Não te prende.",
-    body: "Open source, bundle verificável offline. Funciona mesmo se o Beheld sumir amanhã.",
-  },
-];
+type NotKey = "cloud" | "code" | "score" | "tell" | "charge" | "lockin";
+const NOTS: NotKey[] = ["cloud", "code", "score", "tell", "charge", "lockin"];
 
 export function NotDoingList() {
+  const t = useT();
   return (
     <Section
       id="nao"
       num="✗"
-      title="O que o Beheld não faz"
-      aside="honesto sobre os limites"
+      title={t("landing.not.title")}
+      aside={t("landing.not.aside")}
     >
       <div className="nots">
-        {NOT_ITEMS.map((n, i) => (
-          <div key={n.title} className={`notrow reveal d${Math.floor(i / 2) + 1}`}>
+        {NOTS.map((n, i) => (
+          <div key={n} className={`notrow reveal d${Math.floor(i / 2) + 1}`}>
             <span className="x">✗</span>
             <div>
-              <b>{n.title}</b>
-              <p>{n.body}</p>
+              <b>{t(`landing.not.${n}.t` as TKey)}</b>
+              <p>{t(`landing.not.${n}.b` as TKey)}</p>
             </div>
           </div>
         ))}
@@ -133,47 +104,43 @@ export function NotDoingList() {
 // ─────────────────────────────────────────────────────────────────────────
 
 export function ClaimedVsDemonstrated() {
+  const t = useT();
   return (
     <Section
       num="02"
-      title="Claimed vs Demonstrated · o delta verificável"
-      aside="3 estados possíveis"
+      title={t("landing.cvd.title")}
+      aside={t("landing.cvd.aside")}
     >
-      <p className="cvd-intro reveal d1">
-        O dev declara o que é. O daemon mostra o que de fato aparece nas
-        sessões e no git. Onde os dois se encontram, o sinal é confirmado.
-        Onde divergem, o sinal é limitado — e isso também é informação.
-      </p>
+      <p className="cvd-intro reveal d1">{t("landing.cvd.intro")}</p>
 
       <div className="delta">
         <div className="drow ok reveal d1">
           <span className="mk">✓</span>
           <div>
-            <div className="claim">Stack principal: Python, TypeScript</div>
+            <div className="claim">{t("landing.cvd.row1.claim")}</div>
             <div className="proof">
-              <span className="st">Confirmado.</span> 87% das sessões em
-              Python/TS nos últimos 90 dias. 8 repositórios em L1.
+              <span className="st">{t("landing.cvd.row1.st")}</span>{" "}
+              {t("landing.cvd.row1.proof")}
             </div>
           </div>
         </div>
         <div className="drow ok reveal d2">
           <span className="mk">✓</span>
           <div>
-            <div className="claim">Senioridade: 8+ anos backend engineer</div>
+            <div className="claim">{t("landing.cvd.row2.claim")}</div>
             <div className="proof">
-              <span className="st">Confirmado.</span> L1 mostra atividade
-              contínua desde 2017. Test ratio médio: 38%, 4.2× mediana global.
+              <span className="st">{t("landing.cvd.row2.st")}</span>{" "}
+              {t("landing.cvd.row2.proof")}
             </div>
           </div>
         </div>
         <div className="drow warn reveal d3">
           <span className="mk">⚠</span>
           <div>
-            <div className="claim">Especialização: Senior React Engineer</div>
+            <div className="claim">{t("landing.cvd.row3.claim")}</div>
             <div className="proof">
-              <span className="st">Sinal limitado.</span> React em 2 de 87
-              sessões. Nenhum repositório React em L1. Trajetória recente:
-              Python/FastAPI.
+              <span className="st">{t("landing.cvd.row3.st")}</span>{" "}
+              {t("landing.cvd.row3.proof")}
             </div>
           </div>
         </div>
@@ -182,27 +149,27 @@ export function ClaimedVsDemonstrated() {
       <div className="drow self reveal d2">
         <span className="mk">○</span>
         <div>
-          <div className="claim">self-declared · não verificado pelo Beheld</div>
+          <div className="claim">{t("landing.cvd.self.claim")}</div>
           <div className="proof">
             <div className="sdgrid">
               <div className="sdg">
-                <div className="l">emprego autodeclarado</div>
+                <div className="l">{t("landing.cvd.self.emp_label")}</div>
                 <div className="v">
-                  Stripe <span>2020–2022</span>
-                  Stack Overflow <span>2018–2020</span>
+                  {t("landing.cvd.self.emp_a")}{" "}
+                  <span>{t("landing.cvd.self.emp_a_years")}</span>
+                  {t("landing.cvd.self.emp_b")}{" "}
+                  <span>{t("landing.cvd.self.emp_b_years")}</span>
                 </div>
               </div>
               <div className="sdg">
-                <div className="l">formação autodeclarada</div>
+                <div className="l">{t("landing.cvd.self.formation_label")}</div>
                 <div className="v">
-                  Mestrado em Computação <span>USP, 2017</span>
+                  {t("landing.cvd.self.formation_a")}{" "}
+                  <span>{t("landing.cvd.self.formation_a_years")}</span>
                 </div>
               </div>
             </div>
-            <div className="sdnote">
-              O Beheld não verifica histórico de empregadores nem formação.
-              Apresenta como o dev declarou, sem confirmação externa.
-            </div>
+            <div className="sdnote">{t("landing.cvd.self.note")}</div>
           </div>
         </div>
       </div>
@@ -215,55 +182,56 @@ export function ClaimedVsDemonstrated() {
 // ─────────────────────────────────────────────────────────────────────────
 
 export function HowItWorksSteps() {
+  const t = useT();
   return (
     <Section
       id="como"
       num="03"
-      title="Como funciona · três passos"
-      aside="setup único"
+      title={t("landing.how.title")}
+      aside={t("landing.how.aside")}
     >
       <div className="steps">
         <div className="step reveal d1">
-          <div className="sk">L1 · Git histórico</div>
-          <h3>Instalação única</h3>
+          <div className="sk">{t("landing.how.s1.sk")}</div>
+          <h3>{t("landing.how.s1.h")}</h3>
           <div className="cmd">
             <span className="pr">$</span> beheld init
           </div>
           <div className="sub">
             <div className="si">
-              <b>Daemon</b> — background · SQLite local
+              <b>Daemon</b> — {t("landing.how.s1.daemon")}
             </div>
             <div className="si">
-              <b>Chave Ed25519</b> — gerada offline · sua
+              <b>Ed25519</b> — {t("landing.how.s1.key")}
             </div>
             <div className="si">
-              <b>L1 importado</b> — git log automático
+              <b>L1</b> — {t("landing.how.s1.l1")}
             </div>
           </div>
         </div>
 
         <div className="step reveal d2">
-          <div className="sk">L2 · Trajetória</div>
-          <h3>Contínuo</h3>
+          <div className="sk">{t("landing.how.s2.sk")}</div>
+          <h3>{t("landing.how.s2.h")}</h3>
           <div className="sub" style={{ marginTop: 0 }}>
             <div className="si">
-              <b>Observação</b> — cada sessão Claude Code
+              <b>L2</b> — {t("landing.how.s2.obs")}
             </div>
             <div className="si">
-              <b>Conteúdo</b> — nunca registrado
+              <b>0 bytes</b> — {t("landing.how.s2.content")}
             </div>
           </div>
         </div>
 
         <div className="step reveal d3">
-          <div className="sk">Gerar bundle</div>
-          <h3>Quando quiser</h3>
+          <div className="sk">{t("landing.how.s3.sk")}</div>
+          <h3>{t("landing.how.s3.h")}</h3>
           <div className="cmd">
             <span className="pr">$</span> beheld snapshot
           </div>
           <div className="sub">
             <div className="si">
-              <b>Resultado</b> — URL pública verificável
+              <b>URL</b> — {t("landing.how.s3.result")}
             </div>
           </div>
         </div>
@@ -276,60 +244,37 @@ export function HowItWorksSteps() {
 //  04 · Cadeia de verificação — cinco camadas (cascade ✓)
 // ─────────────────────────────────────────────────────────────────────────
 
-type ChainLayer = { title: string; body: string; tier: string };
-
-const CHAIN_LAYERS: ChainLayer[] = [
-  {
-    title: "Assinatura Ed25519",
-    body: "Chave do dev assina o bundle. Verificável offline, sem depender do Beheld.",
-    tier: "signature_only",
-  },
-  {
-    title: "Chain hash",
-    body: "Cada bundle referencia o anterior. Reescrever um quebra toda a cadeia.",
-    tier: "chain_intact",
-  },
-  {
-    title: "Identidade GitHub",
-    body: "OAuth vincula a chave pública do dev a um usuário GitHub verificado.",
-    tier: "identity_verified",
-  },
-  {
-    title: "Engine version",
-    body: "Hash do binário conferido contra build reproducível publicado.",
-    tier: "engine_verified",
-  },
-  {
-    title: "Sigstore Rekor",
-    body: "Hash registrado em log público append-only. Impede backdating.",
-    tier: "fully_verifiable",
-  },
-];
+type ChainKey = "l1" | "l2" | "l3" | "l4" | "l5";
+const CHAIN_KEYS: ChainKey[] = ["l1", "l2", "l3", "l4", "l5"];
+const CHAIN_TIERS: Record<ChainKey, string> = {
+  l1: "signature_only",
+  l2: "chain_intact",
+  l3: "identity_verified",
+  l4: "engine_verified",
+  l5: "fully_verifiable",
+};
 
 export function VerificationChain() {
-  // useRevealMany observes every .reveal inside its ref. The cascade ✓
-  // (which lights up the .ck per row) is driven by the same `.in` class
-  // applied on the .clayer wrappers we mark below. Stagger via CSS
-  // transition-delay through .d1–.d5 classes.
+  const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
   useRevealMany<HTMLDivElement>(".clayer", { threshold: 0.3 });
 
   return (
-    <Section num="04" title="Cadeia de verificação · cinco camadas">
-      <div className="chain-tier reveal d1">Tier · fully_verifiable</div>
+    <Section num="04" title={t("landing.chain.title")}>
+      <div className="chain-tier reveal d1">{t("landing.chain.tier_intro")}</div>
       <div className="chain" ref={containerRef}>
-        {CHAIN_LAYERS.map((l, i) => (
+        {CHAIN_KEYS.map((k, i) => (
           <div
-            key={l.tier}
+            key={k}
             className="clayer"
             style={{ transitionDelay: `${i * 0.26}s` }}
           >
             <span className="ck">✓</span>
             <div className="cc">
-              <b>{l.title}</b>
-              <p>{l.body}</p>
+              <b>{t(`landing.chain.${k}.t` as TKey)}</b>
+              <p>{t(`landing.chain.${k}.b` as TKey)}</p>
             </div>
-            <span className="tier">{l.tier}</span>
+            <span className="tier">{CHAIN_TIERS[k]}</span>
           </div>
         ))}
       </div>
@@ -341,40 +286,10 @@ export function VerificationChain() {
 //  FAQ — accordion, one open at a time
 // ─────────────────────────────────────────────────────────────────────────
 
-type FAQItem = { q: string; a: string };
-
-const FAQ_ITEMS: FAQItem[] = [
-  {
-    q: "\"Isso é mais um spyware de produtividade?\"",
-    a: "É o contrário exato. Aquelas ferramentas medem você pra sua empresa, dentro dela, sem você controlar. O Beheld mede você pra você. O dado é seu, a chave é sua, nada é publicado sem sua assinatura. É a relação de poder invertida — e por isso confundir os dois é o pior erro possível.",
-  },
-  {
-    q: "\"O que exatamente ele captura?\"",
-    a: "Sinais agregados: quais ecossistemas você toca, seu test ratio, como seu padrão muda ao longo dos meses, seu histórico de git. Não captura o conteúdo do seu código nem o que você digita numa IDE ou Harness.",
-  },
-  {
-    q: "\"Quem vê meu perfil?\"",
-    a: "Ninguém, por padrão. Ele vive na sua máquina. Quando você roda beheld snapshot, gera um bundle assinado, e só aí decide se publica a URL. Revogável quando quiser.",
-  },
-  {
-    q: "\"Se é de graça, qual é a pegadinha?\"",
-    a: "Não tem pegadinha pro dev. É de graça pra sempre, e isso é um compromisso público que sobrevive a quem fundou. O Beheld se sustenta cobrando, mais pra frente, de empresas que querem buscar devs no diretório.",
-  },
-  {
-    q: "\"Vai pesar na minha máquina?\"",
-    a: "Roda em background, grava num SQLite local, processa em lote. Você não vai sentir.",
-  },
-  {
-    q: "\"Não confio em rodar um binário qualquer.\"",
-    a: "Justo. É open source sob MIT, o build é reproducível e o hash do binário é conferível contra o que está publicado. Leia o código antes de rodar — é pra isso que ele é aberto.",
-  },
-  {
-    q: "\"Pra que serve se nenhuma empresa usa ainda?\"",
-    a: "Porque o bundle já é útil sozinho: uma URL verificável que você cola num processo seletivo, num README, ou manda direto pra quem te entrevista. E ele cresce enquanto você trabalha, sem você manter nada à mão.",
-  },
-];
+const FAQ_IDS = ["q1", "q2", "q3", "q4", "q5", "q6", "q7"] as const;
 
 export function FAQ() {
+  const t = useT();
   const containerRef = useRef<HTMLDivElement>(null);
 
   function handleToggle(e: React.SyntheticEvent<HTMLDetailsElement>) {
@@ -388,18 +303,22 @@ export function FAQ() {
   }
 
   return (
-    <Section num="?" title="As perguntas certas" aside="objeções respondidas">
+    <Section
+      num="?"
+      title={t("landing.faq.title")}
+      aside={t("landing.faq.aside")}
+    >
       <div className="faq" ref={containerRef}>
-        {FAQ_ITEMS.map((item, i) => (
+        {FAQ_IDS.map((id, i) => (
           <details
-            key={item.q}
+            key={id}
             className={`qa reveal d${Math.min(4, Math.floor(i / 2) + 1)}`}
             onToggle={handleToggle}
           >
             <summary className="q">
-              <span className="pl">+</span> {item.q}
+              <span className="pl">+</span> {t(`landing.faq.${id}` as TKey)}
             </summary>
-            <div className="a">{item.a}</div>
+            <div className="a">{t(`landing.faq.a${id.slice(1)}` as TKey)}</div>
           </details>
         ))}
       </div>
@@ -411,39 +330,23 @@ export function FAQ() {
 //  Cenas reais
 // ─────────────────────────────────────────────────────────────────────────
 
-type Scene = { h: string; p: ReactNode };
-
-const SCENES: Scene[] = [
-  {
-    h: "Você foi rejeitado e nunca soube por quê.",
-    p: <><span className="arrow">→</span> Seu trabalho real nunca esteve na mesa. Agora pode estar.</>,
-  },
-  {
-    h: "Você mudou de carreira e o LinkedIn não conta a história.",
-    p: <><span className="arrow">→</span> O git e as sessões contam, sem você reescrever nada.</>,
-  },
-  {
-    h: "Você é freelancer e todo cliente pede \"prova\".",
-    p: <><span className="arrow">→</span> Mande uma URL assinada, não um PDF que qualquer um edita.</>,
-  },
-  {
-    h: "Você aplica pra fora do seu país.",
-    p: <><span className="arrow">→</span> Sotaque não aparece num bundle. Trabalho aparece.</>,
-  },
-  {
-    h: "Você já fez o trabalho.",
-    p: <><span className="arrow">→</span> O Beheld só garante que ele seja visto como é.</>,
-  },
-];
+const SCENES = ["s1", "s2", "s3", "s4", "s5"] as const;
 
 export function RealScenes() {
+  const t = useT();
   return (
-    <Section title="Se isso já aconteceu com você" aside="cenas reais">
+    <Section
+      title={t("landing.scenes.title")}
+      aside={t("landing.scenes.aside")}
+    >
       <div className="cenas">
-        {SCENES.map((s, i) => (
-          <div key={s.h} className={`cena reveal d${Math.min(3, Math.floor(i / 2) + 1)}`}>
-            <div className="ch">{s.h}</div>
-            <div className="cp">{s.p}</div>
+        {SCENES.map((id, i) => (
+          <div key={id} className={`cena reveal d${Math.min(3, Math.floor(i / 2) + 1)}`}>
+            <div className="ch">{t(`landing.scenes.${id}.h` as TKey)}</div>
+            <div className="cp">
+              <span className="arrow">→</span>{" "}
+              {t(`landing.scenes.${id}.p` as TKey) as ReactNode}
+            </div>
           </div>
         ))}
       </div>
@@ -456,10 +359,11 @@ export function RealScenes() {
 // ─────────────────────────────────────────────────────────────────────────
 
 export function CTASection() {
+  const t = useT();
   return (
     <section className="cta" id="cta">
       <InstallLine className="reveal d1" />
-      <div className="free reveal d2">forever free for developers</div>
+      <div className="free reveal d2">{t("landing.cta.free")}</div>
     </section>
   );
 }
@@ -469,17 +373,20 @@ export function CTASection() {
 // ─────────────────────────────────────────────────────────────────────────
 
 export function LandingFooter() {
+  const t = useT();
   return (
     <footer className="footer wrap">
       <div className="fmark">
         <LensMark size={16} />
-        <span>beheld.dev — Beheld by signal. Decided by you.</span>
+        <span>{t("landing.footer.tagline")}</span>
       </div>
       <div className="flinks">
         <a className="mail" href="mailto:hi@beheld.dev">hi@beheld.dev</a>
-        <a href="https://github.com/" target="_blank" rel="noopener noreferrer">GitHub</a>
-        <a href="#">Docs</a>
-        <a href="#">Manifesto</a>
+        <a href="https://github.com/" target="_blank" rel="noopener noreferrer">
+          {t("landing.footer.github")}
+        </a>
+        <a href="#">{t("landing.footer.docs")}</a>
+        <a href="#">{t("landing.footer.manifesto")}</a>
       </div>
     </footer>
   );

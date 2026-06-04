@@ -75,7 +75,6 @@ describe("ObservedTerminal", () => {
     // constructor when its impl is an arrow, so use a real class.
     const observe = vi.fn();
     const disconnect = vi.fn();
-    // @ts-expect-error — stubbing a global
     window.IntersectionObserver = class FakeIO {
       constructor() {}
       observe = observe;

@@ -10,22 +10,28 @@
  *
  * The nav collapses below 860px (CSS-only via `.top nav` media query
  * in index.css). The ThemeToggle stays visible at all widths.
+ *
+ * Labels come from i18n. The "beheld" wordmark stays untranslated
+ * (brand).
  */
 import { LensMark } from "@/components/LensMark";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useT } from "@/i18n/I18nProvider";
+import type { TKey } from "@/i18n/dict";
 
-type NavLink = { href: string; label: string };
+type NavLink = { href: string; key: TKey };
 
 const NAV: NavLink[] = [
-  { href: "#top", label: "home" },
-  { href: "#captura", label: "B3" },
-  { href: "#captura", label: "daemon local" },
-  { href: "#como", label: "sessões reais" },
-  { href: "#nao", label: "open source" },
-  { href: "#cta", label: "compromisso" },
+  { href: "#top", key: "landing.nav.home" },
+  { href: "#captura", key: "landing.nav.b3" },
+  { href: "#captura", key: "landing.nav.daemon" },
+  { href: "#como", key: "landing.nav.sessions" },
+  { href: "#nao", key: "landing.nav.oss" },
+  { href: "#cta", key: "landing.nav.commitment" },
 ];
 
 export function LandingTopbar() {
+  const t = useT();
   return (
     <header className="top">
       <a
@@ -38,8 +44,8 @@ export function LandingTopbar() {
       </a>
       <nav>
         {NAV.map((n, i) => (
-          <a key={`${n.label}-${i}`} href={n.href}>
-            {n.label}
+          <a key={`${n.key}-${i}`} href={n.href}>
+            {t(n.key)}
           </a>
         ))}
       </nav>

@@ -26,30 +26,33 @@
  * filled, stats showing target numbers, liveline visible but its
  * spinner static at the first frame).
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { useT } from "@/i18n/I18nProvider";
+import type { TKey } from "@/i18n/dict";
 
 const BRAILLE_FRAMES = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
 const TYPED_CMD = "$ beheld view --snapshot";
 
-type Step = { label: string; duration: number };
+type Step = { labelKey: TKey; duration: number };
 const STEPS: Step[] = [
-  { label: "scan L1 · git history", duration: 900 },
-  { label: "ler sessões L2", duration: 800 },
-  { label: "computar sinais agregados", duration: 700 },
+  { labelKey: "landing.term.step1", duration: 900 },
+  { labelKey: "landing.term.step2", duration: 800 },
+  { labelKey: "landing.term.step3", duration: 700 },
 ];
 
-type Signal = { label: string; value: number; suffix: string };
+type Signal = { labelKey: TKey; value: number; suffix: string };
 const SIGNALS: Signal[] = [
-  { label: "stack ratio (py/ts)", value: 87, suffix: "%" },
-  { label: "test ratio", value: 38, suffix: "%" },
-  { label: "react ratio", value: 2, suffix: "%" },
+  { labelKey: "landing.term.signal_stack", value: 87, suffix: "%" },
+  { labelKey: "landing.term.signal_test", value: 38, suffix: "%" },
+  { labelKey: "landing.term.signal_react", value: 2, suffix: "%" },
 ];
 
-type Stat = { label: string; value: number; suffix?: string };
+type Stat = { labelKey: TKey; value: number; suffixKey?: TKey };
 const STATS: Stat[] = [
-  { label: "sessões 90d", value: 878 },
-  { label: "repos em L1", value: 8 },
-  { label: "contínua desde 2017", value: 7, suffix: " anos" },
+  { labelKey: "landing.term.stat_sessions", value: 878 },
+  { labelKey: "landing.term.stat_repos", value: 8 },
+  { labelKey: "landing.term.stat_continuous", value: 7, suffixKey: "landing.term.years_suffix" },
 ];
 
 type StepStatus = "pending" | "running" | "done";
@@ -63,8 +66,29 @@ function prefersReducedMotion(): boolean {
 }
 
 export function ObservedTerminal() {
+  const t = useT();
   const rootRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
+  // Resolve all i18n strings once per render so the closures used in
+  // setTimeout chains (`runSteps`, `streamSnapshot`) read the latest
+  // values without re-reading t() per tick.
+  const labels = useMemo(
+    () => ({
+      title: t("landing.term.title"),
+      live: t("landing.term.live"),
+      observedHeader: t("landing.term.observed_header"),
+      concl1: t("landing.term.concl1"),
+      concl2: t("landing.term.concl2"),
+      liveline: t("landing.term.liveline"),
+      steps: STEPS.map((s) => t(s.labelKey)),
+      signals: SIGNALS.map((s) => t(s.labelKey)),
+      stats: STATS.map((s) => ({
+        label: t(s.labelKey),
+        suffix: s.suffixKey ? t(s.suffixKey) : "",
+      })),
+    }),
+    [t],
+  );
 
   // typing
   const [typed, setTyped] = useState("");
@@ -255,10 +279,10 @@ export function ObservedTerminal() {
         <span className="tdot r" />
         <span className="tdot y" />
         <span className="tdot g" />
-        <span className="term-title">~/projects · beheld view --snapshot</span>
+        <span className="term-title">{labels.title}</span>
         <span className="live-tag">
           <span className="live-dot" />
-          live
+          {labels.live}
         </span>
       </div>
       <div className="term-body">
@@ -271,34 +295,35 @@ export function ObservedTerminal() {
         </div>
 
         <div className="proclog">
-          {STEPS.map((s, k) => {
+          {STEPS.map((_s, k) => {
             const status = stepStatus[k];
             if (status === "pending") return null;
+            const label = labels.steps[k];
             if (status === "running") {
               return (
                 <div key={k}>
-                  <span className="sp">{spinChar}</span> {s.label}…
+                  <span className="sp">{spinChar}</span> {label}…
                 </div>
               );
             }
             return (
               <div key={k}>
-                <span className="ok">✓</span> {s.label}
+                <span className="ok">✓</span> {label}
               </div>
             );
           })}
         </div>
 
         <div className={snapVisible ? "snap in" : "snap"}>
-          <div className="snap-h">sinais observados · últimos 90d</div>
+          <div className="snap-h">{labels.observedHeader}</div>
 
           {SIGNALS.map((s, k) => (
             <div
-              key={s.label}
+              key={s.labelKey}
               className={sigVisible[k] ? "sig in" : "sig"}
             >
               <div className="sh">
-                <b>{s.label}</b>
+                <b>{labels.signals[k]}</b>
                 <span className="v">
                   {sigCount[k]}
                   {s.suffix}
@@ -316,25 +341,25 @@ export function ObservedTerminal() {
 
           <div className="snap-stats">
             {STATS.map((s, k) => (
-              <div className="it" key={s.label}>
+              <div className="it" key={s.labelKey}>
                 <div className="n">
                   {statCount[k]}
-                  {s.suffix ?? ""}
+                  {labels.stats[k].suffix}
                 </div>
-                <div className="l">{s.label}</div>
+                <div className="l">{labels.stats[k].label}</div>
               </div>
             ))}
           </div>
 
           <div className="snap-concl">
-            → test ratio é 4.2× mediana global
+            {labels.concl1}
             <br />
-            → bundle ed25519 · rev. 47
+            {labels.concl2}
           </div>
         </div>
 
         <div className={liveVisible ? "liveline in" : "liveline"}>
-          <span className="sp">{liveSpinChar}</span> daemon ativo · observando sessões
+          <span className="sp">{liveSpinChar}</span> {labels.liveline}
         </div>
       </div>
     </div>
