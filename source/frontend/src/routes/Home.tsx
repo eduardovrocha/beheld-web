@@ -28,9 +28,12 @@
  */
 import { useEffect } from "react";
 
+import { B3H31DQuote } from "@/components/landing/B3H31DQuote";
 import { Constellation } from "@/components/Constellation";
+import { DaemonLocalSection } from "@/components/landing/DaemonLocalSection";
 import { Hero } from "@/components/landing/Hero";
 import { LandingTopbar } from "@/components/landing/LandingTopbar";
+import { RealSessionsSection } from "@/components/landing/RealSessionsSection";
 import {
   CTASection,
   CaptureCards,
@@ -76,8 +79,16 @@ export function Home() {
       <main className="wrap" id="top">
         <Hero />
         <Manifesto />
+        <B3H31DQuote
+          id="b3h31d-intro"
+          quoteKey="landing.b3h31d.intro_quote"
+          attrKey="landing.b3h31d.intro_quote_attr"
+          variant="lead"
+        />
         <CaptureCards />
+        <DaemonLocalSection />
         <NotDoingList />
+        <RealSessionsSection />
         <ClaimedVsDemonstrated />
         <HowItWorksSteps />
         <VerificationChain />

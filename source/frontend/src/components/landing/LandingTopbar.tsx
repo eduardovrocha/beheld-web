@@ -24,9 +24,9 @@ type NavLink = { href: string; key: TKey };
 
 const NAV: NavLink[] = [
   { href: "#top", key: "landing.nav.home" },
-  { href: "#captura", key: "landing.nav.b3" },
-  { href: "#captura", key: "landing.nav.daemon" },
-  { href: "#como", key: "landing.nav.sessions" },
+  { href: "#b3h31d-intro", key: "landing.nav.b3" },
+  { href: "#daemon-local", key: "landing.nav.daemon" },
+  { href: "#sessoes-reais", key: "landing.nav.sessions" },
   { href: "#nao", key: "landing.nav.oss" },
   { href: "#cta", key: "landing.nav.commitment" },
 ];
