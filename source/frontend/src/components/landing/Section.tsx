@@ -29,6 +29,8 @@ export type SectionProps = {
   id?: string;
   /** Drop the top hairline border (used for the first content block). */
   noBorderTop?: boolean;
+  /** Extra class on the section element (for per-section overrides). */
+  className?: string;
   children: ReactNode;
 };
 
@@ -38,12 +40,13 @@ export function Section({
   aside,
   id,
   noBorderTop = false,
+  className,
   children,
 }: SectionProps) {
   return (
     <section
       id={id}
-      className="block"
+      className={className ? `block ${className}` : "block"}
       style={noBorderTop ? { borderTop: "none" } : undefined}
     >
       <div className="sechead reveal">

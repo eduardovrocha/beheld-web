@@ -28,7 +28,7 @@ import type { TKey } from "@/i18n/dict";
 export function Manifesto() {
   const t = useT();
   return (
-    <Section title={t("landing.manifesto.title")}>
+    <Section title={t("landing.manifesto.title")} className="manifesto-section">
       <p className="manifesto reveal d1">
         {t("landing.manifesto.body1")}
         <b>{t("landing.manifesto.body_em")}</b>

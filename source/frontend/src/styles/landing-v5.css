@@ -450,6 +450,10 @@
 }
 
 /* ── Manifesto ────────────────────────────────────────────────────────── */
+/* The Manifesto section is short; tighten its bottom padding so the
+   B3H31D quote that follows sits closer (visual rhythm tweak). */
+.landing-v5 .manifesto-section { padding-bottom: 56px; }
+
 .landing-v5 .manifesto {
   font-size: 14px;
   line-height: 1.55;
@@ -718,8 +722,8 @@
 /* ── CTA ──────────────────────────────────────────────────────────────── */
 .landing-v5 .cta {
   text-align: center;
-  padding: 96px 0 60px;
-  border-top: 1px solid var(--rule);
+  padding: 56px 0;
+  border-top: none;
 }
 .landing-v5 .cta .install { max-width: 540px; margin: 0 auto; }
 .landing-v5 .cta .free {

@@ -257,7 +257,7 @@
   "landing.daemon.s2.num": "02",
   "landing.daemon.s2.title": "where everything lives",
   "landing.daemon.s2.body": "Two local processes. The MCP server records the event; the engine reads it, extracts the technical signal, and stores it in SQLite on your disk. Nothing leaves the machine until you publish a bundle, and that's always your choice.",
-  "landing.daemon.s2.diagram.source": "Claude Code / Continue.dev",
+  "landing.daemon.s2.diagram.source": "Harness / IDE",
   "landing.daemon.s2.diagram.mcp": "MCP server",
   "landing.daemon.s2.diagram.mcp_port": ":7337",
   "landing.daemon.s2.diagram.format": "JSONL",
