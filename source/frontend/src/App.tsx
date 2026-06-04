@@ -17,11 +17,21 @@ import { RealSessions } from "./routes/RealSessions";
 import { VerifyLocal } from "./routes/VerifyLocal";
 import { VerifyPublic } from "./routes/VerifyPublic";
 
+/**
+ * Routing.
+ *
+ * `/` (landing v5) renders OUTSIDE <Layout> on purpose: the landing
+ * owns its own Constellation, topbar and footer. Every other route is
+ * nested under a <Layout /> parent route, which provides the global
+ * Constellation, floating Locale/Theme toggle box and width
+ * constraint.
+ */
 export default function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
+    <Routes>
+      <Route path="/" element={<Home />} />
+
+      <Route element={<Layout />}>
         <Route path="/compromisso" element={<Compromisso />} />
         <Route path="/como-funciona" element={<HowItWorks />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
@@ -40,7 +50,7 @@ export default function App() {
         <Route path="/sessions/company/verify" element={<CompanyVerify />} />
         <Route path="/accounts/:account_id/contact" element={<AccountContact />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
+      </Route>
+    </Routes>
   );
 }

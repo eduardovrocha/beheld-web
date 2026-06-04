@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
 
 import { Constellation } from "./Constellation";
 import { LocaleToggle } from "./LocaleToggle";
@@ -9,8 +10,13 @@ import { ThemeToggle } from "./ThemeToggle";
  *   - No traditional header bar
  *   - Floating top-right controls box (lang + theme)
  *   - Main content owns its own column width / padding
+ *
+ * If `children` is omitted, renders <Outlet /> so it can be used as
+ * a parent route element (e.g. nested under <Route element={<Layout/>}>).
+ * The landing v5 (`/`) is rendered OUTSIDE this layout — it owns its
+ * own Constellation, topbar and footer.
  */
-export function Layout({ children }: { children: ReactNode }) {
+export function Layout({ children }: { children?: ReactNode }) {
   return (
     <div className="relative min-h-screen" style={{ zIndex: 1 }}>
       {/* Ambient constellation — portaled to document.body, fixed behind. */}
@@ -46,7 +52,7 @@ export function Layout({ children }: { children: ReactNode }) {
           may still add their own inner wrapper for padding/typography
           rhythm; nesting same-width wrappers is a no-op visually. */}
       <main className="mx-auto" style={{ maxWidth: 1032 }}>
-        {children}
+        {children ?? <Outlet />}
       </main>
     </div>
   );
