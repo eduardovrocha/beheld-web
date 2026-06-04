@@ -107,9 +107,11 @@ export function ClaimedVsDemonstrated() {
   const t = useT();
   return (
     <Section
+      id="claimed-vs-demonstrated"
       num="02"
       title={t("landing.cvd.title")}
       aside={t("landing.cvd.aside")}
+      noBorderTop
     >
       <p className="cvd-intro reveal d1">{t("landing.cvd.intro")}</p>
 
@@ -260,7 +262,12 @@ export function VerificationChain() {
   useRevealMany<HTMLDivElement>(".clayer", { threshold: 0.3 });
 
   return (
-    <Section num="04" title={t("landing.chain.title")}>
+    <Section
+      id="verification-chain"
+      num="04"
+      title={t("landing.chain.title")}
+      noBorderTop
+    >
       <div className="chain-tier reveal d1">{t("landing.chain.tier_intro")}</div>
       <div className="chain" ref={containerRef}>
         {CHAIN_KEYS.map((k, i) => (

@@ -33,6 +33,7 @@ export function DaemonLocalSection() {
       num={t("landing.daemon.s1.num")}
       title={t("landing.daemon.title")}
       aside={t("landing.daemon.aside")}
+      noBorderTop
     >
       {/* ── 01 — o que ele observa ── */}
       <Sub

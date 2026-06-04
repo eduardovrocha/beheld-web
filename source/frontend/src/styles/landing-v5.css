@@ -856,6 +856,21 @@
    the Manifesto block above and CaptureCards/CTA below — drop the
    default vertical margins so the visual rhythm there is tighter. */
 .landing-v5 #b3h31d-intro.b3-quote { margin-top: 0; margin-bottom: 0; }
+
+/* Daemon deep-dive sits flush against CaptureCards above and
+   HowItWorksSteps below — no hairline (noBorderTop already on the
+   component) and no vertical padding, so the three blocks read as
+   one continuous narrative. */
+.landing-v5 #daemon-local.block { padding-top: 0; padding-bottom: 0; }
+
+/* Same treatment for the verification chain (Verificação tab) —
+   sits flush between NotDoingList above and FAQ below. */
+.landing-v5 #verification-chain.block { padding-top: 0; padding-bottom: 0; }
+
+/* Claimed vs Demonstrated (Sessões tab) — sits flush against
+   RealSessionsSection above. Top only — bottom keeps the default
+   padding so the panel doesn't end abruptly. */
+.landing-v5 #claimed-vs-demonstrated.block { padding-top: 0; }
 .landing-v5 .b3-quote__body {
   font-family: var(--sans);
   font-weight: 400;
@@ -879,9 +894,8 @@
   grid-template-columns: 60px 1fr;
   gap: 24px;
   padding: 28px 0;
-  border-top: 1px solid var(--rule);
 }
-.landing-v5 .subsection:first-of-type { border-top: none; padding-top: 0; }
+.landing-v5 .subsection:first-of-type { padding-top: 0; }
 @media (max-width: 600px) {
   .landing-v5 .subsection { grid-template-columns: 1fr; gap: 10px; }
 }
@@ -1111,9 +1125,14 @@
 }
 
 /* ── Compromisso (5th tab) ────────────────────────────────────────────── */
+/* Width matches the surrounding .wrap (var(--maxw) = 1080px) — full
+   panel-wide. The reading column inside still feels comfortable
+   because the body paragraphs cap themselves via line-length, not
+   container width. */
 .landing-v5 .compromisso {
-  max-width: 760px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
 }
 .landing-v5 .comp-head { margin-bottom: 28px; }
 .landing-v5 .comp-eyebrow {
