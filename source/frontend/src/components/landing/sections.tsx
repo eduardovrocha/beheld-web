@@ -385,8 +385,6 @@ export function LandingFooter() {
         <a href="https://github.com/" target="_blank" rel="noopener noreferrer">
           {t("landing.footer.github")}
         </a>
-        <a href="#">{t("landing.footer.docs")}</a>
-        <a href="#">{t("landing.footer.manifesto")}</a>
       </div>
     </footer>
   );
