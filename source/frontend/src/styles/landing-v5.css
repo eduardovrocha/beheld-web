@@ -111,6 +111,19 @@
   .landing-v5 .top nav { display: none; }
 }
 
+/* Controls cluster on the right edge: LocaleToggle | ThemeToggle. */
+.landing-v5 .top-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+.landing-v5 .top-divider {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--rule);
+  user-select: none;
+}
+
 /* ── Eyebrow ──────────────────────────────────────────────────────────── */
 .landing-v5 .eyebrow {
   font-family: var(--mono);

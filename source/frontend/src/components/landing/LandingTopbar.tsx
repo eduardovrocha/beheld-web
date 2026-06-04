@@ -15,6 +15,7 @@
  * (brand).
  */
 import { LensMark } from "@/components/LensMark";
+import { LocaleToggle } from "@/components/LocaleToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useT } from "@/i18n/I18nProvider";
 import type { TKey } from "@/i18n/dict";
@@ -49,7 +50,11 @@ export function LandingTopbar() {
           </a>
         ))}
       </nav>
-      <ThemeToggle />
+      <div className="top-controls">
+        <LocaleToggle />
+        <span className="top-divider" aria-hidden="true">|</span>
+        <ThemeToggle />
+      </div>
     </header>
   );
 }
