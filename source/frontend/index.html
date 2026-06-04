@@ -14,25 +14,25 @@
     <link href="https://api.fontshare.com/v2/css?f[]=switzer@200,300,400,500,600,700,800&display=swap" rel="stylesheet" />
 
     <!--
-      Pre-paint theme bootstrap.  Runs BEFORE the bundle loads so dark-mode
-      users never see a flash of light page.  Resolves the active theme by:
-        1. localStorage["dp-theme"] (auto | light | dark)
-        2. prefers-color-scheme when no explicit choice persisted
-      Adds `class="dark"` on <html> to flip every `dark:` Tailwind utility.
+      Pre-paint theme bootstrap. Runs BEFORE the bundle loads so users
+      never see a flash of the wrong theme. Reachable themes:
+        · "dark"   → html.dark              (DEFAULT)
+        · "github" → html[data-theme="github"]
+      Legacy values ("auto", "light") are migrated to "dark" on read.
     -->
     <script>
       (function () {
         try {
           var saved = localStorage.getItem("dp-theme");
-          var explicit = saved === "dark" || saved === "light" || saved === "github" ? saved : null;
-          // GitHub é um tema standalone (não usa .dark). Light/dark padrão segue o sistema.
-          var wantsDark =
-            explicit === "dark" ? true
-            : (explicit === "light" || explicit === "github") ? false
-            : !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
-          if (wantsDark) document.documentElement.classList.add("dark");
-          if (explicit) document.documentElement.setAttribute("data-theme", explicit);
-        } catch (_) {}
+          var mode = saved === "github" ? "github" : "dark";
+          if (mode === "github") {
+            document.documentElement.setAttribute("data-theme", "github");
+          } else {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (_) {
+          document.documentElement.classList.add("dark");
+        }
       })();
     </script>
   </head>

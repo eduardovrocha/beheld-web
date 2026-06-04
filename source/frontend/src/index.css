@@ -2,28 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Theme tokens (mirrors deploy/development/.../beheld-landing-v4 mock) ── */
+/* ── Theme tokens (mirrors web/source/frontend/docs/landing-motion-mockup.html) ──
+   Three themes:
+     · :root                    → light/creme — fallback only; unreachable
+                                  via UI (ThemeToggle cycles dark↔github)
+     · html.dark                → terminal noturno — DEFAULT
+     · html[data-theme="github"] → GitHub Light (Primer)
+   Legacy tokens (--surface-2, --ok, --lens, --term-band-*, etc.) are
+   kept untouched — other routes/components depend on them. */
 :root {
+  /* Typography + layout (shared across themes) */
+  --sans: "Switzer", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --maxw: 1080px;
+
   --bg: #f5f1e8;
-  --surface: #ebe6d6;
+  --surface: #ece6d7;
   --surface-2: #ddd6c2;
-  --rule: #cec5b1;
+  --rule: #d9d1bf;
   --rule-soft: #ddd6c2;
   --text: #1a1f29;
   --muted: #6e6555;
   --muted-soft: #948a78;
   --accent: #8a6f3e;
-  --accent-deep: #5e4928;
+  --accent-dim: #a8884f;        /* mockup landing v5 */
+  --accent-deep: #5e4928;       /* legacy: darker variant used by other routes */
   --ok: #4a7c4e;
-  --warn: #b56135;
+  --warn: #b06a3e;
   --lens: #1a1f29;
   --card-bg: #ffffff;
 
   /* Terminal — light variant: cream bg, deep text, page accent */
-  --term-bg: #f0ead8;
+  --term-bg: #efe9d9;
   --term-text: #1a1f29;
   --term-rule: #d8cfba;
-  --term-prompt: #4a7c4e;
+  --term-prompt: #5f7d4f;
   --term-muted: #6e6555;
   --term-key: #2e2a20;
   --term-accent: #8a6f3e;
@@ -51,7 +64,8 @@ html[data-theme="github"] {
   --muted:       #636c76;
   --muted-soft:  #6e7781;
   --accent:      #0969da;      /* Primer blue */
-  --accent-deep: #0550ae;
+  --accent-dim:  #218bff;      /* mockup landing v5 — brighter Primer blue */
+  --accent-deep: #0550ae;      /* legacy darker */
   --ok:          #1a7f37;
   --warn:        #9a6700;
   --lens:        #1f2328;
@@ -91,17 +105,18 @@ html.dark {
   --muted: #8b8278;
   --muted-soft: #5a5550;
   --accent: #c9a96e;
-  --accent-deep: #a07840;
+  --accent-dim: #8a6f3e;        /* mockup landing v5 — darker dim in dark */
+  --accent-deep: #a07840;       /* legacy */
   --ok: #5a9e5e;
-  --warn: #d4923e;
+  --warn: #c98e6e;
   --lens: #d8d3c4;
   --card-bg: var(--surface);
 
-  /* Terminal — dark variant: matches original mock */
-  --term-bg: #070a0f;
+  /* Terminal — dark variant: matches landing mockup */
+  --term-bg: #0a0e14;
   --term-text: #e6e1d8;
   --term-rule: #1a2030;
-  --term-prompt: #7fa87f;
+  --term-prompt: #7ea66f;
   --term-muted: #8b8278;
   --term-key: #cfc7b5;
   --term-accent: #c9a96e;
