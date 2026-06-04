@@ -18,7 +18,6 @@ export function Hero() {
   return (
     <section className="hero">
       <div>
-        <div className="eyebrow reveal d1">forever free for developers</div>
         <h1 className="title reveal d2">
           Beheld by signal.
           <br />
@@ -37,15 +36,11 @@ export function Hero() {
             instale em uma linha
           </div>
           <InstallLine />
-          <div className="install-meta">
-            macOS e Linux · zero dependências · daemon local
-          </div>
+          <div className="install-meta">macOS e Linux</div>
           <div className="freebar">
             <span className="ff">forever free for developers</span>
             <span className="dot">·</span>
             <span>open source</span>
-            <span className="dot">·</span>
-            <span>verificável offline</span>
           </div>
           <ToolsRow />
         </div>
