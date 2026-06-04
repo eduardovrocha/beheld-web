@@ -751,6 +751,20 @@
 .landing-v5 .footer .flinks a:hover { color: var(--accent); }
 .landing-v5 .footer .flinks a.mail { color: var(--accent); }
 
+/* ── Focus visible — readable on every theme without breaking layout ── */
+.landing-v5 a:focus-visible,
+.landing-v5 button:focus-visible,
+.landing-v5 summary:focus-visible,
+.landing-v5 .install button:focus-visible,
+.landing-v5 .tool:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.landing-v5 .qa summary:focus-visible {
+  outline-offset: -2px; /* details summary spans the full card edge */
+}
+
 /* ── Reduced motion — disable decorative animations ──────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .lens-mark-pupil--alive,
