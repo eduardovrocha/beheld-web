@@ -19,9 +19,9 @@
   "landing.nav.verification": "Verificação",
   "landing.nav.free": "forever free for developers",
 
-  "landing.hero.h1_sig": "Beheld",
-  "landing.hero.h1_rest": " by signal.",
-  "landing.hero.h1_line2": "Decided by you.",
+  "landing.hero.h1_sig": "Guiado",
+  "landing.hero.h1_rest": " por sinais.",
+  "landing.hero.h1_line2": "Decidido por você.",
   "landing.hero.lede_pre": "Um ",
   "landing.hero.lede_b": "daemon local",
   "landing.hero.lede_post": " que observa suas sessões reais e seu git, e assina um bundle verificável. Trabalho real — não currículo cheio de palavras-chave.",
@@ -216,7 +216,7 @@
 
   "landing.cta.free": "forever free for developers",
 
-  "landing.footer.tagline": "beheld.dev — Beheld by signal. Decided by you.",
+  "landing.footer.tagline": "beheld.dev — Guiado por sinais. Decidido por você.",
   "landing.footer.github": "GitHub",
   "landing.footer.docs": "Docs",
   "landing.footer.manifesto": "Manifesto",
