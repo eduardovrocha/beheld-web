@@ -187,11 +187,13 @@ export function CTABand() {
     <section className="cta-band">
       <div className="wrap">
         <h2 className="cta-band__h">
-          <span className="b">{sig.charAt(0)}</span>
-          {sig.slice(1)}
-          {t("landing.hero.h1_rest")}
+          <span className="cta-band__h__l1">
+            <span className="b">{sig.charAt(0)}</span>
+            {sig.slice(1)}
+            {t("landing.hero.h1_rest")}
+          </span>
           <br />
-          {t("landing.hero.h1_line2")}
+          <span className="cta-band__h__l2">{t("landing.hero.h1_line2")}</span>
         </h2>
         <InstallBox />
         <p className="cta-band__free">{t("landing.cta.free")}</p>

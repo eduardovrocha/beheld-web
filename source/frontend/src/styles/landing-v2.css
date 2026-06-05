@@ -217,6 +217,12 @@ html.landing-v2-page body {
   color: var(--ink); margin: 0 0 26px; text-wrap: balance;
 }
 .landing-v2 .hero__h .sig { color: var(--signal-ink); }
+/* First sentence (Beheld by signal. / Guiado por sinais. / …) reads as
+   the brand line — paint it in --signal-ink. Second sentence (Decided
+   by you. / Decidido por você. / …) reads as the user's clause — keep
+   it in --ink for contrast. */
+.landing-v2 .hero__h__l1 { color: var(--signal-ink); }
+.landing-v2 .hero__h__l2 { color: var(--ink); }
 .landing-v2 .hero__lede { font-size: clamp(16px, 1.8vw, 20px); color: var(--ink-2); max-width: 50ch; margin: 0 0 34px; }
 .landing-v2 .hero__lede b { color: var(--ink); font-weight: 600; }
 .landing-v2 .hero__counter {
@@ -485,6 +491,9 @@ html.landing-v2-page body {
 .landing-v2 .cta-band { padding: clamp(64px, 9vw, 120px) 0; text-align: center; border-top: 1px solid var(--line); }
 .landing-v2 .cta-band__h { font-size: clamp(30px, 5vw, 60px); letter-spacing: -0.03em; line-height: 1.02; margin: 0 0 32px; color: var(--ink); }
 .landing-v2 .cta-band__h .b { color: var(--signal-ink); }
+/* Mirror the hero h1: first sentence brand-green, second sentence ink. */
+.landing-v2 .cta-band__h__l1 { color: var(--signal-ink); }
+.landing-v2 .cta-band__h__l2 { color: var(--ink); }
 .landing-v2 .cta-band .install { margin: 0 auto; }
 .landing-v2 .cta-band__free { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--signal-ink); margin-top: 22px; }
 

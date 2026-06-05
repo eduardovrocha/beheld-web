@@ -19,10 +19,12 @@ export function Hero() {
       <div className="wrap hero__grid">
         <div>
           <h1 className="hero__h">
-            <span className="sig">{t("landing.hero.h1_sig")}</span>
-            {t("landing.hero.h1_rest")}
+            <span className="hero__h__l1">
+              <span className="sig">{t("landing.hero.h1_sig")}</span>
+              {t("landing.hero.h1_rest")}
+            </span>
             <br />
-            {t("landing.hero.h1_line2")}
+            <span className="hero__h__l2">{t("landing.hero.h1_line2")}</span>
           </h1>
           <p className="hero__lede">
             {t("landing.hero.lede_pre")}
