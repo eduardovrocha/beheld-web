@@ -1,95 +1,84 @@
 /**
- * RealSessionsSection — "sessões reais" deep-dive.
+ * RealSessionsSection — "04 sessões reais": the film of the work, not
+ * the photo under pressure.
  *
- * Structure:
- *   intro line (under the section head, before subs)
- *   01 · o que é uma sessão real    — short body
- *   02 · o que o B3H31D vê numa sessão — body + ObservedSessionExample
- *                                         (key/value pairs + inline quote)
- *   03 · projeto por projeto, mês após mês — short body
- *   04 · o que fica local            — short body
- *   closing B3H31D quote (tight)
+ * Structure (mirrors the reference DOM 1:1):
+ *   - two-col header: h2 + two h3/p blocks
+ *   - .sess-split: example observed-session card (mono key/value rows,
+ *     green highlights on "sim" and "TDD-first") + two h3/p blocks
+ *   - closing B3H31D pull quote (narrow)
  */
-import { B3H31DQuote } from "@/components/landing/B3H31DQuote";
-import { Sub } from "@/components/landing/DaemonLocalSection";
-import { Section } from "@/components/landing/Section";
+import { Eyebrow } from "@/components/landing/Eyebrow";
+import { PullQuote } from "@/components/landing/PullQuote";
 import { useT } from "@/i18n/I18nProvider";
-import type { TKey } from "@/i18n/dict";
-
-type ExRow = {
-  k: TKey;
-  v: TKey;
-};
-
-const EX_ROWS: ExRow[] = [
-  { k: "landing.sessions.s2.ex.k_project",  v: "landing.sessions.s2.ex.v_project" },
-  { k: "landing.sessions.s2.ex.k_duration", v: "landing.sessions.s2.ex.v_duration" },
-  { k: "landing.sessions.s2.ex.k_tools",    v: "landing.sessions.s2.ex.v_tools" },
-  { k: "landing.sessions.s2.ex.k_test",     v: "landing.sessions.s2.ex.v_test" },
-  { k: "landing.sessions.s2.ex.k_eco",      v: "landing.sessions.s2.ex.v_eco" },
-  { k: "landing.sessions.s2.ex.k_pattern",  v: "landing.sessions.s2.ex.v_pattern" },
-];
 
 export function RealSessionsSection() {
   const t = useT();
-
   return (
-    <Section
-      id="sessoes-reais"
-      num={t("landing.sessions.s1.num")}
-      title={t("landing.sessions.title")}
-    >
-      <p className="cvd-intro reveal d1">{t("landing.sessions.intro")}</p>
-
-      <Sub
-        num={t("landing.sessions.s1.num")}
-        eyebrow={t("landing.sessions.title")}
-        title={t("landing.sessions.s1.title")}
-        body={t("landing.sessions.s1.body")}
-        delay={1}
-      />
-
-      <Sub
-        num={t("landing.sessions.s2.num")}
-        eyebrow={t("landing.sessions.title")}
-        title={t("landing.sessions.s2.title")}
-        body={t("landing.sessions.s2.body")}
-        delay={2}
-      >
-        <div className="obs-ex">
-          <div className="obs-ex-head">{t("landing.sessions.s2.ex.heading")}</div>
-          <dl className="obs-ex-grid">
-            {EX_ROWS.map((row) => (
-              <div className="obs-ex-row" key={row.k}>
-                <dt>{t(row.k)}</dt>
-                <dd>{t(row.v)}</dd>
-              </div>
-            ))}
-          </dl>
-          <div className="obs-ex-quote">"{t("landing.sessions.s2.ex.quote")}"</div>
+    <section id="sessoes">
+      <div className="wrap">
+        <Eyebrow idx="04">{t("landing.sessions.eyebrow")}</Eyebrow>
+        <div className="two-col">
+          <h2 className="h-sect">{t("landing.sessions.h2")}</h2>
+          <div>
+            <h3 className="h-mini">{t("landing.sessions.what_title")}</h3>
+            <p className="lede lede--gap">{t("landing.sessions.what_body")}</p>
+            <h3 className="h-mini">{t("landing.sessions.sees_title")}</h3>
+            <p className="lede">{t("landing.sessions.sees_body")}</p>
+          </div>
         </div>
-      </Sub>
 
-      <Sub
-        num={t("landing.sessions.s3.num")}
-        eyebrow={t("landing.sessions.title")}
-        title={t("landing.sessions.s3.title")}
-        body={t("landing.sessions.s3.body")}
-        delay={3}
-      />
+        <div className="sess-split reveal">
+          <div className="card">
+            <p className="card__k">{t("landing.sessions.ex.heading")}</p>
+            <div className="session">
+              <div className="session__row">
+                <span className="session__k">{t("landing.sessions.ex.k_project")}</span>
+                <span className="session__v">{t("landing.sessions.ex.v_project")}</span>
+              </div>
+              <div className="session__row">
+                <span className="session__k">{t("landing.sessions.ex.k_duration")}</span>
+                <span className="session__v">{t("landing.sessions.ex.v_duration")}</span>
+              </div>
+              <div className="session__row">
+                <span className="session__k">{t("landing.sessions.ex.k_tools")}</span>
+                <span className="session__v">{t("landing.sessions.ex.v_tools")}</span>
+              </div>
+              <div className="session__row">
+                <span className="session__k">{t("landing.sessions.ex.k_test")}</span>
+                <span className="session__v">
+                  <span className="h">{t("landing.sessions.ex.v_test_hl")}</span>
+                  {t("landing.sessions.ex.v_test_rest")}
+                </span>
+              </div>
+              <div className="session__row">
+                <span className="session__k">{t("landing.sessions.ex.k_eco")}</span>
+                <span className="session__v">{t("landing.sessions.ex.v_eco")}</span>
+              </div>
+              <div className="session__row">
+                <span className="session__k">{t("landing.sessions.ex.k_pattern")}</span>
+                <span className="session__v">
+                  <span className="h">{t("landing.sessions.ex.v_pattern")}</span>
+                </span>
+              </div>
+            </div>
+            <p className="session__cap">“{t("landing.sessions.ex.caption")}”</p>
+          </div>
 
-      <Sub
-        num={t("landing.sessions.s4.num")}
-        eyebrow={t("landing.sessions.title")}
-        title={t("landing.sessions.s4.title")}
-        body={t("landing.sessions.s4.body")}
-        delay={4}
-      />
+          <div>
+            <h3 className="h-mini">{t("landing.sessions.months_title")}</h3>
+            <p className="lede lede--gap">{t("landing.sessions.months_body")}</p>
+            <h3 className="h-mini">{t("landing.sessions.local_title")}</h3>
+            <p className="lede">{t("landing.sessions.local_body")}</p>
+          </div>
+        </div>
 
-      <B3H31DQuote
-        quoteKey="landing.sessions.closing_quote"
-        attrKey="landing.sessions.closing_quote_attr"
-      />
-    </Section>
+        <PullQuote
+          quoteKey="landing.sessions.quote"
+          attrKey="landing.sessions.quote_attr"
+          className="quote--closing quote--narrow"
+        />
+      </div>
+    </section>
   );
 }

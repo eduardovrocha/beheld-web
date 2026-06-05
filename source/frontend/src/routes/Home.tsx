@@ -1,120 +1,87 @@
 /**
- * Home — landing v5.
+ * Home — landing v2 ("cripto-brutalist refinado · terminal-native").
  *
- * Layout (single page, owns its own header/footer/Constellation —
- * see App.tsx for the routing carve-out):
+ * Single long-scroll page implementing design_handoff/README.md, with
+ * reference/{beheld.css,landing.css} as the visual source of truth.
+ * Dark-only, wide container (max 1560px). Renders OUTSIDE <Layout> —
+ * see App.tsx for the routing carve-out.
  *
- *   .landing-v5
- *     <Constellation />                    (ambient bg, portal'd)
- *     <LandingTopbar />                    (LensMark + nav + toggles)
- *     <main class="wrap" id="top">
- *       <Hero />                           (always visible above the
- *                                           4 tabs)
- *       <LandingTabs panels={...}>         (4 tabs, fixed order)
- *         01 Manifesto:   Manifesto + B3Quote(intro) + RealScenes
- *         02 Daemon:      CaptureCards + DaemonLocalSection (which
- *                         includes its own closing B3Quote and
- *                         flow/never-table) + HowItWorksSteps
- *         03 Sessões:     RealSessionsSection (includes the session
- *                         example block + closing B3Quote) +
- *                         ClaimedVsDemonstrated
- *         04 Verificação: NotDoingList + VerificationChain + FAQ
- *       </LandingTabs>
- *       <CTASection />                     (always visible below)
+ *   .landing-v2
+ *     <a .skip-link>                  (a11y: jumps to #main)
+ *     <LandingNav />                  (sticky: brand + anchors + locale)
+ *     <main id="main">
+ *       <Hero />                      (#top · h1 + counter + install + term)
+ *       <ToolsStrip />
+ *       <Manifesto />                 (#manifesto · 01)
+ *       <DaemonSection />             (#daemon · 02)
+ *       <HowItWorks />                (03 · três passos)
+ *       <RealSessionsSection />       (#sessoes · 04)
+ *       <ClaimedVsDemonstrated />     (05)
+ *       <Verification />              (#verificacao · 06 + chain + FAQ)
+ *       <Scenes />                    (07 · cenas reais)
+ *       <CTABand />
  *     </main>
  *     <LandingFooter />
  *
- * Hero, CTA and footer are intentionally OUTSIDE the tabs — they
- * frame the page and stay visible whichever tab is active.
+ * The landing fixes its own palette in landing-v2.css; while mounted it
+ * adds `landing-v2-page` to <html> to neutralise the global theme
+ * chrome (gold top border, body zoom 1.1, noise texture) and enable
+ * smooth anchor scrolling.
  *
- * Reveals: the page-level useRevealMany still observes everything,
- * but tab panels that are `hidden` won't intersect, so LandingTabs
- * also force-applies `.in` to all `.reveal` descendants when a panel
- * activates (see LandingTabs.tsx).
+ * Reveals: useRevealMany observes every `.reveal` descendant (threshold
+ * 0.15 per the handoff), honouring prefers-reduced-motion.
  */
 import { useEffect } from "react";
 
-import { B3H31DQuote } from "@/components/landing/B3H31DQuote";
-import { CompromissoSection } from "@/components/landing/CompromissoSection";
-import { Constellation } from "@/components/Constellation";
-import { DaemonLocalSection } from "@/components/landing/DaemonLocalSection";
+import { DaemonSection } from "@/components/landing/DaemonSection";
 import { Hero } from "@/components/landing/Hero";
-import { LandingTabs, type PanelId } from "@/components/landing/LandingTabs";
-import { LandingTopbar } from "@/components/landing/LandingTopbar";
+import { LandingNav } from "@/components/landing/LandingNav";
 import { RealSessionsSection } from "@/components/landing/RealSessionsSection";
+import { ToolsStrip } from "@/components/landing/ToolsStrip";
+import { Verification } from "@/components/landing/Verification";
 import {
-  CTASection,
-  CaptureCards,
+  CTABand,
   ClaimedVsDemonstrated,
-  FAQ,
-  HowItWorksSteps,
+  HowItWorks,
   LandingFooter,
   Manifesto,
-  NotDoingList,
-  RealScenes,
-  VerificationChain,
+  Scenes,
 } from "@/components/landing/sections";
 import { useRevealMany } from "@/hooks/useReveal";
+import { useT } from "@/i18n/I18nProvider";
 
-// Scoped landing-v5 stylesheet. Side-effect import: Vite bundles it
-// into the chunk emitted for this route (and any other route that
-// imports it). MeetB3/Compromisso/etc. never reach this file, so its
-// `.landing-v5 …` selectors stay dormant.
-import "@/styles/landing-v5.css";
+// Scoped landing-v2 stylesheet. Side-effect import: Vite bundles it
+// into the chunk emitted for this route. Other routes never reach this
+// file, so its `.landing-v2 …` selectors stay dormant there.
+import "@/styles/landing-v2.css";
 
 export function Home() {
-  const rootRef = useRevealMany<HTMLDivElement>(".reveal", { threshold: 0.16 });
+  const t = useT();
+  const rootRef = useRevealMany<HTMLDivElement>(".reveal", { threshold: 0.15 });
 
+  // Neutralise the global (themed) chrome while the landing is mounted.
   useEffect(() => {
-    const t = window.setTimeout(() => {
-      document.querySelectorAll(".landing-v5 .hero .reveal").forEach((el) => el.classList.add("in"));
-    }, 80);
-    return () => window.clearTimeout(t);
+    document.documentElement.classList.add("landing-v2-page");
+    return () => document.documentElement.classList.remove("landing-v2-page");
   }, []);
 
-  const panels: Record<PanelId, React.ReactNode> = {
-    manifesto: (
-      <>
+  return (
+    <div className="landing-v2" ref={rootRef}>
+      <a className="skip-link" href="#main">
+        {t("landing.a11y.skip")}
+      </a>
+      <LandingNav />
+      <main id="main">
+        <Hero />
+        <ToolsStrip />
         <Manifesto />
-        <B3H31DQuote
-          id="b3h31d-intro"
-          quoteKey="landing.b3h31d.intro_quote"
-          attrKey="landing.b3h31d.intro_quote_attr"
-        />
-        <RealScenes />
-      </>
-    ),
-    daemon: (
-      <>
-        <CaptureCards />
-        <DaemonLocalSection />
-        <HowItWorksSteps />
-      </>
-    ),
-    sessoes: (
-      <>
+        <DaemonSection />
+        <HowItWorks />
         <RealSessionsSection />
         <ClaimedVsDemonstrated />
-      </>
-    ),
-    verificacao: (
-      <>
-        <NotDoingList />
-        <VerificationChain />
-        <FAQ />
-      </>
-    ),
-    compromisso: <CompromissoSection />,
-  };
-
-  return (
-    <div className="landing-v5" ref={rootRef}>
-      <Constellation />
-      <LandingTopbar />
-      <main className="wrap" id="top">
-        <Hero />
-        <LandingTabs panels={panels} />
-        <CTASection />
+        <Verification />
+        <Scenes />
+        <CTABand />
       </main>
       <LandingFooter />
     </div>

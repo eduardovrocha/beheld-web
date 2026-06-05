@@ -1,52 +1,43 @@
 /**
- * Hero — the top fold of the landing.
+ * Hero — the top fold of landing v2.
  *
- * Layout: 2-col grid (collapses to 1col under 900px).
- *   Left: h1 + lede + MachinesPill + install eyebrow + InstallLine +
- *         install-meta + freebar + ToolsRow.
- *   Right: ObservedTerminal (marketing-mock animation).
- *
- * All copy comes from i18n (PT-BR canonical, EN/ES translations).
- * Brand phrases ("Beheld by signal.", "Decided by you.", "forever
- * free for developers") stay identical across locales — see the
- * `landing.hero.*` keys in each dict.
+ * 2-col grid (1fr / 1.12fr, stacks under 980px):
+ *   Left:  h1 ("Beheld by signal. / Decided by you." — brand phrase,
+ *          identical across locales) + lede + MachineCounter +
+ *          InstallBox + mono meta line.
+ *   Right: HeroTerminal (static snapshot output).
  */
-import { InstallLine } from "@/components/landing/InstallLine";
-import { MachinesPill } from "@/components/landing/MachinesPill";
-import { ObservedTerminal } from "@/components/landing/ObservedTerminal";
-import { ToolsRow } from "@/components/landing/ToolsRow";
+import { HeroTerminal } from "@/components/landing/HeroTerminal";
+import { InstallBox } from "@/components/landing/InstallBox";
+import { MachineCounter } from "@/components/landing/MachineCounter";
 import { useT } from "@/i18n/I18nProvider";
 
 export function Hero() {
   const t = useT();
   return (
-    <section className="hero">
-      <div>
-        <h1 className="title reveal d2">
-          {t("landing.hero.title_line1")}
-          <br />
-          <span className="em">{t("landing.hero.title_line2")}</span>
-        </h1>
-        <p className="lede reveal d3">{t("landing.hero.lede")}</p>
+    <header className="hero" id="top">
+      <div className="wrap hero__grid">
+        <div>
+          <h1 className="hero__h">
+            <span className="sig">{t("landing.hero.h1_sig")}</span>
+            {t("landing.hero.h1_rest")}
+            <br />
+            {t("landing.hero.h1_line2")}
+          </h1>
+          <p className="hero__lede">
+            {t("landing.hero.lede_pre")}
+            <b>{t("landing.hero.lede_b")}</b>
+            {t("landing.hero.lede_post")}
+          </p>
+          <MachineCounter />
+          <InstallBox />
+          <p className="hero__meta">{t("landing.hero.meta")}</p>
+        </div>
 
-        <MachinesPill count={0} />
-
-        <div className="reveal d4">
-          <div className="eyebrow" style={{ marginBottom: 10 }}>
-            {t("landing.hero.install_label")}
-          </div>
-          <InstallLine />
-          <div className="install-meta">{t("landing.hero.install_meta")}</div>
-          <div className="freebar">
-            <span className="ff">{t("landing.hero.freebar_ff")}</span>
-            <span className="dot">·</span>
-            <span>{t("landing.hero.freebar_oss")}</span>
-          </div>
-          <ToolsRow />
+        <div>
+          <HeroTerminal />
         </div>
       </div>
-
-      <ObservedTerminal />
-    </section>
+    </header>
   );
 }
