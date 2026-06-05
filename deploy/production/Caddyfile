@@ -63,6 +63,15 @@ beheld.dev {
     reverse_proxy 127.0.0.1:3000
   }
 
+  # ── Install script — same redirect as install.beheld.dev ─────────────────
+  # `curl -fsSL beheld.dev/install.sh | sh` follows the 302 and pulls the
+  # current scripts/install.sh from `main`. Mirrors install.beheld.dev so
+  # both URLs work; the landing's InstallLine ships the
+  # beheld.dev/install.sh form, which is the more intuitive one.
+  handle /install.sh {
+    redir https://raw.githubusercontent.com/eduardovrocha/beheld/main/scripts/install.sh 302
+  }
+
   # ── Static SPA (default fallback for everything else) ─────────────────────
   handle {
     root * /srv/frontend
