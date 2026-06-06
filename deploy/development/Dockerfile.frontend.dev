@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Development image for the devprofile-frontend React SPA.
+# Development image for the beheld-frontend React SPA.
 # Source is bind-mounted at runtime; node_modules live in a named volume so
 # the slow first install isn't repeated across restarts.
 

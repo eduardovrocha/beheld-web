@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Development image for the devprofile-backend Rails API.
+# Development image for the beheld-backend Rails API.
 # Source is bind-mounted at runtime — this image only carries system deps and
 # the entrypoint. Gems are installed on first container start and cached in
 # the `bundle-cache` volume declared by docker-compose.yml.
