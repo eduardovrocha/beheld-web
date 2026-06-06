@@ -1,4 +1,4 @@
-<% portal = ENV.fetch("PORTAL_PUBLIC_URL", "https://beheld.dev").sub(%r{/+\z}, "") %>
+<% portal = ENV.fetch("PORTAL_PUBLIC_URL").sub(%r{/+\z}, "") %>
 
 <% unless @contact_configured %>
   <div class="warning" role="alert">

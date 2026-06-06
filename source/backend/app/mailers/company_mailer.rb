@@ -21,11 +21,10 @@ class CompanyMailer < ApplicationMailer
 
   # Where the magic link lives. The SPA (Vite) handles /sessions/company/verify
   # — calls our /api/v1/sessions/company/verify to exchange the token for a
-  # cookie. Pick the right host per environment so the URL in the email is
-  # always clickable in the user's browser.
+  # cookie. PORTAL_PUBLIC_URL é exigida em todos os ambientes para evitar
+  # que um setup mal configurado em dev/staging mande email apontando para
+  # a producao (`https://beheld.dev`).
   def portal_host
-    explicit = ENV["PORTAL_PUBLIC_URL"].to_s.strip
-    return explicit.sub(%r{/+\z}, "") if explicit.present?
-    Rails.env.production? ? "https://beheld.dev" : "http://localhost:5173"
+    ENV.fetch("PORTAL_PUBLIC_URL").sub(%r{/+\z}, "")
   end
 end

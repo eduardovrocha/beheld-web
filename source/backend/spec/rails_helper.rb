@@ -4,6 +4,11 @@ require 'spec_helper'
 # `||=` form silently keeps RAILS_ENV=development and routes specs against
 # the dev DB and dev `config.hosts`, which blocks Rack::Test's www.example.com.
 ENV['RAILS_ENV'] = 'test'
+# `PORTAL_PUBLIC_URL` é exigida (sem fallback) por views/controllers/mailers
+# para evitar que setups mal configurados apontem para producao. Em specs
+# usamos um host estavel para que pattern matches contra URLs (`/v/<slug>`)
+# fiquem deterministicos.
+ENV['PORTAL_PUBLIC_URL'] ||= 'https://beheld.test'
 require_relative '../config/environment'
 # Prevent database truncation if the environment is production
 abort("The Rails environment is running in production mode!") if Rails.env.production?

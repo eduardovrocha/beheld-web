@@ -106,7 +106,7 @@ module Api
       end
 
       def portal_host
-        ENV.fetch("PORTAL_PUBLIC_URL", "https://beheld.dev").sub(%r{/+\z}, "")
+        ENV.fetch("PORTAL_PUBLIC_URL").sub(%r{/+\z}, "")
       end
     end
   end
