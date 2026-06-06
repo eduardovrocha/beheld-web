@@ -31,26 +31,20 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Mailtrap Sandbox — captura todos os emails enviados em development. Sem
-  # MAILTRAP_USERNAME definida, o Action Mailer vai falhar com mensagem clara
-  # (preferivel a "deliver silenciosamente para o vazio").
+  # Mailpit rodando no host do Docker — captura todos os emails sem auth e
+  # expoe a UI em http://localhost:8025. O backend container chega no
+  # Mailpit via `host.docker.internal:1025` (mapeado por
+  # `extra_hosts: host.docker.internal:host-gateway` no compose).
   #
-  # Como obter credenciais:
-  #   1. mailtrap.io -> Email Testing -> My Inbox
-  #   2. Show Credentials -> "Ruby on Rails" -> copiar username/password
-  #   3. colar em web/deploy/development/.env
-  #      (MAILTRAP_USERNAME / MAILTRAP_PASSWORD)
+  # Override por SMTP_HOST / SMTP_PORT (ex.: rodando Rails fora do container,
+  # ou Mailpit em outro host).
   config.action_mailer.delivery_method        = :smtp
   config.action_mailer.raise_delivery_errors  = true
   config.action_mailer.perform_deliveries     = true
   config.action_mailer.smtp_settings = {
-    address:              "sandbox.smtp.mailtrap.io",
-    port:                 2525,
-    domain:               "sandbox.smtp.mailtrap.io",
-    user_name:            ENV.fetch("MAILTRAP_USERNAME", nil),
-    password:             ENV.fetch("MAILTRAP_PASSWORD", nil),
-    authentication:       :plain,
-    enable_starttls_auto: true,
+    address:              ENV.fetch("SMTP_HOST", "host.docker.internal"),
+    port:                 ENV.fetch("SMTP_PORT", "1025").to_i,
+    enable_starttls_auto: false,
   }
 
   # Disable caching for Action Mailer templates even if Action Controller

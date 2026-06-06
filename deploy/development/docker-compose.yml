@@ -45,10 +45,12 @@ services:
       # Portal público (obrigatória — Rails lança KeyError se não setada).
       # Em dev aponta ao SPA Vite; em prod ao host público (beheld.dev).
       PORTAL_PUBLIC_URL: ${PORTAL_PUBLIC_URL:-http://localhost:5173}
-      # Mailtrap Sandbox — capturar emails sem mandar pro mundo. Sem essas
-      # vars, ActionMailer levanta na primeira tentativa de envio.
-      MAILTRAP_USERNAME: ${MAILTRAP_USERNAME:-}
-      MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD:-}
+      # Mailpit no host do Docker — captura emails sem auth. Defaults
+      # `host.docker.internal:1025` resolvem para o host via extra_hosts
+      # ja declarado acima. SMTP_HOST/SMTP_PORT so precisam ser setados
+      # se rodar o Mailpit em outra porta/host.
+      SMTP_HOST: ${SMTP_HOST:-host.docker.internal}
+      SMTP_PORT: ${SMTP_PORT:-1025}
       MAIL_FROM: ${MAIL_FROM:-beheld <noreply@beheld.test>}
       # GitHub OAuth (Phase 5 / F5.6) — values come from local .env, never
       # baked into the image. Empty defaults so the container still boots if
