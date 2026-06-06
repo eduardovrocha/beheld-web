@@ -1,8 +1,16 @@
 node_modules/
 dist/
+# Block secrets / personal overrides…
 .env
-.env.*
+.env.local
+.env.*.local
+# …but keep the mode-scoped, non-secret defaults versioned. Vite loads
+# `.env.development` automatically with `vite dev` and `.env.production`
+# with `vite build`. The values are just public URLs (VITE_API_URL,
+# VITE_API_TARGET) — they're not secrets and should travel with the repo.
 !.env.example
+!.env.development
+!.env.production
 
 # editor
 .vscode/
