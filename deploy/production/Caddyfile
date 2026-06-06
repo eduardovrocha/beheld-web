@@ -68,8 +68,12 @@ beheld.dev {
   # current scripts/install.sh from `main`. Mirrors install.beheld.dev so
   # both URLs work; the landing's InstallLine ships the
   # beheld.dev/install.sh form, which is the more intuitive one.
+  # Target is parameterizable via `BEHELD_INSTALL_SCRIPT_URL` (set in
+  # /etc/beheld/app.env). If unset, points at the public GitHub raw URL
+  # of the canonical fork — pin to a tag (e.g. `/v0.4.0/`) for immutable
+  # installs.
   handle /install.sh {
-    redir https://raw.githubusercontent.com/eduardovrocha/beheld/main/scripts/install.sh 302
+    redir {$BEHELD_INSTALL_SCRIPT_URL:https://raw.githubusercontent.com/eduardovrocha/beheld/main/scripts/install.sh} 302
   }
 
   # ── Static SPA (default fallback for everything else) ─────────────────────
@@ -82,8 +86,9 @@ beheld.dev {
 
 # ── Install script — redirects to GitHub raw on every request ───────────────
 # `curl -fsSL install.beheld.dev | sh` follows the 302 and pulls the latest
-# scripts/install.sh from `main`. Pin to a tag (e.g. `/v0.2.0/`) if you need
-# install-script immutability.
+# scripts/install.sh from `main`. Same parameterization as `/install.sh`
+# acima — set BEHELD_INSTALL_SCRIPT_URL in /etc/beheld/app.env para apontar
+# a um fork ou a uma tag fixa.
 install.beheld.dev {
-  redir https://raw.githubusercontent.com/eduardovrocha/beheld/main/scripts/install.sh 302
+  redir {$BEHELD_INSTALL_SCRIPT_URL:https://raw.githubusercontent.com/eduardovrocha/beheld/main/scripts/install.sh} 302
 }

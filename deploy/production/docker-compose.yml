@@ -43,6 +43,11 @@ services:
       - ../../source/frontend/dist:/srv/frontend:ro
       - caddy_data:/data
       - caddy_config:/config
+    # `app.env` traz BEHELD_INSTALL_SCRIPT_URL (opcional). Caddy interpola
+    # `{$VAR:default}` em tempo de boot — basta a env estar visivel no
+    # container.
+    env_file:
+      - /etc/beheld/app.env
     restart: unless-stopped
     depends_on:
       backend:
