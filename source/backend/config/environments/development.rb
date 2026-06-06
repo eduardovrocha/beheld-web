@@ -31,8 +31,27 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  # Mailtrap Sandbox — captura todos os emails enviados em development. Sem
+  # MAILTRAP_USERNAME definida, o Action Mailer vai falhar com mensagem clara
+  # (preferivel a "deliver silenciosamente para o vazio").
+  #
+  # Como obter credenciais:
+  #   1. mailtrap.io -> Email Testing -> My Inbox
+  #   2. Show Credentials -> "Ruby on Rails" -> copiar username/password
+  #   3. colar em web/deploy/development/.env
+  #      (MAILTRAP_USERNAME / MAILTRAP_PASSWORD)
+  config.action_mailer.delivery_method        = :smtp
+  config.action_mailer.raise_delivery_errors  = true
+  config.action_mailer.perform_deliveries     = true
+  config.action_mailer.smtp_settings = {
+    address:              "sandbox.smtp.mailtrap.io",
+    port:                 2525,
+    domain:               "sandbox.smtp.mailtrap.io",
+    user_name:            ENV.fetch("MAILTRAP_USERNAME", nil),
+    password:             ENV.fetch("MAILTRAP_PASSWORD", nil),
+    authentication:       :plain,
+    enable_starttls_auto: true,
+  }
 
   # Disable caching for Action Mailer templates even if Action Controller
   # caching is enabled.

@@ -45,6 +45,11 @@ services:
       # Portal público (obrigatória — Rails lança KeyError se não setada).
       # Em dev aponta ao SPA Vite; em prod ao host público (beheld.dev).
       PORTAL_PUBLIC_URL: ${PORTAL_PUBLIC_URL:-http://localhost:5173}
+      # Mailtrap Sandbox — capturar emails sem mandar pro mundo. Sem essas
+      # vars, ActionMailer levanta na primeira tentativa de envio.
+      MAILTRAP_USERNAME: ${MAILTRAP_USERNAME:-}
+      MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-beheld <noreply@beheld.test>}
       # GitHub OAuth (Phase 5 / F5.6) — values come from local .env, never
       # baked into the image. Empty defaults so the container still boots if
       # the developer hasn't filled them in yet.
