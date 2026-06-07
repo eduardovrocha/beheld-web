@@ -4,7 +4,7 @@
  * Visual (landing v2): large sans serif, curly quote glyphs in signal
  * green via CSS ::before/::after, mono letter-spaced attribution.
  * Variants via className: `quote--closing` (56px top margin, used at
- * the end of Daemon/Sessões), `quote--narrow` (40ch cap).
+ * the end of B3H31D/Sessões), `quote--narrow` (40ch cap).
  */
 import { useT } from "@/i18n/I18nProvider";
 import type { TKey } from "@/i18n/dict";

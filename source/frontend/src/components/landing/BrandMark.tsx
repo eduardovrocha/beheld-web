@@ -4,7 +4,7 @@
  *
  *   [ ▮ ]
  *
- * Conceptually the daemon HOLDS your work IN VIEW; the contained signal
+ * Conceptually the B3H31D HOLDS your work IN VIEW; the contained signal
  * is a terminal cursor — alive. Brackets in --ink, cursor in --signal.
  * Stroke width nudges up at smaller render sizes for legibility (6 at
  * large display, 7 at small, 8 at favicon — per the design handoff).

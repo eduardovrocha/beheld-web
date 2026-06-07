@@ -36,7 +36,7 @@ describe("Home (landing v2)", () => {
     );
 
     // Every nav anchor has a matching section id.
-    for (const id of ["top", "manifesto", "daemon", "sessoes", "verificacao"]) {
+    for (const id of ["top", "manifesto", "B3H31D", "sessoes", "verificacao"]) {
       expect(container.querySelector(`#${id}`)).not.toBeNull();
     }
   });

@@ -9,7 +9,7 @@
  * for developers", "B3H31D", "Ed25519", tier identifiers like
  * "fully_verifiable") stay identical across locales.
  *
- * Bigger sections live in their own files: DaemonSection,
+ * Bigger sections live in their own files: B3H31DSection,
  * RealSessionsSection, Verification (+ FAQ).
  */
 import { BrandGlyph, Wordmark } from "@/components/landing/BrandMark";

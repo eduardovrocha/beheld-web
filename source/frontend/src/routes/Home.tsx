@@ -13,7 +13,7 @@
  *       <Hero />                      (#top · h1 + counter + install + term)
  *       <ToolsStrip />
  *       <Manifesto />                 (#manifesto · 01)
- *       <DaemonSection />             (#daemon · 02)
+ *       <B3H31DSection />             (#B3H31D · 02)
  *       <HowItWorks />                (03 · três passos)
  *       <RealSessionsSection />       (#sessoes · 04)
  *       <ClaimedVsDemonstrated />     (05)
@@ -23,17 +23,18 @@
  *     </main>
  *     <LandingFooter />
  *
- * The landing fixes its own palette in landing-v2.css; while mounted it
- * adds `landing-v2-page` to <html> to neutralise the global theme
- * chrome (gold top border, body zoom 1.1, noise texture) and enable
- * smooth anchor scrolling.
+ * The landing's palette lives in landing-v2.css (dark default + light
+ * opt-in via html[data-theme-v2="light"] — see design_handoff_temas);
+ * while mounted it adds `landing-v2-page` to <html> to neutralise the
+ * global theme chrome (gold top border, body zoom 1.1, noise texture)
+ * and enable smooth anchor scrolling.
  *
  * Reveals: useRevealMany observes every `.reveal` descendant (threshold
  * 0.15 per the handoff), honouring prefers-reduced-motion.
  */
 import { useEffect } from "react";
 
-import { DaemonSection } from "@/components/landing/DaemonSection";
+import { B3H31DSection } from "@/components/landing/B3H31DSection";
 import { Hero } from "@/components/landing/Hero";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { RealSessionsSection } from "@/components/landing/RealSessionsSection";
@@ -75,7 +76,7 @@ export function Home() {
         <Hero />
         <ToolsStrip />
         <Manifesto />
-        <DaemonSection />
+        <B3H31DSection />
         <HowItWorks />
         <RealSessionsSection />
         <ClaimedVsDemonstrated />
