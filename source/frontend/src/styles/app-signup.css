@@ -151,7 +151,8 @@ html[data-theme-v2="light"] .app-v2 .step.is-now .ck { color: #fff; background: 
 .app-v2 .input::placeholder { color: var(--ink-5); }
 .app-v2 .input:focus { border-color: var(--signal); box-shadow: 0 0 0 1px var(--signal); }
 .app-v2 .input[aria-invalid="true"] { border-color: var(--amber); }
-.app-v2 .input--prefixed { padding-left: 64px; }
+/* 80px: limpa o prefixo "https://" (left 14px + ~62px de mono 14px) */
+.app-v2 .input--prefixed { padding-left: 80px; }
 
 .app-v2 .input-wrap { position: relative; display: flex; }
 .app-v2 .input-wrap .prefix {
