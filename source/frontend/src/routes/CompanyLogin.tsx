@@ -22,6 +22,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
+import { PublicFooter } from "@/components/PublicFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { ShellButton } from "@/components/app/PageHeader";
 import { useT } from "@/i18n/I18nProvider";
@@ -188,6 +189,7 @@ export function CompanyLogin() {
           )}
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 }

@@ -27,6 +27,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import { PublicFooter } from "@/components/PublicFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { SaveDevButton } from "@/components/company/SaveDevButton";
 import { useT, useTp, useFmt } from "@/i18n/I18nProvider";
@@ -127,6 +128,7 @@ export function VerifyPublic() {
           )}
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 }

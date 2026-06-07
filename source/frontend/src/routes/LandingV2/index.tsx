@@ -28,7 +28,7 @@
  *       <ConsequenceBand />           (recrutamento é a consequência)
  *       <CTA />
  *     </main>
- *     <Footer />
+ *     <PublicFooter landing />        (footer padrão das páginas públicas)
  *
  * A paleta vive em landing-v2-kit.css (dark default + claro opt-in via
  * html[data-theme-v2="light"] — design_handoff_temas); enquanto montada
@@ -41,11 +41,11 @@
  */
 import { useEffect } from "react";
 
+import { PublicFooter } from "@/components/PublicFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { useRevealMany } from "@/hooks/useReveal";
 
 import { T, useT } from "./T";
-import { Footer } from "./sections/Chrome";
 import { Hero } from "./sections/Hero";
 import {
   TriangleBand,
@@ -108,7 +108,7 @@ export function LandingV2() {
         <ConsequenceBand />
         <CTA />
       </main>
-      <Footer />
+      <PublicFooter landing />
     </div>
   );
 }

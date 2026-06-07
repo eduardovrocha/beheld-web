@@ -1,0 +1,19 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * PublicFooter — footer padrão das páginas públicas (components/
+ * PublicFooter.tsx), par do SiteNav.
+ *
+ * Regras extraídas do footer da landing (landing-v2-kit.css) e
+ * escopadas em `.site-foot`. Os TOKENS (--ink/--line/--signal/--mono…)
+ * vêm do escopo pai — .landing-v2-kit na landing, .app-v2 nas telas de
+ * app — então o footer tematiza junto com a página
+ * (html[data-theme-v2="light"]).
+ * ───────────────────────────────────────────────────────────────────── */
+
+.site-foot { padding: 64px 0; border-top: 1px solid var(--line); }
+.site-foot .wrap { max-width: 1560px; margin: 0 auto; padding: 0 clamp(24px, 4.5vw, 88px); }
+.site-foot__grid { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 32px; }
+.site-foot .lk-word { font-family: var(--mono); font-weight: 700; letter-spacing: -0.04em; color: var(--ink); }
+.site-foot .lk-word .b { color: var(--signal-ink); }
+.site-foot .fm { font-family: var(--mono); font-size: 13px; color: var(--ink-4); margin: 0; }
+.site-foot .fm a { color: var(--ink-3); text-decoration: none; margin-left: 18px; }
+.site-foot .fm a:hover { color: var(--signal-ink); }

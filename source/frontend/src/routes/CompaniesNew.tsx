@@ -21,6 +21,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
+import { PublicFooter } from "@/components/PublicFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { ShellButton } from "@/components/app/PageHeader";
 import { VerificationStepper, type StepDef } from "@/components/company/VerificationStepper";
@@ -288,6 +289,7 @@ export function CompaniesNew() {
           )}
         </div>
       </main>
+      <PublicFooter />
     </div>
   );
 }
