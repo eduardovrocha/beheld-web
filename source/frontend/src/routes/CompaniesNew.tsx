@@ -1,225 +1,382 @@
 /**
- * Recruiter signup page (`/companies/new`).
+ * /companies/new (alias /empresa/cadastro) — cadastro de empresa,
+ * app-shell v2 (design_handoff_cadastro_empresa). Página PÚBLICA no
+ * shell `.app--public` (topbar sem sidebar de nav, "já tem conta?
+ * entrar" + theme toggle). Renders OUTSIDE <Layout>.
  *
- * Same visual vocabulary as Home/Dashboard — Switzer body, mono uppercase
- * labels with letter-spacing, white card on cream bg, accent gold for
- * numbers/links, primary button inverts text/bg. Two states:
- *   1. Form    — name + email, submit triggers POST /api/v1/companies.
- *   2. Sent    — confirms the magic link was mailed.
+ * A história visual: o stepper de 3 passos (cadastro → email
+ * corporativo → DNS TXT) logo sob o hero — empresa = chave verificada,
+ * igual ao dev. Form enxuto: Empresa + Administrador + Termos.
+ *
+ * Wiring (handoff "Validação & Submit", adaptado à API real): o backend
+ * expõe POST /api/v1/companies aceitando { name, email } (signupCompany)
+ * — domínio/cargo/termos são validados client-side (o domínio é checado
+ * contra o email: precisa bater; a pré-validação DNS async e o 409 de
+ * duplicidade dependem de endpoints que ainda não existem). 422 do
+ * servidor mapeia inline; demais erros viram banner âmbar role="alert".
+ * Sucesso → estado "email enviado" com o stepper avançado pro passo 02
+ * (a tela dedicada de email-confirmation fica fora deste handoff).
  */
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { signupCompany, type SignupResult } from "@/lib/companyApi";
+import { ShellThemeToggle } from "@/components/app/ShellThemeToggle";
+import { ShellButton } from "@/components/app/PageHeader";
+import { TopBar } from "@/components/app/TopBar";
+import { VerificationStepper, type StepDef } from "@/components/company/VerificationStepper";
 import { useT } from "@/i18n/I18nProvider";
+import { signupCompany } from "@/lib/companyApi";
+
+import "@/styles/app-shell.css";
+import "@/styles/app-profile.css";   /* .app--public + .app__top__r */
+import "@/styles/app-signup.css";
+
+// Hostname DNS válido, sem esquema nem path (ex.: nimbustech.com).
+const DOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Phase = "form" | "sending" | "sent";
 
+type FieldKey = "company" | "domain" | "adminName" | "email" | "terms";
+
 export function CompaniesNew() {
   const t = useT();
-  const [phase, setPhase]   = useState<Phase>("form");
-  const [name,  setName]    = useState("");
-  const [email, setEmail]   = useState("");
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [genericError, setGenericError] = useState<string | null>(null);
-  const [confirmedEmail, setConfirmedEmail] = useState<string>("");
+  const [phase, setPhase] = useState<Phase>("form");
+  const [company, setCompany] = useState("");
+  const [domain, setDomain] = useState("");
+  const [adminName, setAdminName] = useState("");
+  const [role, setRole] = useState("");
+  const [email, setEmail] = useState("");
+  const [terms, setTerms] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
+  const [banner, setBanner] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState("");
+
+  useEffect(() => {
+    document.documentElement.classList.add("app-v2-page");
+    return () => document.documentElement.classList.remove("app-v2-page");
+  }, []);
+
+  // Página privada-de-task: title próprio + noindex (handoff §SEO).
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = t("csignup.doc_title");
+    const robots = document.createElement("meta");
+    robots.name = "robots";
+    robots.content = "noindex";
+    document.head.appendChild(robots);
+    return () => { document.title = prevTitle; robots.remove(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const cleanDomain = domain.trim().toLowerCase();
+  const emailPlaceholder = `voce@${DOMAIN_RE.test(cleanDomain) ? cleanDomain : "nimbustech.com"}`;
+
+  function validate(): Partial<Record<FieldKey, string>> {
+    const errs: Partial<Record<FieldKey, string>> = {};
+    const name = company.trim();
+    if (name.length < 2 || name.length > 80) errs.company = t("csignup.err.company");
+    if (!DOMAIN_RE.test(cleanDomain) || /^https?:\/\//i.test(domain.trim())) {
+      errs.domain = t("csignup.err.domain");
+    }
+    const admin = adminName.trim();
+    if (admin.length < 2 || admin.length > 80) errs.adminName = t("csignup.err.admin_name");
+    const mail = email.trim().toLowerCase();
+    if (!EMAIL_RE.test(mail)) errs.email = t("csignup.err.email");
+    else if (!errs.domain && !mail.endsWith(`@${cleanDomain}`)) {
+      errs.email = t("csignup.err.email_domain", { domain: cleanDomain });
+    }
+    if (!terms) errs.terms = t("csignup.err.terms");
+    return errs;
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setErrors({}); setGenericError(null);
-    setPhase("sending");
+    setBanner(null);
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
 
-    const result: SignupResult = await signupCompany({ name: name.trim(), email: email.trim() });
+    setPhase("sending");
+    const result = await signupCompany({ name: company.trim(), email: email.trim() });
 
     if (result.ok) {
-      setConfirmedEmail(result.email);
+      setSentTo(result.email);
       setPhase("sent");
       return;
     }
-
-    if (result.status === 422) {
-      setErrors(result.errors);
+    if ("errors" in result) {
+      // 422 — mapeia chaves do servidor pros campos da tela.
+      setErrors({
+        ...(result.errors.name?.[0] ? { company: result.errors.name[0] } : {}),
+        ...(result.errors.email?.[0] ? { email: result.errors.email[0] } : {}),
+      });
     } else {
-      setGenericError(result.message ?? t("auth.signup.generic_error"));
+      setBanner(result.message || t("csignup.err.generic"));
     }
     setPhase("form");
   }
 
-  if (phase === "sent") {
-    return (
-      <Page>
-        <Header step="02" title={t("auth.verify_email.title")} />
-        <Card>
-          <p style={{ color: "var(--text)", fontSize: 14.5, lineHeight: 1.85 }}>
-            {t("auth.verify_email.body_prefix")}<strong style={{ color: "var(--accent)" }}>{confirmedEmail}</strong>{t("auth.verify_email.body_suffix")}
-          </p>
-          <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, marginTop: 12 }}>
-            {t("auth.verify_email.expiry_prefix")}<span style={{ color: "var(--text)" }}>{t("auth.verify_email.expiry_minutes")}</span>{t("auth.verify_email.expiry_mid")}<code style={{ color: "var(--accent)" }}>log/development.log</code>{t("auth.verify_email.expiry_suffix")}
-          </p>
-          <div style={{ marginTop: 24 }}>
-            <Link to="/" style={{
-              fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-              fontSize: 11, color: "var(--muted)", letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
-            }}>
-              {t("auth.back_home")}
-            </Link>
-          </div>
-        </Card>
-      </Page>
-    );
-  }
+  const steps: StepDef[] = useMemo(() => [
+    { label: t("csignup.step.label", { n: "01" }), title: t("csignup.step1.title"), when: t("csignup.step1.when") },
+    { label: t("csignup.step.label", { n: "02" }), title: t("csignup.step2.title"), when: t("csignup.step2.when") },
+    { label: t("csignup.step.label", { n: "03" }), title: t("csignup.step3.title"), when: t("csignup.step3.when") },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t]);
 
   return (
-    <Page>
-      <Header step="01" title={t("auth.signup.title")} />
+    <div className="app-v2 app--public">
+      <a className="skip-link" href="#main">{t("landing.a11y.skip")}</a>
+      <TopBar crumb={["empresa", "cadastro"]}
+              right={
+                <>
+                  <span className="topnav">
+                    {t("csignup.top.has_account")}{" "}
+                    <Link to="/sessions/company/new">{t("csignup.top.signin")}</Link>
+                  </span>
+                  <ShellThemeToggle />
+                </>
+              } />
+      <main className="app__main" id="main">
+        <div className="wrap-inner">
+          <header className="signup-hero">
+            <div>
+              <p className="eb">
+                <span>empresa</span>
+                <span className="sl">/</span>
+                <span className="you">{t("csignup.eb")}</span>
+              </p>
+              <h1>{t("csignup.h1")}</h1>
+              <p className="sub">
+                {t("csignup.sub_prefix")}<b>{t("csignup.sub_verified")}</b>{t("csignup.sub_suffix")}
+              </p>
+            </div>
+            <p className="meta-r">
+              <b>1</b> {t("csignup.meta_step")}<br />
+              {t("csignup.meta_no_hidden")}
+            </p>
+          </header>
 
-      <Card>
-        <form onSubmit={handleSubmit} className="grid gap-5">
-          {genericError && (
-            <div style={{
-              padding: "10px 14px",
-              background: "rgba(181,97,53,0.08)",
-              border: "1px solid rgba(181,97,53,0.35)",
-              color: "var(--warn)", fontSize: 13,
-            }}>
-              {genericError}
+          <VerificationStepper steps={steps}
+                               current={phase === "sent" ? 2 : 1}
+                               ariaLabel={t("csignup.stepper_aria")} />
+
+          {phase === "sent" ? (
+            <SentPanel email={sentTo} />
+          ) : (
+            <div className="signup-cols">
+              <form className="signup-form" onSubmit={handleSubmit} noValidate>
+                {banner && <div className="signup-alert" role="alert">{banner}</div>}
+
+                <FormSection n="01" title={t("csignup.sec1.title")}>
+                  <Field id="company" full
+                         label={t("csignup.f.company")}
+                         error={errors.company}>
+                    <input id="company" className="input" type="text" value={company}
+                           placeholder="Nimbus Tech" autoComplete="organization"
+                           aria-invalid={errors.company ? true : undefined}
+                           aria-describedby={errors.company ? "company-err" : undefined}
+                           disabled={phase === "sending"}
+                           onChange={(e) => setCompany(e.target.value)} />
+                  </Field>
+                  <Field id="domain" full
+                         label={t("csignup.f.domain")}
+                         error={errors.domain}
+                         hint={!errors.domain && (
+                           <>{t("csignup.f.domain_hint_prefix")}<code>TXT</code>{t("csignup.f.domain_hint_suffix")}</>
+                         )}>
+                    <span className="input-wrap">
+                      <span className="prefix" aria-hidden="true">https://</span>
+                      <input id="domain" className="input input--prefixed" type="text" value={domain}
+                             placeholder="nimbustech.com" autoComplete="url" spellCheck={false}
+                             aria-invalid={errors.domain ? true : undefined}
+                             aria-describedby={errors.domain ? "domain-err" : "domain-hint"}
+                             disabled={phase === "sending"}
+                             onChange={(e) => setDomain(e.target.value)} />
+                    </span>
+                  </Field>
+                </FormSection>
+
+                <FormSection n="02" title={t("csignup.sec2.title")}>
+                  <Field id="admin-name" label={t("csignup.f.admin_name")} error={errors.adminName}>
+                    <input id="admin-name" className="input" type="text" value={adminName}
+                           placeholder="Maria Souza" autoComplete="name"
+                           aria-invalid={errors.adminName ? true : undefined}
+                           disabled={phase === "sending"}
+                           onChange={(e) => setAdminName(e.target.value)} />
+                  </Field>
+                  <Field id="role" label={t("csignup.f.role")} optional={t("csignup.f.optional")}>
+                    <input id="role" className="input" type="text" value={role}
+                           placeholder="Head of Engineering" autoComplete="organization-title"
+                           disabled={phase === "sending"}
+                           onChange={(e) => setRole(e.target.value)} />
+                  </Field>
+                  <Field id="email" full
+                         label={t("csignup.f.email")}
+                         error={errors.email}
+                         hint={!errors.email && t("csignup.f.email_hint")}>
+                    <input id="email" className="input" type="email" value={email}
+                           placeholder={emailPlaceholder} autoComplete="email"
+                           aria-invalid={errors.email ? true : undefined}
+                           aria-describedby={errors.email ? "email-err" : "email-hint"}
+                           disabled={phase === "sending"}
+                           onChange={(e) => setEmail(e.target.value)} />
+                  </Field>
+                </FormSection>
+
+                <FormSection n="03" title={t("csignup.sec3.title")}>
+                  <div className={`terms${terms ? " is-checked" : ""}`}
+                       onClick={(e) => {
+                         // links de Termos/Privacidade navegam sem togglar
+                         if ((e.target as HTMLElement).closest("a, input")) return;
+                         setTerms((v) => !v);
+                       }}>
+                    <input type="checkbox" checked={terms}
+                           aria-label={t("csignup.terms_aria")}
+                           aria-invalid={errors.terms ? true : undefined}
+                           onChange={(e) => setTerms(e.target.checked)} />
+                    <span className="box" aria-hidden="true">✓</span>
+                    <span className="lbl">
+                      {t("csignup.terms_prefix")}
+                      <Link to="/compromisso">{t("csignup.terms_tos")}</Link>
+                      {t("csignup.terms_mid")}
+                      <Link to="/compromisso">{t("csignup.terms_privacy")}</Link>
+                      {t("csignup.terms_mid2")}
+                      <b>{t("csignup.terms_no_sell")}</b>
+                      {t("csignup.terms_suffix")}
+                    </span>
+                  </div>
+                  {errors.terms && (
+                    <p className="hint err" role="alert" style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--amber)", margin: "8px 0 0" }}>
+                      {errors.terms}
+                    </p>
+                  )}
+                </FormSection>
+
+                <div className="signup-foot">
+                  <span className="keep">{t("csignup.keep_line")}</span>
+                  <span className="actions">
+                    <Link to="/" className="btn">← {t("csignup.back")}</Link>
+                    <ShellButton primary type="submit" disabled={phase === "sending"} icon={ArrowRight}>
+                      {phase === "sending" ? t("auth.sending") : t("csignup.submit")}
+                    </ShellButton>
+                  </span>
+                </div>
+              </form>
+
+              <aside className="signup-side">
+                <section className="sidecard">
+                  <div className="sidecard__h">
+                    <h3>{t("csignup.side.title")}</h3>
+                    <span className="meta">{t("csignup.side.meta")}</span>
+                  </div>
+                  <div className="sidelist">
+                    <Benefit t1={t("csignup.side.b1.t")} d={t("csignup.side.b1.d")} />
+                    <Benefit t1={t("csignup.side.b2.t")} d={t("csignup.side.b2.d")} />
+                    <Benefit t1={t("csignup.side.b3.t")}
+                             d={<>{t("csignup.side.b3.d_prefix")}<b>{t("csignup.side.b3.d_verified")}</b>{t("csignup.side.b3.d_suffix")}</>} />
+                    <Benefit t1={t("csignup.side.b4.t")} d={t("csignup.side.b4.d")} />
+                  </div>
+                </section>
+
+                <div className="foreverfree" style={{ marginTop: 0 }}>
+                  <span className="ic" aria-hidden="true">∞</span>
+                  <p>
+                    <b>{t("csignup.free.lead")}</b> {t("csignup.free.body")}
+                  </p>
+                </div>
+              </aside>
             </div>
           )}
-
-          <Field label={t("auth.signup.name_label")} error={errors.name?.[0]}>
-            <Input
-              type="text" value={name} onChange={(e) => setName(e.target.value)}
-              autoComplete="organization" required disabled={phase === "sending"} />
-          </Field>
-
-          <Field label={t("auth.login.email_label")} hint={t("auth.signup.email_hint")} error={errors.email?.[0]}>
-            <Input
-              type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email" required disabled={phase === "sending"} />
-          </Field>
-
-          <div className="flex items-center justify-between gap-4 pt-2">
-            <Link to="/sessions/company/new" style={{
-              fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-              fontSize: 11, color: "var(--muted)", letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
-            }}>
-              {t("auth.signup.has_account")}
-            </Link>
-            <PrimaryButton type="submit" disabled={phase === "sending"}>
-              {phase === "sending" ? t("auth.sending") : t("auth.signup.submit")}
-            </PrimaryButton>
-          </div>
-        </form>
-      </Card>
-
-      <p style={{ marginTop: 32, color: "var(--muted)", fontSize: 12.5, lineHeight: 1.7 }}>
-        {t("auth.signup.note_prefix")}
-        <span style={{ color: "var(--text)" }}>{t("contact.action_respond")}</span>{t("auth.signup.note_suffix")}
-      </p>
-    </Page>
-  );
-}
-
-// ── shell + primitives (mirror of the language used by Dashboard) ──────────
-
-function Page({ children }: { children: ReactNode }) {
-  return (
-    <div className="mx-auto" style={{ maxWidth: 720, padding: "64px 32px 96px", color: "var(--text)" }}>
-      {children}
+        </div>
+      </main>
     </div>
   );
 }
 
-function Header({ step, title, emTail }: { step: string; title: string; emTail?: string }) {
-  const t = useT();
+const ArrowRight = (
+  <svg viewBox="0 0 12 12" fill="none" width="12" height="12">
+    <path d="M1.5 6h9M6.5 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
+// ── form primitives ─────────────────────────────────────────────────────────
+
+function FormSection({ n, title, children }: { n: string; title: string; children: ReactNode }) {
   return (
-    <header className="mb-8">
-      <div className="mb-3 font-mono uppercase"
-           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        {t("auth.signup.eyebrow")}
+    <section className="formsec">
+      <div className="formsec__h">
+        <h2><span className="n">{n}</span>{title}</h2>
       </div>
-      <div className="flex flex-wrap items-baseline gap-6">
-        <span className="font-mono uppercase"
-              style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em" }}>
-          {step}
-        </span>
-        <h1 className="font-semibold"
-            style={{ color: "var(--text)", fontSize: 28, letterSpacing: "-0.025em", lineHeight: 1.15 }}>
-          {title}
-          {emTail && <span style={{ color: "var(--muted)", fontWeight: 400 }}> {emTail}</span>}
-        </h1>
-      </div>
-    </header>
+      <div className="fgrid">{children}</div>
+    </section>
   );
 }
 
-function Card({ children }: { children: ReactNode }) {
-  return (
-    <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)", padding: 24 }}>
-      {children}
-    </div>
-  );
-}
-
-function Field({ label, hint, error, children }: {
-  label: string; hint?: string; error?: string; children: ReactNode;
+function Field({ id, label, hint, error, optional, full = false, children }: {
+  id: string;
+  label: string;
+  hint?: ReactNode;
+  error?: string;
+  optional?: string;
+  full?: boolean;
+  children: ReactNode;
 }) {
   return (
-    <label className="grid gap-1.5">
-      <span className="font-mono uppercase"
-            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
+    <div className={`field2${full ? " full" : ""}`}>
+      <label htmlFor={id}>
         {label}
-        {hint && (
-          <span style={{ color: "var(--muted-soft)", letterSpacing: 0, textTransform: "none" }}> · {hint}</span>
-        )}
-      </span>
+        {optional && <span className="optional">{optional}</span>}
+      </label>
       {children}
-      {error && (
-        <span style={{ color: "var(--warn)", fontSize: 12, marginTop: 2 }}>
-          {capitalize(error)}
-        </span>
-      )}
-    </label>
+      {error
+        ? <span className="hint err" id={`${id}-err`} role="alert">{error}</span>
+        : hint
+          ? <span className="hint" id={`${id}-hint`}>{hint}</span>
+          : null}
+    </div>
   );
 }
 
-function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+function Benefit({ t1, d }: { t1: string; d: ReactNode }) {
   return (
-    <input {...props}
-           style={{
-             font: "inherit", fontSize: 14,
-             padding: "10px 12px",
-             color: "var(--text)", background: "var(--bg)",
-             border: "1px solid var(--rule)",
-             borderRadius: 0,
-             outline: "none",
-             ...(props.style ?? {}),
-           }} />
+    <div className="item">
+      <span className="ck" aria-hidden="true">✓</span>
+      <div>
+        <p className="t">{t1}</p>
+        <p className="d">{d}</p>
+      </div>
+    </div>
   );
 }
 
-function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+// ── estado "email enviado" (passo 02 do stepper) ────────────────────────────
+
+function SentPanel({ email }: { email: string }) {
+  const t = useT();
   return (
-    <button {...props}
-            style={{
-              font: "inherit", fontSize: 13,
-              padding: "8px 18px",
-              background: "var(--text)", color: "var(--bg)",
-              border: "1px solid var(--text)",
-              borderRadius: 0,
-              letterSpacing: "0.02em",
-              cursor: props.disabled ? "not-allowed" : "pointer",
-              opacity: props.disabled ? 0.5 : 1,
-              transition: "background 120ms ease",
-              ...(props.style ?? {}),
-            }} />
+    <div className="signup-cols">
+      <section className="signup-form">
+        <div className="formsec">
+          <div className="formsec__h">
+            <h2><span className="n">02</span>{t("auth.verify_email.title")}</h2>
+          </div>
+          <p style={{ color: "var(--ink-2)", fontSize: 14.5, lineHeight: 1.7, margin: 0 }}>
+            {t("auth.verify_email.body_prefix")}
+            <strong style={{ color: "var(--signal-ink)" }}>{email}</strong>
+            {t("auth.verify_email.body_suffix")}
+          </p>
+          <p style={{ color: "var(--ink-3)", fontSize: 13, lineHeight: 1.7, marginTop: 12 }}>
+            {t("csignup.sent.next")}
+          </p>
+        </div>
+        <div className="signup-foot">
+          <span className="keep">{t("csignup.keep_line")}</span>
+          <span className="actions">
+            <Link to="/" className="btn">← {t("auth.back_home")}</Link>
+          </span>
+        </div>
+      </section>
+    </div>
   );
-}
-
-function capitalize(s: string): string {
-  return s.length === 0 ? s : s[0].toUpperCase() + s.slice(1);
 }

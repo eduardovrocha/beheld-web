@@ -1,0 +1,224 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * App shell — cadastro de empresa (extends app-shell.css + app-profile.css
+ * pelo shell público). Ported from design_handoff_cadastro_empresa/
+ * reference/app-signup.css, scoped under `.app-v2`; tema claro via
+ * html[data-theme-v2="light"].
+ * ───────────────────────────────────────────────────────────────────── */
+
+.app-v2 .app__top .topnav {
+  display: flex; gap: 10px; align-items: center;
+  font-family: var(--mono); font-size: 11.5px; color: var(--ink-4);
+}
+.app-v2 .app__top .topnav .sep { color: var(--ink-5); }
+.app-v2 .app__top .topnav a {
+  color: var(--ink-3); text-decoration: none;
+  border-bottom: 1px solid var(--line-2); padding-bottom: 1px;
+  transition: 0.12s;
+}
+.app-v2 .app__top .topnav a:hover,
+.app-v2 .app__top .topnav a:focus-visible { color: var(--signal-ink); border-color: var(--signal); }
+
+/* ============== HERO ============== */
+.app-v2 .signup-hero {
+  padding: 40px 0 26px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--line);
+  display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end;
+}
+@media (max-width: 720px) { .app-v2 .signup-hero { grid-template-columns: 1fr; align-items: start; } }
+.app-v2 .signup-hero p.eb {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-4); margin: 0 0 14px; display: inline-flex; gap: 10px; align-items: center;
+}
+.app-v2 .signup-hero p.eb .sl { color: var(--ink-5); }
+.app-v2 .signup-hero p.eb .you { color: var(--signal-ink); }
+.app-v2 .signup-hero h1 {
+  font-family: var(--sans); font-weight: 600; letter-spacing: -0.02em;
+  font-size: clamp(32px, 4vw, 52px); line-height: 1.04;
+  color: var(--ink); margin: 0 0 14px;
+}
+.app-v2 .signup-hero .sub { color: var(--ink-3); font-size: 16px; margin: 0; max-width: 58ch; line-height: 1.5; }
+.app-v2 .signup-hero .sub b { color: var(--ink); font-weight: 600; }
+.app-v2 .signup-hero .meta-r {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-4); text-align: right; line-height: 1.5;
+}
+@media (max-width: 720px) { .app-v2 .signup-hero .meta-r { text-align: left; } }
+.app-v2 .signup-hero .meta-r b { color: var(--ink); }
+
+/* ============== 2-COL LAYOUT (form + side) ============== */
+.app-v2 .signup-cols { display: grid; grid-template-columns: 1.4fr 0.85fr; gap: 28px; margin-top: 32px; align-items: start; }
+@media (max-width: 1080px) { .app-v2 .signup-cols { grid-template-columns: 1fr; } }
+
+.app-v2 .signup-side { display: grid; gap: 18px; position: sticky; top: 78px; }
+@media (max-width: 1080px) { .app-v2 .signup-side { position: static; } }
+
+.app-v2 .sidecard { background: var(--surface); border: 1px solid var(--line); }
+.app-v2 .sidecard__h {
+  padding: 14px 20px; border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+}
+.app-v2 .sidecard__h h3 {
+  margin: 0; font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-3); font-weight: 500;
+}
+.app-v2 .sidecard__h .meta { font-family: var(--mono); font-size: 10.5px; color: var(--ink-4); letter-spacing: 0.08em; text-transform: uppercase; }
+
+.app-v2 .sidelist { padding: 4px 0; }
+.app-v2 .sidelist .item {
+  display: grid; grid-template-columns: 22px 1fr; gap: 12px;
+  padding: 12px 20px; align-items: start;
+}
+.app-v2 .sidelist .item .ck {
+  width: 18px; height: 18px; display: grid; place-items: center;
+  border: 1px solid var(--signal); color: var(--signal-ink); background: var(--signal-dim);
+  font-family: var(--mono); font-size: 11px; margin-top: 1px;
+}
+html[data-theme-v2="light"] .app-v2 .sidelist .item .ck { color: #fff; background: var(--signal-ink); border-color: var(--signal-ink); }
+.app-v2 .sidelist .item .t { color: var(--ink); font-size: 13.5px; margin: 0; font-weight: 600; }
+.app-v2 .sidelist .item .d { color: var(--ink-3); font-size: 12.5px; margin: 2px 0 0; line-height: 1.45; }
+.app-v2 .sidelist .item .d b { color: var(--ink); font-weight: 600; }
+
+/* ============== STEPPER ============== */
+.app-v2 .stepper {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  background: var(--line); border: 1px solid var(--line);
+  margin: 32px 0 0;
+}
+@media (max-width: 720px) { .app-v2 .stepper { grid-template-columns: 1fr; } }
+.app-v2 .step {
+  background: var(--surface); padding: 14px 18px;
+  display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; align-items: center;
+}
+.app-v2 .step .ck {
+  width: 22px; height: 22px; display: grid; place-items: center;
+  border: 1px solid var(--line-2); color: var(--ink-4);
+  font-family: var(--mono); font-size: 11px;
+}
+.app-v2 .step .lab { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-4); display: block; margin-bottom: 2px; }
+.app-v2 .step .t { font-size: 14px; color: var(--ink-2); font-family: var(--sans); }
+.app-v2 .step .when { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-4); text-transform: uppercase; white-space: nowrap; }
+.app-v2 .step.is-now { background: var(--surface-2); border-left: 2px solid var(--signal); padding-left: 16px; }
+.app-v2 .step.is-now .ck { color: var(--signal-ink); border-color: var(--signal); background: var(--signal-dim); }
+html[data-theme-v2="light"] .app-v2 .step.is-now .ck { color: #fff; background: var(--signal-ink); border-color: var(--signal-ink); }
+.app-v2 .step.is-now .lab { color: var(--signal-ink); }
+.app-v2 .step.is-now .t { color: var(--ink); font-weight: 600; }
+.app-v2 .step.is-now .when { color: var(--signal-ink); }
+/* passo concluído (ex.: cadastro feito → tela de confirmação) */
+.app-v2 .step.is-done .ck { color: var(--signal-ink); border-color: var(--signal); }
+
+/* ============== FORM ============== */
+.app-v2 .signup-form { background: var(--surface); border: 1px solid var(--line); }
+
+.app-v2 .formsec {
+  padding: 26px 28px;
+  border-bottom: 1px solid var(--line);
+}
+.app-v2 .formsec:last-of-type { border-bottom: 0; }
+.app-v2 .formsec__h {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin-bottom: 18px;
+}
+.app-v2 .formsec__h h2 {
+  margin: 0; font-family: var(--sans); font-size: 17px; font-weight: 600; color: var(--ink);
+  display: flex; align-items: baseline; gap: 12px;
+}
+.app-v2 .formsec__h h2 .n {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em; color: var(--ink-4);
+  font-weight: 400;
+}
+.app-v2 .formsec__h .meta { font-family: var(--mono); font-size: 11px; color: var(--ink-4); letter-spacing: 0.06em; text-transform: uppercase; }
+
+.app-v2 .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.app-v2 .fgrid > .full { grid-column: 1 / -1; }
+@media (max-width: 640px) { .app-v2 .fgrid { grid-template-columns: 1fr; } .app-v2 .fgrid > .full { grid-column: auto; } }
+
+.app-v2 .field2 { display: grid; gap: 6px; }
+.app-v2 .field2 label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-3);
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+}
+.app-v2 .field2 label .optional {
+  text-transform: none; letter-spacing: 0; color: var(--ink-4); font-size: 11px;
+}
+.app-v2 .input {
+  background: var(--bg); border: 1px solid var(--line-2); color: var(--ink);
+  font-family: var(--mono); font-size: 14px;
+  padding: 12px 14px; outline: 0; width: 100%;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.app-v2 .input::placeholder { color: var(--ink-5); }
+.app-v2 .input:focus { border-color: var(--signal); box-shadow: 0 0 0 1px var(--signal); }
+.app-v2 .input[aria-invalid="true"] { border-color: var(--amber); }
+.app-v2 .input--prefixed { padding-left: 64px; }
+
+.app-v2 .input-wrap { position: relative; display: flex; }
+.app-v2 .input-wrap .prefix {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-family: var(--mono); font-size: 14px; color: var(--ink-4);
+  pointer-events: none;
+}
+.app-v2 .input-wrap .input { flex: 1; }
+
+.app-v2 .field2 .hint { font-family: var(--mono); font-size: 11px; color: var(--ink-4); line-height: 1.4; }
+.app-v2 .field2 .hint.err { color: var(--amber); }
+.app-v2 .field2 .hint .ok { color: var(--signal-ink); }
+.app-v2 .field2 .hint .warn { color: var(--amber); }
+.app-v2 .field2 .hint a { color: var(--signal-ink); text-decoration: none; }
+.app-v2 .field2 .hint code {
+  background: var(--bg); border: 1px solid var(--line-2); padding: 1px 5px;
+  font-family: var(--mono); font-size: 10.5px; color: var(--ink-2);
+}
+
+/* banner de erro global (429 / 5xx) — âmbar, nunca vermelho-alarme */
+.app-v2 .signup-alert {
+  margin: 0 28px; margin-top: 22px;
+  background: var(--amber-dim); border: 1px solid var(--amber);
+  color: var(--ink-2); font-size: 13.5px; line-height: 1.5;
+  padding: 12px 16px;
+}
+
+/* terms */
+.app-v2 .terms { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; position: relative; }
+.app-v2 .terms input { position: absolute; opacity: 0; pointer-events: none; }
+.app-v2 .terms .box {
+  width: 18px; height: 18px; border: 1px solid var(--line-2); background: var(--bg);
+  flex: none; display: grid; place-items: center;
+  font-family: var(--mono); font-size: 11px; color: transparent;
+  transition: 0.12s; margin-top: 1px;
+}
+.app-v2 .terms.is-checked .box { background: var(--signal); border-color: var(--signal); color: #07120a; }
+html[data-theme-v2="light"] .app-v2 .terms.is-checked .box { background: var(--signal-ink); border-color: var(--signal-ink); color: #fff; }
+.app-v2 .terms input:focus-visible ~ .box { outline: 2px solid var(--signal); outline-offset: 2px; }
+.app-v2 .terms .lbl { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
+.app-v2 .terms .lbl b { color: var(--ink); font-weight: 600; }
+.app-v2 .terms .lbl a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line-2); padding-bottom: 1px; }
+.app-v2 .terms .lbl a:hover { color: var(--signal-ink); border-color: var(--signal); }
+
+/* form footer */
+.app-v2 .signup-foot {
+  padding: 18px 28px;
+  border-top: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+}
+.app-v2 .signup-foot .keep { font-family: var(--mono); font-size: 11.5px; color: var(--ink-4); max-width: 40ch; line-height: 1.5; }
+.app-v2 .signup-foot .actions { display: flex; gap: 10px; align-items: center; }
+.app-v2 .signup-foot .actions a.btn { text-decoration: none; }
+
+/* ============ FOREVER FREE strip ============ */
+.app-v2 .foreverfree {
+  display: flex; gap: 14px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line);
+  border-left: 2px solid var(--signal);
+  padding: 14px 22px;
+  margin-top: 22px;
+}
+.app-v2 .foreverfree .ic {
+  width: 26px; height: 26px; flex: none; display: grid; place-items: center;
+  border: 1px solid var(--signal); color: var(--signal-ink); background: var(--signal-dim);
+  font-family: var(--mono); font-size: 14px;
+}
+html[data-theme-v2="light"] .app-v2 .foreverfree .ic { color: #fff; background: var(--signal-ink); border-color: var(--signal-ink); }
+.app-v2 .foreverfree p { margin: 0; color: var(--ink-3); font-size: 13.5px; line-height: 1.5; }
+.app-v2 .foreverfree p b { color: var(--ink); font-weight: 600; }

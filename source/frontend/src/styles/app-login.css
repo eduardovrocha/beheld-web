@@ -1,0 +1,111 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * App shell — login empresa (extends app-shell.css + app-profile.css
+ * [shell público] + app-signup.css [.field2/.input/.signup-alert]).
+ * Ported from design_handoff_login_empresa/reference/app-login.css,
+ * scoped under `.app-v2`; tema claro via html[data-theme-v2="light"].
+ * ───────────────────────────────────────────────────────────────────── */
+
+.app-v2 .login-shell { max-width: 520px; margin: 0 auto; padding: 60px 0; }
+
+.app-v2 .login-hero { text-align: left; margin-bottom: 28px; }
+.app-v2 .login-hero .eb {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-4); margin: 0 0 16px; display: inline-flex; gap: 10px; align-items: center;
+}
+.app-v2 .login-hero .eb .sl { color: var(--ink-5); }
+.app-v2 .login-hero .eb .you { color: var(--signal-ink); }
+.app-v2 .login-hero h1 {
+  font-family: var(--sans); font-weight: 600; letter-spacing: -0.02em;
+  font-size: clamp(30px, 3.6vw, 44px); line-height: 1.05;
+  color: var(--ink); margin: 0;
+}
+
+.app-v2 .login-card { background: var(--surface); border: 1px solid var(--line); padding: 28px; }
+.app-v2 .login-actions {
+  margin-top: 22px;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+}
+.app-v2 .login-actions .alt {
+  font-family: var(--mono); font-size: 12.5px; color: var(--ink-3);
+}
+.app-v2 .login-actions .alt a {
+  color: var(--signal-ink); text-decoration: none;
+  border-bottom: 1px solid var(--line-2); padding-bottom: 1px;
+  transition: 0.12s;
+}
+.app-v2 .login-actions .alt a:hover,
+.app-v2 .login-actions .alt a:focus-visible { color: var(--signal); border-color: var(--signal); }
+@media (max-width: 600px) {
+  .app-v2 .login-actions { flex-direction: column; align-items: stretch; }
+  .app-v2 .login-actions .btn { width: 100%; justify-content: center; }
+}
+
+/* trust strip (magic-link explanation) — o contrato, não nota de rodapé */
+.app-v2 .login-trust {
+  margin-top: 22px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-left: 2px solid var(--signal);
+  padding: 16px 20px;
+  display: grid; grid-template-columns: 24px 1fr; gap: 14px; align-items: start;
+}
+.app-v2 .login-trust .ic {
+  width: 24px; height: 24px; display: grid; place-items: center; margin-top: 1px;
+  border: 1px solid var(--signal); color: var(--signal-ink); background: var(--signal-dim);
+  font-family: var(--mono); font-size: 12px;
+}
+html[data-theme-v2="light"] .app-v2 .login-trust .ic { color: #fff; background: var(--signal-ink); border-color: var(--signal-ink); }
+.app-v2 .login-trust p { margin: 0; color: var(--ink-3); font-size: 13.5px; line-height: 1.55; }
+.app-v2 .login-trust p b { color: var(--ink); font-weight: 600; }
+
+/* sent state (after submit) */
+.app-v2 .login-sent {
+  background: var(--surface); border: 1px solid var(--line);
+  padding: 28px; text-align: center;
+}
+.app-v2 .login-sent .ic {
+  width: 44px; height: 44px; margin: 0 auto 18px; display: grid; place-items: center;
+  border: 1px solid var(--signal); color: var(--signal-ink); background: var(--signal-dim);
+  font-family: var(--mono); font-size: 18px;
+}
+html[data-theme-v2="light"] .app-v2 .login-sent .ic { color: #fff; background: var(--signal-ink); border-color: var(--signal-ink); }
+.app-v2 .login-sent h2 { font-size: 20px; color: var(--ink); margin: 0 0 8px; font-weight: 600; }
+.app-v2 .login-sent p { color: var(--ink-3); font-size: 14px; margin: 0; line-height: 1.6; }
+.app-v2 .login-sent p b { color: var(--ink); font-family: var(--mono); font-weight: 400; overflow-wrap: anywhere; }
+.app-v2 .login-sent p .expira { color: var(--signal-ink); font-weight: 600; }
+.app-v2 .login-sent .resend { margin-top: 18px; font-family: var(--mono); font-size: 12px; color: var(--ink-4); }
+.app-v2 .login-sent .resend button {
+  background: none; border: 0; padding: 0 0 1px; cursor: pointer;
+  font-family: var(--mono); font-size: 12px;
+  color: var(--signal-ink); border-bottom: 1px solid var(--line-2);
+  transition: 0.12s;
+}
+.app-v2 .login-sent .resend button:hover:not(:disabled),
+.app-v2 .login-sent .resend button:focus-visible { color: var(--signal); border-color: var(--signal); }
+.app-v2 .login-sent .resend button:disabled { color: var(--ink-4); cursor: not-allowed; border-color: transparent; }
+.app-v2 .login-sent .resend .soft { display: block; margin-top: 10px; color: var(--ink-4); }
+.app-v2 .login-sent .resend .soft a { color: var(--signal-ink); text-decoration: none; border-bottom: 1px solid var(--line-2); padding-bottom: 1px; }
+
+/* banner âmbar do login (429 / rede) — fora do card, acima do form */
+.app-v2 .login-alert {
+  margin-bottom: 16px;
+  background: var(--amber-dim); border: 1px solid var(--amber);
+  color: var(--ink-2); font-size: 13.5px; line-height: 1.5;
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.app-v2 .login-alert button {
+  background: none; border: 1px solid var(--amber); color: var(--amber);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 10px; cursor: pointer;
+}
+
+/* spinner do submit (substitui a seta enquanto envia) */
+.app-v2 .btn .spin {
+  width: 12px; height: 12px; flex: none;
+  border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: bh-spin 0.7s linear infinite;
+}
+@keyframes bh-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .app-v2 .btn .spin { animation: none; opacity: 0.6; }
+}
