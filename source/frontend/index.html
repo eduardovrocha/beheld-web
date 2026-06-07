@@ -35,6 +35,25 @@
         }
       })();
     </script>
+
+    <!--
+      Pre-paint bootstrap do tema beheld (design_handoff_temas).
+      Sistema separado do dp-theme acima: vale pras telas .app-v2
+      (dashboards / diretório / contato / perfil público) E pra landing
+      (.landing-v2), via html[data-theme-v2="light"]. Roda antes de
+      qualquer CSS visível (o bundle Vite carrega depois) — sem flash
+      dark→light. Default = dark (sem atributo — a alma da marca).
+      Persistência em localStorage["beheld:theme"].
+    -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("beheld:theme") === "light") {
+            document.documentElement.setAttribute("data-theme-v2", "light");
+          }
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
