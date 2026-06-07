@@ -78,6 +78,23 @@ export async function verifyCompanyToken(token: string): Promise<VerifyResult> {
   return { ok: false, reason, status: r.status };
 }
 
+// ── Logout (destrói a sessão por cookie) ───────────────────────────────────
+
+/** DELETE /api/v1/sessions/company — apaga o cookie `_beheld_company_session`.
+ *  Best-effort: falha de rede não impede o redirect pro login (o cookie
+ *  expira sozinho; o pior caso é a sessão seguir válida no servidor). */
+export async function logoutCompany(): Promise<void> {
+  try {
+    await fetch(`${apiBase()}/api/v1/sessions/company`, {
+      method:      "DELETE",
+      credentials: "include",
+      headers:     { Accept: "application/json" },
+    });
+  } catch {
+    /* noop — ver doc acima */
+  }
+}
+
 // ── Request a fresh magic link (for an existing Company) ───────────────────
 
 export type RequestLinkFailureReason = "not_registered" | "missing_email" | "unknown";

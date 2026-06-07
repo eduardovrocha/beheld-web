@@ -1,22 +1,21 @@
 /**
- * Recruiter directory (`/directory`).
+ * /directory — recruiter-facing searchable dev directory, app-shell v2
+ * (design_handoff_empresa, "Page :: Directory"). Renders OUTSIDE
+ * <Layout>; shares CompanyShell with /company/dashboard.
  *
- * Same visual vocabulary as Dashboard — Switzer body, mono uppercase
- * section labels, white cards with rule hairlines, accent gold for
- * numerics. Auth via signed company cookie set by
- * `POST /api/v1/sessions/company/verify`.
+ * Two-pane layout (.dir): filters left (ecosystem chips + busca,
+ * accessible dual-range test ratio, status select, aplicar/limpar) and
+ * results right (sortable dcard grid). Server-side filtering via
+ * GET /api/v1/directory (existing API: ecosystems[], test_ratio_min/max,
+ * status); sorting is client-side. "Exportar lista" baixa um CSV dos
+ * resultados atuais.
  */
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useMemo, useState, useEffect, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { TabStrip, type TabDef } from "@/components/TabStrip";
-import { Tooltip } from "@/components/Tooltip";
-import { DragScroll } from "@/components/DragScroll";
-import { Dropdown } from "@/components/Dropdown";
-import { VerifiedIcon } from "@/components/icons";
-import { useT, useTp, useFmt } from "@/i18n/I18nProvider";
-import { CompanyNav } from "@/components/company/CompanyNav";
-import { SaveDevButton } from "@/components/company/SaveDevButton";
+import { PageHeader, ShellButton } from "@/components/app/PageHeader";
+import { CompanyShell } from "@/components/company/CompanyShell";
+import { useT, useFmt } from "@/i18n/I18nProvider";
 import {
   getDirectory,
   DirectoryAuthError,
@@ -25,48 +24,34 @@ import {
   type DirectoryPayload,
   type DirectoryQuery,
 } from "@/lib/directoryApi";
+import { saveDev, CompanyAuthError } from "@/lib/companyDashboardApi";
 
-// ── tabs ──────────────────────────────────────────────────────────────────
-type DirTab = "filters" | "results";
+import "@/styles/app-shell.css";
+import "@/styles/app-company.css";
 
-const DIR_TABS: Array<{ id: DirTab; labelKey: string; hash: string }> = [
-  { id: "filters", labelKey: "directory.tab.filters", hash: "#filtros" },
-  { id: "results", labelKey: "directory.tab.results", hash: "#resultados" },
-];
+// Default test ratio window (matches the previous directory behaviour):
+// weeds out bundles with no test discipline and auto-generated outliers.
+const DEFAULT_MIN = "0.25";
+const DEFAULT_MAX = "0.50";
 
-function dirTabFromHash(hash: string): DirTab {
-  return DIR_TABS.find((t) => t.hash === hash)?.id ?? "results";
-}
+type SortKey = "test_ratio" | "recency" | "handle";
 
 export function Directory() {
   const navigate = useNavigate();
   const t = useT();
-  const tp = useTp();
-  const [data, setData]       = useState<DirectoryPayload | null>(null);
-  const [error, setError]     = useState<string | null>(null);
-  const [busy, setBusy]       = useState(false);
+  const [data, setData]   = useState<DirectoryPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy]   = useState(false);
+  const [sort, setSort]   = useState<SortKey>("test_ratio");
 
-  // Local filter state — mirrors the server's filter shape. The default
-  // 0.25–0.50 test ratio range is a sensible starting filter: weeds out
-  // bundles with no test discipline at all and the few outliers above 50%
-  // (which usually mean tests are auto-generated). Recruiters can widen
-  // immediately by dragging the slider.
   const [draft, setDraft] = useState<DirectoryFilters>({
-    ecosystems: [], test_ratio_min: "0.25", test_ratio_max: "0.50", status: "all",
+    ecosystems: [], test_ratio_min: DEFAULT_MIN, test_ratio_max: DEFAULT_MAX, status: "all",
   });
 
-  const [applied, setApplied] = useState(false);
-  const [tab, setTab] = useState<DirTab>(() => dirTabFromHash(window.location.hash));
   useEffect(() => {
-    function onHash() { setTab(dirTabFromHash(window.location.hash)); }
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    document.documentElement.classList.add("app-v2-page");
+    return () => document.documentElement.classList.remove("app-v2-page");
   }, []);
-  function selectTab(id: DirTab) {
-    setTab(id);
-    const t = DIR_TABS.find((x) => x.id === id);
-    if (t) history.replaceState(null, "", t.hash);
-  }
 
   async function load(query: DirectoryQuery) {
     setBusy(true);
@@ -87,13 +72,11 @@ export function Directory() {
   }
 
   useEffect(() => {
-    // Initial load applies the default test ratio range (see `draft` above)
-    // so the URL the server sees matches what the slider visually shows.
-    void load({ test_ratio_min: "0.25", test_ratio_max: "0.50" });
+    void load({ test_ratio_min: DEFAULT_MIN, test_ratio_max: DEFAULT_MAX });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  function apply(e: FormEvent) {
     e.preventDefault();
     void load({
       ecosystems:     draft.ecosystems,
@@ -101,632 +84,344 @@ export function Directory() {
       test_ratio_max: draft.test_ratio_max,
       status:         draft.status,
     });
-    // Permanece na aba Filtros; o resultado é sinalizado ali mesmo + no
-    // badge da aba Resultados.
-    setApplied(true);
   }
 
-  if (error) {
-    return (
-      <Shell>
-        <Section num="01" title={t("directory.error_title")}>
-          <EmptyCard>{error}</EmptyCard>
-        </Section>
-      </Shell>
-    );
+  function clearFilters() {
+    setDraft({ ecosystems: [], test_ratio_min: "", test_ratio_max: "", status: "all" });
+    void load({});
   }
 
-  if (!data) {
-    return (
-      <Shell>
-        <p style={{ color: "var(--muted)", fontSize: 13, padding: "32px 0" }}>{t("directory.loading")}</p>
-      </Shell>
-    );
-  }
+  const results = useMemo(() => sortResults(data?.results ?? [], sort), [data, sort]);
+  const total = results.length;
 
-  const activeCount = data.results.length;
+  const activeFilterCount =
+    draft.ecosystems.length
+    + (draft.test_ratio_min || draft.test_ratio_max ? 1 : 0)
+    + (draft.status !== "all" ? 1 : 0);
 
   return (
-    <Shell>
-      <DirectoryHero company={data.company.name} total={activeCount} />
+    <CompanyShell page="directory" companyName={data?.company.name ?? null}
+                  crumbExtra="directory"
+                  counts={data ? { directory: total } : undefined}>
+      <PageHeader
+        eyebrow={["empresa", data?.company.name ?? "—", "directory"]}
+        title={t("directory.shell.h1")}
+        subtitle={t("directory.shell.sub", { count: total })}
+        cta={
+          <>
+            <ShellButton onClick={() => exportCsv(results)} disabled={total === 0}>
+              {t("directory.shell.cta.export")}
+            </ShellButton>
+            <ShellButton primary disabled title={t("company.shell.soon")}>
+              {t("directory.shell.cta.save_search")}
+            </ShellButton>
+          </>
+        }
+      />
 
-      <TabStrip<DirTab>
-        tabs={DIR_TABS.map((tab_) => ({
-          id:    tab_.id,
-          label: t(tab_.labelKey),
-          badge: tab_.id === "results" ? activeCount : null,
-        })) as readonly TabDef<DirTab>[]}
-        active={tab}
-        onSelect={selectTab}
-        trailing={
-          <Tooltip
-            tone="ok"
-            align="right"
-            icon={<VerifiedIcon size={12} />}
-            label={t("common.verified.label")}
-            title={t("common.verified.title")}
-            description={t("directory.verified.desc")}>
-            <span aria-label={t("directory.verified.legend_aria")}
-                  style={{ display: "inline-flex", alignItems: "center", color: "var(--ok)", cursor: "help" }}>
-              <VerifiedIcon size={16} />
-            </span>
-          </Tooltip>
-        } />
+      {error && (
+        <p style={{ color: "var(--amber)", fontFamily: "var(--mono)", fontSize: 12.5, padding: "16px 0" }}>
+          {error}
+        </p>
+      )}
+      {!data && !error && <p className="app__loading">{t("directory.loading")}</p>}
 
-      <div className="pt-8">
-        {tab === "filters" && (
-          <Card>
-            <form onSubmit={onSubmit} className="grid gap-5">
-              <Field label={t("directory.filter.ecosystems_label")} hint={t("directory.filter.ecosystems_hint")}>
-                <EcosystemPicker
-                  selected={draft.ecosystems}
-                  available={data.available_ecosystems}
-                  onChange={(next) => setDraft((d) => ({ ...d, ecosystems: next }))} />
-              </Field>
+      {data && (
+        <div className="dir">
+          <FiltersPanel draft={draft} setDraft={setDraft}
+                        available={data.available_ecosystems}
+                        activeCount={activeFilterCount}
+                        busy={busy}
+                        onApply={apply} onClear={clearFilters} />
 
-              <Field label={t("directory.filter.test_ratio_label")} hint={t("directory.filter.test_ratio_hint")}>
-                <DualRangeSlider
-                  min={0} max={1} step={0.05}
-                  lo={parseRatio(draft.test_ratio_min, 0)}
-                  hi={parseRatio(draft.test_ratio_max, 1)}
-                  onChange={(lo, hi) => setDraft((d) => ({
-                    ...d,
-                    test_ratio_min: lo > 0 ? lo.toFixed(2) : "",
-                    test_ratio_max: hi < 1 ? hi.toFixed(2) : "",
-                  }))}
-                  formatLabel={(v) => `${Math.round(v * 100)}%`} />
-              </Field>
-
-              <Field label={t("directory.filter.status_label")}>
-                <Dropdown
-                  value={draft.status}
-                  onChange={(v) => setDraft((d) => ({ ...d, status: v as DirectoryFilters["status"] }))}
-                  options={[
-                    { value: "all",      label: t("directory.filter.status.all") },
-                    { value: "verified", label: t("directory.filter.status.verified") },
-                    { value: "outdated", label: t("directory.filter.status.outdated") },
-                  ]} />
-              </Field>
-
-              <div className="flex flex-wrap items-center" style={{ gap: 14 }}>
-                <PrimaryButton type="submit" disabled={busy}>
-                  {busy ? t("directory.filter.applying") : t("directory.filter.apply")}
-                </PrimaryButton>
-                {applied && !busy && (
-                  <span className="font-mono" style={{ fontSize: 13, letterSpacing: "0.02em" }}>
-                    <strong style={{ color: "var(--accent)", fontFeatureSettings: '"tnum"' }}>
-                      {activeCount}
-                    </strong>
-                    <span style={{ color: "var(--muted)" }}>
-                      {" "}{tp("directory.filter.match_count", activeCount)} ·{" "}
-                    </span>
-                    <button type="button" onClick={() => selectTab("results")} style={inlineLinkBtn()}>
-                      {t("directory.filter.see_results")}
-                    </button>
-                  </span>
-                )}
-              </div>
-            </form>
-          </Card>
-        )}
-
-        {tab === "results" && (
-          data.results.length === 0 ? (
-            <EmptyCard>
-              {t("directory.results.empty_prefix")}
-              <button type="button" onClick={() => selectTab("filters")} style={inlineLinkBtn()}>{t("directory.results.empty_link")}</button>
-              {t("directory.results.empty_suffix")}
-            </EmptyCard>
-          ) : (
-            <div className="grid gap-4"
-                 style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
-              {data.results.map((dev) => <DevCard key={dev.account_id} dev={dev} />)}
+          <section>
+            <div className="dir-res-h">
+              <h3>{t("directory.shell.results")} <b>{total}</b></h3>
+              <label className="sort">
+                {t("directory.shell.sort_label")}
+                <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+                  <option value="test_ratio">{t("directory.shell.sort.test_ratio")}</option>
+                  <option value="recency">{t("directory.shell.sort.recency")}</option>
+                  <option value="handle">{t("directory.shell.sort.handle")}</option>
+                </select>
+              </label>
             </div>
-          )
-        )}
-      </div>
-    </Shell>
+
+            {total === 0 ? (
+              <div style={{ border: "1px solid var(--line)", background: "var(--surface)", padding: 22 }}>
+                <p style={{ color: "var(--ink-3)", fontSize: 13.5, margin: 0 }}>
+                  {t("directory.shell.empty")}
+                </p>
+              </div>
+            ) : (
+              <div className="dir-grid">
+                {results.map((dev) => <DevCard key={dev.account_id} dev={dev} />)}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+    </CompanyShell>
   );
 }
 
-function inlineLinkBtn(): React.CSSProperties {
-  return {
-    background: "none", border: "none", padding: 0, cursor: "pointer",
-    font: "inherit", color: "var(--accent)",
-    textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
-  };
+// ── sorting / export ────────────────────────────────────────────────────────
+
+function sortResults(results: DevSummary[], sort: SortKey): DevSummary[] {
+  const arr = [...results];
+  switch (sort) {
+    case "test_ratio":
+      return arr.sort((a, b) => (b.test_ratio ?? -1) - (a.test_ratio ?? -1));
+    case "recency":
+      return arr.sort((a, b) => (b.last_bundle_at ?? "").localeCompare(a.last_bundle_at ?? ""));
+    case "handle":
+      return arr.sort((a, b) => a.handle.localeCompare(b.handle));
+  }
 }
 
-// ── chrome ───────────────────────────────────────────────────────────────────
-
-function Shell({ children }: { children: ReactNode }) {
-  return (
-    <div className="mx-auto" style={{ maxWidth: 1032, padding: "64px 32px 96px", color: "var(--text)" }}>
-      {children}
-    </div>
-  );
+function exportCsv(results: DevSummary[]) {
+  const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const lines = [
+    "handle,status,test_ratio,ecosystems,platforms,last_bundle_at",
+    ...results.map((d) => [
+      esc(d.handle),
+      d.status ?? "",
+      d.test_ratio ?? "",
+      esc(d.ecosystems.join(" ")),
+      esc(d.platforms.join(" ")),
+      d.last_bundle_at ?? "",
+    ].join(",")),
+  ];
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "beheld-directory.csv";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
-function DirectoryHero({ company, total }: { company: string; total: number }) {
-  const t = useT();
-  const tp = useTp();
-  return (
-    <header className="mb-10">
-      <div className="mb-3 font-mono uppercase"
-           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        {t("directory.hero.eyebrow")}
-      </div>
-      <h1 className="font-semibold"
-          style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
-        {company}
-      </h1>
-      <div className="mt-3 flex flex-wrap items-baseline gap-3 font-mono"
-           style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
-        <CompanyNav current="directory" bare />
-      </div>
-      <div className="mt-2 font-mono"
-           style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
-        {total === 0 ? t("directory.hero.total_zero") : tp("directory.hero.total", total)}
-      </div>
-    </header>
-  );
-}
+// ── filters panel ───────────────────────────────────────────────────────────
 
-function Section({ num, title, emTail, right, children }: {
-  num: string; title: string; emTail?: string; right?: string; children: ReactNode;
+function FiltersPanel({ draft, setDraft, available, activeCount, busy, onApply, onClear }: {
+  draft: DirectoryFilters;
+  setDraft: React.Dispatch<React.SetStateAction<DirectoryFilters>>;
+  available: string[];
+  activeCount: number;
+  busy: boolean;
+  onApply: (e: FormEvent) => void;
+  onClear: () => void;
 }) {
+  const t = useT();
+  const [query, setQuery] = useState("");
+
+  // Chips = união (disponíveis + selecionados custom), filtrada pela busca.
+  const chips = useMemo(() => {
+    const all = [...new Set([...available, ...draft.ecosystems])];
+    const q = query.trim().toLowerCase();
+    return q ? all.filter((c) => c.toLowerCase().includes(q)) : all;
+  }, [available, draft.ecosystems, query]);
+
+  function toggle(eco: string) {
+    setDraft((d) => ({
+      ...d,
+      ecosystems: d.ecosystems.includes(eco)
+        ? d.ecosystems.filter((e) => e !== eco)
+        : [...d.ecosystems, eco],
+    }));
+  }
+
+  function addCustom() {
+    const eco = query.trim().toLowerCase();
+    if (!eco) return;
+    if (!draft.ecosystems.includes(eco)) toggle(eco);
+    setQuery("");
+  }
+
+  const lo = parseRatio(draft.test_ratio_min, 0);
+  const hi = parseRatio(draft.test_ratio_max, 1);
+
   return (
-    <section className="py-12" style={{ borderTop: "1px solid var(--rule)" }}>
-      <div className="mb-8 flex flex-wrap items-baseline gap-6">
-        <span className="font-mono uppercase"
-              style={{ color: "var(--accent)", fontSize: 11, letterSpacing: "0.18em" }}>
-          {num}
-        </span>
-        <h2 className="font-semibold"
-            style={{ color: "var(--text)", fontSize: 22, letterSpacing: "-0.02em" }}>
-          {title}
-          {emTail && <span style={{ color: "var(--muted)", fontWeight: 400 }}> {emTail}</span>}
-        </h2>
-        {right && (
-          <span className="ml-auto font-mono uppercase"
-                style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
-            {right}
-          </span>
-        )}
+    <form className="filters" onSubmit={onApply}>
+      <h2>
+        {t("directory.shell.filters")}
+        {activeCount > 0 && <span className="ct">{t("directory.shell.filters_active", { count: activeCount })}</span>}
+      </h2>
+
+      <div className="filters__b">
+        <fieldset>
+          <legend>{t("directory.filter.ecosystems_label")}</legend>
+          <p className="hint">{t("directory.filter.ecosystems_hint")}</p>
+          <div className="search">
+            <span className="glyph" aria-hidden="true">⌕</span>
+            <input value={query}
+                   placeholder={t("directory.shell.search_placeholder")}
+                   aria-label={t("directory.filter.ecosystems_label")}
+                   onChange={(e) => setQuery(e.target.value)}
+                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }} />
+          </div>
+          <div className="chips">
+            {chips.map((eco) => {
+              const on = draft.ecosystems.includes(eco);
+              return (
+                <button key={eco} type="button" className={`chip${on ? " on" : ""}`}
+                        aria-pressed={on} onClick={() => toggle(eco)}>
+                  <span className="plus" aria-hidden="true">{on ? "✓" : "+"}</span>{eco}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>{t("directory.filter.test_ratio_label")}</legend>
+          <p className="hint">{t("directory.filter.test_ratio_hint")}</p>
+          <RangeDual lo={lo} hi={hi}
+                     onChange={(nlo, nhi) => setDraft((d) => ({
+                       ...d,
+                       test_ratio_min: nlo > 0 ? nlo.toFixed(2) : "",
+                       test_ratio_max: nhi < 1 ? nhi.toFixed(2) : "",
+                     }))} />
+        </fieldset>
+
+        <fieldset>
+          <legend>{t("directory.filter.status_label")}</legend>
+          <select value={draft.status}
+                  aria-label={t("directory.filter.status_label")}
+                  onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as DirectoryFilters["status"] }))}>
+            <option value="all">{t("directory.filter.status.all")}</option>
+            <option value="verified">{t("directory.filter.status.verified")}</option>
+            <option value="outdated">{t("directory.filter.status.outdated")}</option>
+          </select>
+        </fieldset>
       </div>
-      {children}
-    </section>
+
+      <div className="filters__foot">
+        <button type="button" className="clear" onClick={onClear}>{t("directory.shell.clear")}</button>
+        <ShellButton primary type="submit" disabled={busy}>
+          {busy ? t("directory.filter.applying") : t("directory.filter.apply")}
+        </ShellButton>
+      </div>
+    </form>
   );
 }
 
-function Card({ children, padded = true }: { children: ReactNode; padded?: boolean }) {
+function parseRatio(raw: string, fallback: number): number {
+  const n = Number.parseFloat(raw);
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : fallback;
+}
+
+/**
+ * Accessible dual-handle range: two native `<input type="range">` stacked
+ * on a shared visual track (per the handoff's a11y note). Keyboard works
+ * out of the box; each handle carries its own aria-label.
+ */
+function RangeDual({ lo, hi, onChange }: {
+  lo: number; hi: number;
+  onChange: (lo: number, hi: number) => void;
+}) {
+  const t = useT();
+  const pct = (v: number) => `${Math.round(v * 100)}%`;
   return (
-    <div style={{
-      background: "var(--card-bg)",
-      border: "1px solid var(--rule)",
-      padding: padded ? "24px" : 0,
-    }}>
-      {children}
+    <div className="range">
+      <div className="range__cur">
+        <span>{pct(lo)}</span>
+        <span>{pct(hi)}</span>
+      </div>
+      <div className="range__track">
+        <span className="sel" style={{ left: pct(lo), right: `${100 - Math.round(hi * 100)}%` }} aria-hidden="true" />
+        <input type="range" min={0} max={1} step={0.05} value={lo}
+               aria-label={t("directory.shell.range_min")}
+               onChange={(e) => onChange(Math.min(Number(e.target.value), hi), hi)} />
+        <input type="range" min={0} max={1} step={0.05} value={hi}
+               aria-label={t("directory.shell.range_max")}
+               onChange={(e) => onChange(lo, Math.max(Number(e.target.value), lo))} />
+      </div>
+      <div className="range__labs"><span>0%</span><span>100%</span></div>
     </div>
   );
 }
 
-function EmptyCard({ children }: { children: ReactNode }) {
-  return (
-    <Card>
-      <p style={{ color: "var(--muted)", fontSize: 13, lineHeight: 1.7, margin: 0 }}>{children}</p>
-    </Card>
-  );
-}
+// ── result card ─────────────────────────────────────────────────────────────
 
-// ── dev card ──────────────────────────────────────────────────────────────
+function daysSince(iso: string | null): number | null {
+  if (!iso) return null;
+  const ts = new Date(iso).getTime();
+  if (Number.isNaN(ts)) return null;
+  return Math.max(0, Math.floor((Date.now() - ts) / 86_400_000));
+}
 
 function DevCard({ dev }: { dev: DevSummary }) {
   const t = useT();
   const fmt = useFmt();
-  const portal      = window.location.origin;
-  const profileUrl  = dev.slug ? `${portal}/v/${dev.slug}` : null;
-  const contactPath = `/accounts/${dev.account_id}/contact`;
+  const days = daysSince(dev.last_bundle_at);
+  const tierCls = dev.status === "verified" ? "tier--2" : dev.status === "outdated" ? "tier--1" : "tier--0";
+  const tierLabel = dev.status ? t(`common.bundle_status.${dev.status}`) : "—";
 
   return (
-    <div style={{
-      position: "relative",
-      display: "flex", flexDirection: "column",
-      background: "var(--card-bg)",
-      border: "1px solid var(--rule)",
-      padding: 18,
-      minHeight: 188,
-    }}>
-      {/* selo de verificação — só o ícone no canto; o significado é explicado
-          uma vez na legenda do topo (alinhada às tabs). */}
-      {dev.status === "verified" && (
-        <span aria-label={t("common.verified.aria")}
-              style={{ position: "absolute", top: 12, right: 12, display: "inline-flex", color: "var(--ok)" }}>
-          <VerifiedIcon size={18} />
-        </span>
-      )}
-
-      {/* header: handle + status */}
-      <div className="flex flex-wrap items-center" style={{ gap: 6, paddingRight: 24 }}>
-        <span style={{ color: "var(--text)", fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em" }}>
-          {dev.handle}
-        </span>
-        {dev.status === "outdated" && <Badge kind="warn">{t("common.bundle_status.outdated")}</Badge>}
+    <article className="dcard">
+      <div className="dcard__top">
+        <span className="dcard__h">@{dev.handle.replace(/^@/, "")}</span>
+        <span className={`dcard__tier ${tierCls}`}>{tierLabel}</span>
       </div>
 
-      {/* test ratio + última publicação (mono numerics) */}
-      <div className="mt-2 font-mono"
-           style={{ color: "var(--muted)", fontSize: 12, letterSpacing: "0.02em",
-                     fontFeatureSettings: '"tnum"', lineHeight: 1.6 }}>
-        {typeof dev.test_ratio === "number" && (
-          <span>{t("directory.card.test_ratio_label")} <strong style={{ color: "var(--accent)" }}>{fmt.percent(dev.test_ratio)}</strong></span>
-        )}
-        {dev.last_bundle_at && (
-          <span> · {t("directory.card.published", { date: fmt.date(dev.last_bundle_at, { month: "short", year: "numeric" }) })}</span>
-        )}
+      <div className="dcard__mini">
+        <div>
+          <span className="k">test ratio</span>
+          <span className={`v${(dev.test_ratio ?? 0) >= 0.3 ? " ok" : ""}`}>
+            {dev.test_ratio != null ? fmt.percent(dev.test_ratio) : "—"}
+          </span>
+        </div>
+        <div>
+          <span className="k">{t("directory.shell.card.ecos")}</span>
+          <span className="v">{dev.ecosystems.length}</span>
+        </div>
+        <div>
+          <span className="k">{t("directory.shell.card.last_bundle")}</span>
+          <span className="v">{days != null ? `${days}d` : "—"}</span>
+        </div>
       </div>
 
-      {/* ecosystems como chips — carrossel horizontal: quando passam da
-          largura do card, rolam (wheel/trackpad ou clicar-e-arrastar) em vez
-          de quebrar linha, então a altura do card nunca muda. */}
       {dev.ecosystems.length > 0 && (
-        <DragScroll className="mt-3 flex" style={{ gap: 5, flexWrap: "nowrap" }}>
-          {dev.ecosystems.map((eco) => (
-            <span key={eco} style={{ ...chipStyle(), flex: "0 0 auto", whiteSpace: "nowrap" }}>{eco}</span>
-          ))}
-        </DragScroll>
-      )}
-
-      {/* plataformas em texto discreto */}
-      {dev.platforms.length > 0 && (
-        <div className="mt-2" style={{ color: "var(--muted-soft)", fontSize: 11.5, lineHeight: 1.6 }}>
-          {dev.platforms.slice(0, 4).join(" · ")}
+        <div className="dcard__eco">
+          {dev.ecosystems.slice(0, 4).map((eco) => <span key={eco}>{eco}</span>)}
         </div>
       )}
 
-      {/* ações no rodapé do card — link style igual ao CompanyNav */}
-      <div className="mt-auto flex flex-wrap items-center font-mono pt-4"
-           style={{ gap: 10, fontSize: 12, letterSpacing: "0.04em", whiteSpace: "nowrap" }}>
-        <SaveDevButton accountId={dev.account_id} />
-        <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
-        <Link to={contactPath}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6,
-                       color: "var(--muted)", textDecoration: "none",
-                       transition: "color 120ms ease" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
-          <ContactIcon /> {t("directory.card.contact")}
-        </Link>
-        {profileUrl && (
-          <>
-            <span aria-hidden="true" style={{ color: "var(--rule)" }}>|</span>
-            <a href={profileUrl} target="_blank" rel="noopener noreferrer"
-               style={{ display: "inline-flex", alignItems: "center", gap: 6,
-                        color: "var(--muted)", textDecoration: "none",
-                        transition: "color 120ms ease" }}
-               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
-               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}>
-              <ProfileIcon /> {t("directory.card.view_profile")}
+      <div className="dcard__foot">
+        <span>{days != null ? t("directory.shell.card.seen", { days }) : "—"}</span>
+        <span className="links">
+          <DcardSave accountId={dev.account_id} />
+          <Link to={`/accounts/${dev.account_id}/contact`}>{t("directory.card.contact")}</Link>
+          {dev.slug && (
+            <a href={`/v/${dev.slug}`} target="_blank" rel="noreferrer">
+              {t("directory.shell.card.profile")}
             </a>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function chipStyle(): React.CSSProperties {
-  return {
-    display: "inline-block",
-    padding: "2px 9px",
-    fontSize: 11.5,
-    letterSpacing: "0.01em",
-    background: "var(--rule-soft)",
-    color: "var(--text)",
-    border: "1px solid var(--rule)",
-  };
-}
-
-// ── primitives ─────────────────────────────────────────────────────────────
-
-function Badge({ kind, children }: { kind: "ok" | "warn"; children: ReactNode }) {
-  const palette = kind === "ok"
-    ? { bg: "rgba(74,124,78,0.12)", fg: "var(--ok)",   bd: "rgba(74,124,78,0.4)" }
-    : { bg: "rgba(181,97,53,0.12)", fg: "var(--warn)", bd: "rgba(181,97,53,0.4)" };
-  return (
-    <span className="inline-block font-mono uppercase"
-          style={{
-            background: palette.bg, color: palette.fg,
-            border: `1px solid ${palette.bd}`,
-            padding: "2px 8px", fontSize: 9, letterSpacing: "0.12em",
-            marginLeft: 8, verticalAlign: "middle",
-          }}>
-      {children}
-    </span>
-  );
-}
-
-function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <label className="grid gap-1.5">
-      <span className="font-mono uppercase"
-            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
-        {label}
-        {hint && <span style={{ color: "var(--muted-soft)", letterSpacing: 0, textTransform: "none" }}> · {hint}</span>}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-function inputStyle(): React.CSSProperties {
-  return {
-    font: "inherit", fontSize: 14,
-    padding: "8px 10px",
-    color: "var(--text)", background: "var(--bg)",
-    border: "1px solid var(--rule)",
-    borderRadius: 0,
-    outline: "none",
-  };
-}
-
-function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button {...props}
-            style={{
-              font: "inherit", fontSize: 13,
-              padding: "8px 18px",
-              background: "var(--text)", color: "var(--bg)",
-              border: "1px solid var(--text)",
-              borderRadius: 0,
-              letterSpacing: "0.02em",
-              cursor: props.disabled ? "not-allowed" : "pointer",
-              opacity: props.disabled ? 0.5 : 1,
-              transition: "background 120ms ease",
-              ...(props.style ?? {}),
-            }} />
-  );
-}
-
-// 11px stroke icons matching CompanyNav idiom — leading glyph for the
-// link-style action row in result cards.
-function ContactIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
-         style={{ flexShrink: 0 }}>
-      <rect x="0.5" y="2" width="10" height="7" stroke="currentColor" />
-      <path d="M0.5 2.5 L5.5 6 L10.5 2.5" stroke="currentColor" />
-    </svg>
-  );
-}
-function ProfileIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"
-         style={{ flexShrink: 0 }}>
-      <circle cx="5.5" cy="3.5" r="2" stroke="currentColor" />
-      <path d="M1.5 10.5 C1.5 7.5 3.5 6.5 5.5 6.5 C7.5 6.5 9.5 7.5 9.5 10.5" stroke="currentColor" />
-    </svg>
-  );
-}
-
-// ── helpers ─────────────────────────────────────────────────────────────────
-
-function parseRatio(raw: string, fallback: number): number {
-  const n = Number(raw);
-  if (Number.isNaN(n)) return fallback;
-  return Math.max(0, Math.min(1, n));
-}
-
-// ── DualRangeSlider — two overlapping <input type="range"> with a custom
-//    track that highlights the active span. The pointer-events trick lets
-//    each thumb stay grabbable while the inputs themselves don't block
-//    each other.
-//
-function DualRangeSlider({ min, max, step, lo, hi, onChange, formatLabel }: {
-  min: number; max: number; step: number;
-  lo: number; hi: number;
-  onChange: (lo: number, hi: number) => void;
-  formatLabel?: (v: number) => string;
-}) {
-  const range = max - min;
-  const loPct = ((lo - min) / range) * 100;
-  const hiPct = ((hi - min) / range) * 100;
-  const label = formatLabel ?? ((v: number) => String(v));
-
-  function setLo(next: number) {
-    const clamped = Math.min(next, hi);
-    onChange(clamped, hi);
-  }
-  function setHi(next: number) {
-    const clamped = Math.max(next, lo);
-    onChange(lo, clamped);
-  }
-
-  return (
-    <div>
-      <div className="mb-2 font-mono"
-           style={{ fontSize: 13, color: "var(--text)", letterSpacing: "0.04em", fontFeatureSettings: '"tnum"' }}>
-        <span style={{ color: "var(--accent)" }}>{label(lo)}</span>
-        <span style={{ color: "var(--muted)" }}>  —  </span>
-        <span style={{ color: "var(--accent)" }}>{label(hi)}</span>
-      </div>
-
-      <div style={{ position: "relative", height: 36, paddingTop: 14 }}>
-        {/* track */}
-        <div style={{
-          position: "absolute", top: "50%", left: 0, right: 0,
-          height: 2, background: "var(--rule)", transform: "translateY(-50%)",
-        }} />
-        {/* active span between lo and hi */}
-        <div style={{
-          position: "absolute", top: "50%", left: `${loPct}%`, right: `${100 - hiPct}%`,
-          height: 2, background: "var(--text)", transform: "translateY(-50%)",
-        }} />
-        {/* two stacked inputs — pointer-events: none on the input itself,
-            ::-webkit-slider-thumb re-enables pointer-events so both thumbs
-            stay grabbable. The "above" thumb wins ties (when both meet at
-            the same value). */}
-        <input type="range" className="dual-range-input"
-               min={min} max={max} step={step} value={lo}
-               onChange={(e) => setLo(Number(e.target.value))}
-               style={rangeStyle({ above: lo > max - step })} />
-        <input type="range" className="dual-range-input"
-               min={min} max={max} step={step} value={hi}
-               onChange={(e) => setHi(Number(e.target.value))}
-               style={rangeStyle({ above: true })} />
-      </div>
-
-      <div className="mt-1 flex justify-between font-mono"
-           style={{ fontSize: 10, color: "var(--muted-soft)", letterSpacing: "0.08em" }}>
-        <span>{label(min)}</span>
-        <span>{label(max)}</span>
-      </div>
-
-      <style>{`
-        .dual-range-input::-webkit-slider-thumb {
-          -webkit-appearance: none; appearance: none;
-          width: 14px; height: 14px;
-          background: var(--bg); border: 1px solid var(--text);
-          border-radius: 0; cursor: grab;
-          pointer-events: auto;
-          margin-top: 0;
-        }
-        .dual-range-input::-webkit-slider-thumb:active { cursor: grabbing; background: var(--text); }
-        .dual-range-input::-moz-range-thumb {
-          width: 14px; height: 14px;
-          background: var(--bg); border: 1px solid var(--text);
-          border-radius: 0; cursor: grab;
-          pointer-events: auto;
-        }
-        .dual-range-input::-webkit-slider-runnable-track { background: transparent; height: 2px; }
-        .dual-range-input::-moz-range-track             { background: transparent; height: 2px; }
-      `}</style>
-    </div>
-  );
-}
-
-function rangeStyle({ above }: { above: boolean }): React.CSSProperties {
-  return {
-    position: "absolute", top: "50%", left: 0, right: 0,
-    width: "100%", height: 2,
-    background: "transparent",
-    appearance: "none", WebkitAppearance: "none",
-    pointerEvents: "none",
-    margin: 0, padding: 0, border: 0,
-    transform: "translateY(-50%)",
-    zIndex: above ? 2 : 1,
-  } as React.CSSProperties;
-}
-
-// ── EcosystemPicker — chips for selected, search input that filters the
-//    available list AND lets the user add custom values.
-//
-function EcosystemPicker({ selected, available, onChange }: {
-  selected: string[]; available: string[];
-  onChange: (next: string[]) => void;
-}) {
-  const [query, setQuery] = useState("");
-
-  const normalizedAvail = available.filter((a) => !selected.includes(a));
-  const q = query.trim().toLowerCase();
-  const matches = q
-    ? normalizedAvail.filter((a) => a.toLowerCase().includes(q))
-    : normalizedAvail;
-  const showAddCustom = q.length > 0
-    && !selected.includes(q)
-    && !normalizedAvail.some((a) => a.toLowerCase() === q);
-
-  function add(name: string) {
-    const cleaned = name.trim().toLowerCase();
-    if (!cleaned || selected.includes(cleaned)) return;
-    onChange([...selected, cleaned]);
-    setQuery("");
-  }
-  function remove(name: string) {
-    onChange(selected.filter((n) => n !== name));
-  }
-
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const target = q ? q : null;
-      if (target) add(target);
-    }
-    if (e.key === "Backspace" && query === "" && selected.length > 0) {
-      remove(selected[selected.length - 1]);
-    }
-  }
-
-  return (
-    <div className="grid gap-3">
-      {/* selected chips + inline input */}
-      <div style={{
-        display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6,
-        padding: "8px 10px", minHeight: 42,
-        background: "var(--bg)",
-        border: "1px solid var(--rule)",
-      }}>
-        {selected.map((eco) => (
-          <button key={eco} type="button" onClick={() => remove(eco)}
-                  className="font-mono uppercase"
-                  title="clique para remover"
-                  style={{
-                    fontSize: 11, letterSpacing: "0.10em",
-                    padding: "3px 8px",
-                    border: "1px solid var(--text)",
-                    background: "var(--text)", color: "var(--bg)",
-                    cursor: "pointer",
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                  }}>
-            {eco}
-            <span aria-hidden="true" style={{ opacity: 0.7 }}>×</span>
-          </button>
-        ))}
-        <input
-          type="text" value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={selected.length === 0 ? "buscar ou adicionar (ex.: rails, elixir)" : "buscar ou adicionar"}
-          style={{
-            flex: 1, minWidth: 140,
-            font: "inherit", fontSize: 13,
-            color: "var(--text)", background: "transparent",
-            border: 0, outline: "none",
-            padding: "2px 4px",
-          }} />
-      </div>
-
-      {(matches.length > 0 || showAddCustom) && (
-        <div className="flex flex-wrap gap-2">
-          {showAddCustom && (
-            <button type="button" onClick={() => add(q)}
-                    className="font-mono uppercase"
-                    title="adicionar ecossistema digitado"
-                    style={{
-                      fontSize: 11, letterSpacing: "0.10em",
-                      padding: "4px 10px",
-                      border: "1px dashed var(--accent)",
-                      background: "transparent", color: "var(--accent)",
-                      cursor: "pointer",
-                    }}>
-              + {q}
-            </button>
           )}
-          {matches.map((eco) => (
-            <button key={eco} type="button" onClick={() => add(eco)}
-                    className="font-mono uppercase"
-                    style={{
-                      fontSize: 11, letterSpacing: "0.10em",
-                      padding: "4px 10px",
-                      border: "1px solid var(--rule)",
-                      background: "transparent", color: "var(--text)",
-                      cursor: "pointer",
-                    }}>
-              + {eco}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function DcardSave({ accountId }: { accountId: number }) {
+  const t = useT();
+  const [state, setState] = useState<"idle" | "busy" | "saved" | "error">("idle");
+
+  async function handle() {
+    setState("busy");
+    try {
+      await saveDev(accountId, null);
+      setState("saved");
+    } catch (e) {
+      setState(e instanceof CompanyAuthError ? "error" : "error");
+    }
+  }
+
+  if (state === "saved") return <span className="saved">✓ {t("company.save_dev.saved")}</span>;
+  return (
+    <button type="button" disabled={state === "busy"} onClick={() => void handle()}>
+      {state === "error" ? t("company.save_dev.failed") : t("company.save_dev.cta")}
+    </button>
   );
 }

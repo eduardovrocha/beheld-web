@@ -576,7 +576,9 @@ function FormTabs({ active, onChange }: {
   );
 }
 
-function NewForm({ onCreate, onCancel }: {
+// Exported: reused by the app-shell company dashboard (routes/company/
+// Dashboard.tsx) for the "Nova posição" panel.
+export function NewForm({ onCreate, onCancel }: {
   onCreate: (input: CreateInput) => Promise<void> | void;
   onCancel: () => void;
 }) {
@@ -659,7 +661,8 @@ function NewForm({ onCreate, onCancel }: {
   );
 }
 
-function EditForm({ position, onSave, onCancel }: {
+// Exported: reused by the app-shell company dashboard for "Editar".
+export function EditForm({ position, onSave, onCancel }: {
   position: Position;
   onSave:   (input: UpdateInput) => Promise<void> | void;
   onCancel: () => void;
