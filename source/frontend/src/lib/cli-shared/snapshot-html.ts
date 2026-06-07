@@ -63,7 +63,7 @@ interface EmergentDiff {
   baseline_window_days: number;
 }
 
-interface SignalsPayload {
+export interface SignalsPayload {
   ecosystems?: { dominant?: string[]; secondary?: string[] };
   test_pattern?: { discipline?: string; approach?: string };
   timing?: { peak_period?: string; consistency?: string };
@@ -81,7 +81,7 @@ export interface SnapshotHtmlData {
 
 // ── label maps (mirror engine's identity.labels for client-side rendering) ──
 
-const ECO_LABEL: Record<string, string> = {
+export const ECO_LABEL: Record<string, string> = {
   rails: "Rails", node: "Node.js", react: "React", vue: "Vue", next: "Next.js",
   python: "Python", django: "Django", fastapi: "FastAPI",
   flutter: "Flutter", go: "Go", rust: "Rust",
@@ -90,7 +90,7 @@ const ECO_LABEL: Record<string, string> = {
   ruby_other: "Ruby", devops: "DevOps",
 };
 
-const PLATFORM_LABEL: Record<string, string> = {
+export const PLATFORM_LABEL: Record<string, string> = {
   docker: "Docker", kubernetes: "Kubernetes",
   github: "GitHub", github_actions: "GitHub Actions", gitlab: "GitLab",
   postgres: "Postgres", mysql: "MySQL", redis: "Redis", mongodb: "MongoDB",
@@ -98,14 +98,14 @@ const PLATFORM_LABEL: Record<string, string> = {
   terraform: "Terraform", ansible: "Ansible",
 };
 
-const DISCIPLINE_LABEL: Record<string, string> = {
+export const DISCIPLINE_LABEL: Record<string, string> = {
   strong: "Disciplinado",
   moderate: "Moderado",
   low: "Em formação",
   minimal: "Pouca evidência",
 };
 
-const APPROACH_LABEL: Record<string, string> = {
+export const APPROACH_LABEL: Record<string, string> = {
   tdd_dominant: "TDD na maior parte das sessões",
   tdd_partial: "TDD em parte considerável das sessões",
   test_after: "Testes escritos depois do código",
@@ -113,7 +113,7 @@ const APPROACH_LABEL: Record<string, string> = {
   exploratory: "Sessões exploratórias",
 };
 
-const WORKFLOW_LABEL: Record<string, string> = {
+export const WORKFLOW_LABEL: Record<string, string> = {
   tdd: "TDD",
   test_after: "Test-after",
   debug_driven: "Debug-driven",
@@ -122,7 +122,7 @@ const WORKFLOW_LABEL: Record<string, string> = {
   review_before_commit: "Review antes do commit",
 };
 
-const PEAK_LABEL: Record<string, string> = {
+export const PEAK_LABEL: Record<string, string> = {
   morning: "Concentrado pela manhã",
   afternoon: "Concentrado no período da tarde",
   evening: "Concentrado no início da noite",
