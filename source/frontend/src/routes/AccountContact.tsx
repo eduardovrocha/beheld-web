@@ -1,19 +1,35 @@
 /**
- * Recruiter → dev contact form (`/accounts/:account_id/contact`).
+ * /accounts/:account_id/contact — recruiter → dev compose-message screen,
+ * app-shell v2 (design_handoff_contato). Renders OUTSIDE <Layout>; reuses
+ * CompanyShell (page="contact": Mensagens marcado na sidebar) with a
+ * narrow 880px single-column main — focused-task screen, not a dashboard.
  *
- * Same vocabulary as Directory / CompaniesNew: numbered section header,
- * white card with hairline, mono uppercase field labels, Switzer body.
+ *   ← voltar · page header (1-col) · <DevProfileCompact> · <Callout>
+ *   histórico pinado por vaga · <form> Nova mensagem
  *
- * Auth via signed company cookie. 401 → bounce to /companies/new.
- * 404 from the API (opt-out / no bundle) → permanent unavailable state.
+ * Wiring (handoff "Data Sources & Wiring", adaptado à API real):
+ *   - perfil + histórico → GET /api/v1/accounts/:id/contact (contactsApi —
+ *     um payload só; não existe /directory/:handle/preview)
+ *   - vagas ativas       → GET /api/v1/company/positions
+ *   - envio              → POST /api/v1/accounts/:id/contact
+ *     (a API usa `job_title` texto — o hidden input carrega o título, não
+ *     um position_id)
+ *   - nome da empresa (crumb) → /directory, fetch silencioso
+ *
+ * Estados (handoff §States): A primeira mensagem (sem histórico, select
+ * aberto); B thread pendente → vaga FIXADA (.pinned-pos). Pré-seleção via
+ * `?position=<título>` (os links Contatar dos matches passam isso).
+ * Sucesso → redirect pra /company/dashboard#mensagens.
  */
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
-import { FloatingBack } from "@/components/company/FloatingBack";
-import { CompanyNav } from "@/components/company/CompanyNav";
-import { Tooltip } from "@/components/Tooltip";
-import { VerifiedIcon } from "@/components/icons";
+import { PageHeader, ShellButton } from "@/components/app/PageHeader";
+import { Callout } from "@/components/company/Callout";
+import { CompanyShell } from "@/components/company/CompanyShell";
+import { DevProfileCompact } from "@/components/company/DevProfileCompact";
+import { useT, useFmt } from "@/i18n/I18nProvider";
+import type { Formatters } from "@/i18n/format";
 import {
   loadContactTarget,
   sendContact,
@@ -22,9 +38,15 @@ import {
   type ContactTarget,
   type ContactPreviousMessage,
 } from "@/lib/contactsApi";
-import { getPositions, type Position } from "@/lib/companyDashboardApi";
-import { Dropdown } from "@/components/Dropdown";
-import { useT, useFmt } from "@/i18n/I18nProvider";
+import { getPositions, type Position, type PositionSignal } from "@/lib/companyDashboardApi";
+import { getDirectory } from "@/lib/directoryApi";
+
+import "@/styles/app-shell.css";
+import "@/styles/app-company.css";
+import "@/styles/app-contact.css";
+
+const MIN_BODY = 30;
+const MAX_BODY = 800;
 
 type Phase =
   | { kind: "loading" }
@@ -35,347 +57,194 @@ type Phase =
 export function AccountContact() {
   const t = useT();
   const { account_id } = useParams<{ account_id: string }>();
+  const [params] = useSearchParams();
   const navigate = useNavigate();
 
-  const [phase, setPhase]       = useState<Phase>({ kind: "loading" });
-  const [jobTitle, setJobTitle] = useState("");
-  const [body, setBody]         = useState("");
-  const [error, setError]       = useState<string | null>(null);
+  const [phase, setPhase] = useState<Phase>({ kind: "loading" });
+  const [error, setError] = useState<string | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [prevMessages, setPrevMessages] = useState<ContactPreviousMessage[]>([]);
-  // Vaga em foco no acordeão de mensagens anteriores. "__none__" = grupo sem
-  // vaga; null = nenhum aberto. O campo travado "Cargo da vaga" espelha isto.
-  const [focusedKey, setFocusedKey] = useState<string | null>(null);
+  const [jobTitle, setJobTitle] = useState(() => params.get("position") ?? "");
+  const [body, setBody] = useState("");
+  const [company, setCompany] = useState<string | null>(null);
 
-  // Vagas cadastradas da empresa, pra preencher o dropdown de "Cargo da vaga".
-  // Fire-and-forget: se falhar, o campo cai no input de texto livre.
+  useEffect(() => {
+    document.documentElement.classList.add("app-v2-page");
+    return () => document.documentElement.classList.remove("app-v2-page");
+  }, []);
+
+  // Chrome-only fetches (fire-and-forget).
   useEffect(() => {
     getPositions().then(setPositions).catch(() => {});
+    getDirectory().then((p) => setCompany(p.company.name)).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!account_id) { setPhase({ kind: "unavailable" }); return; }
+    let cancelled = false;
     (async () => {
       try {
         const ct = await loadContactTarget(account_id);
+        if (cancelled) return;
         setPhase({ kind: "ready", target: ct.account });
         const prev = ct.previous_messages ?? [];
         setPrevMessages(prev);
-        // Se já há uma mensagem PENDENTE, o contato fica atrelado à vaga dela —
-        // fixamos o jobTitle e travamos o seletor (ver `vagaLocked` no render).
+        // Thread pendente → a conversa continua na vaga dela (campo fixado).
         const pending = prev.find((m) => m.status === "pending");
         if (pending) setJobTitle(pending.job_title ?? "");
-        // Vaga aberta por padrão no acordeão: a pendente (acionável), senão a
-        // primeira do histórico. O campo travado segue essa vaga em foco.
-        const groups = groupByPosition(prev);
-        const initial = groups.find((g) => g.msgs.some((m) => m.status === "pending")) ?? groups[0];
-        if (initial) setFocusedKey(initial.title ?? "__none__");
       } catch (e) {
-        if (e instanceof ContactAuthError)         navigate("/companies/new", { replace: true });
+        if (cancelled) return;
+        if (e instanceof ContactAuthError) navigate("/companies/new", { replace: true });
         else if (e instanceof ContactUnavailableError) setPhase({ kind: "unavailable" });
-        else                                       setError((e as Error).message);
+        else setError((e as Error).message);
       }
     })();
+    return () => { cancelled = true; };
   }, [account_id, navigate]);
+
+  const openPositions = positions.filter((p) => !p.archived);
+  const pendingThread = prevMessages.find((m) => m.status === "pending") ?? null;
+  const pinned = pendingThread != null;
+  const bodyLen = body.trim().length;
+  const positionOk = pinned || jobTitle.trim().length > 0 || openPositions.length === 0;
+  const canSend = bodyLen >= MIN_BODY && positionOk && phase.kind === "ready";
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (phase.kind !== "ready") return;
-    setError(null);
+    if (phase.kind !== "ready" || !canSend) return;
     const target = phase.target;
+    setError(null);
     setPhase({ kind: "sending", target });
-
     try {
-      const trimmedJob  = jobTitle.trim();
-      const trimmedBody = body.trim();
       const result = await sendContact(account_id!, {
-        job_title: trimmedJob,
-        body:      trimmedBody,
+        job_title: jobTitle.trim(),
+        body: body.trim(),
       });
       if (result.ok) {
-        // Optimistic append: a mensagem que acabamos de mandar entra no
-        // histórico local imediatamente, sem refetch nem navegação. Status
-        // 'pending' espelha o que o backend gravou (sem resposta ainda).
-        const justSent: ContactPreviousMessage = {
-          id:           result.message_id,
-          job_title:    trimmedJob || null,
-          body:         trimmedBody,
-          reply_body:   null,
-          sent_at:      new Date().toISOString(),
-          responded_at: null,
-          status:       "pending",
-        };
-        setPrevMessages((prev) => [...prev, justSent]);
-        setBody("");
-        setFocusedKey(justSent.job_title ?? "__none__");
-        setPhase({ kind: "ready", target });
-      } else {
-        setError(result.message);
-        setPhase({ kind: "ready", target });
+        // Handoff: redirect pra aba Mensagens do dashboard.
+        navigate("/company/dashboard#mensagens");
+        return;
       }
-    } catch (e) {
-      if (e instanceof ContactAuthError)              navigate("/companies/new", { replace: true });
-      else if (e instanceof ContactUnavailableError)  setPhase({ kind: "unavailable" });
+      setError(result.message);
+      setPhase({ kind: "ready", target });
+    } catch (err) {
+      if (err instanceof ContactAuthError) navigate("/companies/new", { replace: true });
+      else if (err instanceof ContactUnavailableError) setPhase({ kind: "unavailable" });
       else {
-        setError((e as Error).message);
+        setError((err as Error).message);
         setPhase({ kind: "ready", target });
       }
     }
   }
 
+  const shell = (children: React.ReactNode) => (
+    <CompanyShell page="contact" activeTab="messages" companyName={company} crumbExtra="contato">
+      <div style={{ maxWidth: 880 }}>
+        <div className="compose">
+          <a className="back-link" href="/company/dashboard#mensagens"
+             onClick={(e) => { e.preventDefault(); navigate("/company/dashboard#mensagens"); }}>
+            <span className="arrow" aria-hidden="true">←</span> {t("contact.shell.back")}
+          </a>
+          {children}
+        </div>
+      </div>
+    </CompanyShell>
+  );
+
   if (phase.kind === "loading") {
-    return (
-      <Shell>
-        <Header title={t("contact.loading")} />
-      </Shell>
-    );
+    return shell(<p className="app__loading">{t("contact.loading")}</p>);
   }
 
   if (phase.kind === "unavailable") {
-    return (
-      <Shell>
-        <Header title={t("contact.unavailable.title")} />
-        <Card>
-          <p style={{ color: "var(--muted)", fontSize: 14, lineHeight: 1.7 }}>
-            {t("contact.unavailable.body")}
-          </p>
-          <div style={{ marginTop: 16 }}>
-            <Link to="/directory" style={linkStyle()}>{t("contact.unavailable.back")}</Link>
-          </div>
-        </Card>
-      </Shell>
+    return shell(
+      <>
+        <PageHeader eyebrow={["empresa", "contato"]}
+                    title={t("contact.unavailable.title")}
+                    subtitle={t("contact.unavailable.body")} />
+        <div>
+          <Link className="back-link" to="/directory">
+            <span className="arrow" aria-hidden="true">←</span> {t("contact.unavailable.back")}
+          </Link>
+        </div>
+      </>,
     );
   }
 
   const target = phase.target;
   const sending = phase.kind === "sending";
-  const openPositions = positions.filter((p) => !p.archived);
-  // Há contato pendente (enviado, sem resposta) → a vaga não pode mudar.
-  const vagaLocked = prevMessages.some((m) => m.status === "pending");
-  // Título da vaga em foco no acordeão (null quando o grupo "sem vaga" ou nada).
-  const focusedTitle = focusedKey && focusedKey !== "__none__" ? focusedKey : null;
-  // Ao trocar a vaga em foco, o campo travado acompanha (e, travado, é o que
-  // será enviado — você continua a conversa daquela vaga).
-  const focusVaga = (key: string | null) => {
-    setFocusedKey(key);
-    if (vagaLocked) setJobTitle(key && key !== "__none__" ? key : "");
-  };
+  const handle = `@${target.handle.replace(/^@/, "")}`;
 
-  return (
-    <Shell>
-      <Header title={t("contact.title")}
-              meta={<CompanyNav bare />} />
-
-      <div className="grid gap-6"
-           style={{ gridTemplateColumns: "minmax(0, 320px) minmax(0, 1fr)", alignItems: "start" }}>
-        {/* ── esquerda: perfil a ser contatado ── */}
-        <ProfilePanel target={target} />
-
-        {/* ── direita: box de mensagem ── */}
-        <Card>
-          {prevMessages.length > 0 && (
-            <PreviousMessages items={prevMessages} openKey={focusedKey} onToggle={focusVaga} />
-          )}
-          <form onSubmit={handleSubmit} className="grid gap-5">
-            {error && (
-              <div style={{
-                padding: "10px 14px",
-                background: "rgba(181,97,53,0.08)",
-                border: "1px solid rgba(181,97,53,0.35)",
-                color: "var(--warn)", fontSize: 13,
-              }}>
-                {error}
-              </div>
-            )}
-
-            <Field label={t("contact.form.job_title_label")}
-                   hint={vagaLocked ? t("contact.form.job_title_hint_locked") : t("contact.form.job_title_hint")}>
-              {vagaLocked ? (
-                <div style={{
-                  font: "inherit", fontSize: 14, padding: "10px 12px",
-                  color: "var(--muted)", background: "var(--surface)",
-                  border: "1px solid var(--rule)", cursor: "not-allowed",
-                }}>
-                  {focusedTitle || jobTitle || t("contact.form.no_position")}
-                </div>
-              ) : openPositions.length > 0 ? (
-                <Dropdown
-                  value={jobTitle}
-                  onChange={setJobTitle}
-                  disabled={sending}
-                  options={[
-                    { value: "", label: t("contact.form.select_position") },
-                    ...openPositions.map((p) => ({ value: p.title, label: p.title })),
-                  ]} />
-              ) : (
-                <Input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)}
-                       autoComplete="off" disabled={sending} />
-              )}
-            </Field>
-
-            <Field label={t("contact.form.message_label")} hint={t("contact.form.message_hint")}>
-              <textarea value={body} onChange={(e) => setBody(e.target.value)}
-                        required disabled={sending}
-                        rows={8}
-                        style={{
-                          font: "inherit", fontSize: 14,
-                          padding: "10px 12px",
-                          color: "var(--text)", background: "var(--bg)",
-                          border: "1px solid var(--rule)",
-                          borderRadius: 0, outline: "none",
-                          resize: "vertical", minHeight: 160,
-                          fontFamily: "'Newsreader', Georgia, 'Times New Roman', serif",
-                          lineHeight: 1.55,
-                        }} />
-            </Field>
-
-            <div className="flex items-center justify-between gap-4 pt-2">
-              <Link to="/directory" style={linkStyle()}>{t("contact.form.back")}</Link>
-              <PrimaryButton type="submit" disabled={sending}>
-                {sending ? t("contact.form.submitting") : t("contact.form.submit")}
-              </PrimaryButton>
-            </div>
-          </form>
-        </Card>
-      </div>
-    </Shell>
-  );
-}
-
-// Coluna esquerda: cartão do dev a ser contatado. Só dados públicos
-// (handle, status, test ratio, ecosystems, link pro retrato) + a nota de
-// privacidade. Nunca email/telefone.
-function ProfilePanel({ target }: { target: ContactTarget["account"] }) {
-  const t = useT();
-  const fmt = useFmt();
-  const slug = target.bundle_slug;
-  return (
-    <aside style={{
-      background: "var(--card-bg)", border: "1px solid var(--rule)",
-      padding: 20, position: "sticky", top: 24,
-    }}>
-      {/* selo de verificação — ícone no canto superior direito do card */}
-      {target.status === "verified" && (
-        <div style={{ position: "absolute", top: 16, right: 16 }}>
-          <Tooltip
-            tone="ok"
-            align="right"
-            icon={<VerifiedIcon size={12} />}
-            label={t("common.verified.label")}
-            title={t("common.verified.title")}
-            description={t("contact.profile.verified_desc")}>
-            <span aria-label={t("common.verified.aria")}
-                  style={{ display: "inline-flex", alignItems: "center", color: "var(--ok)", cursor: "help" }}>
-              <VerifiedIcon size={18} />
-            </span>
-          </Tooltip>
-        </div>
-      )}
-
-      <div className="font-mono uppercase"
-           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        {t("contact.profile.eyebrow")}
-      </div>
-
-      <div className="mt-2 flex flex-wrap items-center" style={{ gap: 6, paddingRight: 24 }}>
-        {slug
-          ? <a href={`/v/${slug}`} target="_blank" rel="noopener noreferrer"
-               style={{ color: "var(--text)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em",
-                        textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3 }}>
-              {target.handle}
-            </a>
-          : <span style={{ color: "var(--text)", fontSize: 18, fontWeight: 600, letterSpacing: "-0.01em" }}>
-              {target.handle}
-            </span>}
-        {target.status === "outdated" && <StatusBadge kind="warn">{t("common.bundle_status.outdated")}</StatusBadge>}
-      </div>
-
-      {(typeof target.test_ratio === "number" || target.last_bundle_at) && (
-        <div className="mt-2 font-mono"
-             style={{ color: "var(--muted)", fontSize: 12, letterSpacing: "0.02em",
-                       fontFeatureSettings: '"tnum"', lineHeight: 1.6 }}>
-          {typeof target.test_ratio === "number" && (
-            <span>{t("directory.card.test_ratio_label")} <strong style={{ color: "var(--accent)" }}>{Math.round(target.test_ratio)}%</strong></span>
-          )}
-          {target.last_bundle_at && <span> · {t("directory.card.published", { date: fmt.date(target.last_bundle_at, { month: "short", year: "numeric" }) })}</span>}
-        </div>
-      )}
-
-      {target.ecosystems && target.ecosystems.length > 0 && (
-        <div className="mt-3 flex flex-wrap" style={{ gap: 5 }}>
-          {target.ecosystems.slice(0, 6).map((eco) => (
-            <span key={eco} style={{
-              display: "inline-block", padding: "2px 9px", fontSize: 11.5,
-              background: "var(--rule-soft)", color: "var(--text)", border: "1px solid var(--rule)",
-            }}>{eco}</span>
-          ))}
-        </div>
-      )}
-
-      <p style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--rule-soft)",
-                  color: "var(--muted)", fontSize: 12, lineHeight: 1.65 }}>
-        {t("contact.profile.privacy_prefix")}<span style={{ color: "var(--text)" }}>{target.handle}</span>{t("contact.profile.privacy_mid")}<span style={{ color: "var(--text)" }}>{t("contact.action_respond")}</span>{t("contact.profile.privacy_suffix")}
-      </p>
-    </aside>
-  );
-}
-
-function StatusBadge({ kind, children }: { kind: "ok" | "warn"; children: ReactNode }) {
-  const c = kind === "ok"
-    ? { bg: "rgba(74,124,78,0.12)", fg: "var(--ok)",   bd: "rgba(74,124,78,0.4)" }
-    : { bg: "rgba(181,97,53,0.12)", fg: "var(--warn)", bd: "rgba(181,97,53,0.4)" };
-  return (
-    <span className="font-mono uppercase"
-          style={{ background: c.bg, color: c.fg, border: `1px solid ${c.bd}`,
-                   padding: "2px 8px", fontSize: 9, letterSpacing: "0.12em" }}>
-      {children}
-    </span>
-  );
-}
-
-// ── shell + primitives (kept local to keep this route self-contained) ──────
-
-function Shell({ children }: { children: ReactNode }) {
-  return (
+  return shell(
     <>
-      <FloatingBack back to="/directory" />
-      <div className="mx-auto" style={{ maxWidth: 1032, padding: "64px 32px 96px", color: "var(--text)" }}>
-        {children}
-      </div>
-    </>
-  );
-}
-
-function Header({ title, emTail, meta }: { title: string; emTail?: string; meta?: ReactNode }) {
-  const t = useT();
-  return (
-    <header className="mb-10">
-      <div className="mb-3 font-mono uppercase"
-           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.18em" }}>
-        {t("contact.eyebrow")}
-      </div>
-      <h1 className="font-semibold"
-          style={{ color: "var(--text)", fontSize: 34, letterSpacing: "-0.025em", lineHeight: 1.1 }}>
-        {title}
-        {emTail && <span style={{ color: "var(--muted)", fontWeight: 400 }}> {emTail}</span>}
-      </h1>
-      {meta && (
-        <div className="mt-3 flex flex-wrap items-baseline gap-3 font-mono"
-             style={{ color: "var(--muted-soft)", fontSize: 12, letterSpacing: "0.04em" }}>
-          {meta}
+      <header className="page-h" style={{ gridTemplateColumns: "1fr", marginBottom: 0 }}>
+        <div>
+          <p className="page-h__eb"><span>empresa</span> <span className="sl">/</span> <span className="who">contato</span></p>
+          <h1>{t("contact.title")}</h1>
+          <p className="page-h__sub">
+            {t("contact.shell.sub_prefix")}
+            <b style={{ color: "var(--ink)", fontWeight: 600 }}>{t("contact.action_respond")}</b>
+            {t("contact.shell.sub_suffix")}
+          </p>
         </div>
-      )}
-    </header>
+      </header>
+
+      <div>
+        <p className="mono" style={{
+          fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.16em",
+          textTransform: "uppercase", color: "var(--ink-4)", margin: "0 0 10px",
+        }}>
+          {t("contact.profile.eyebrow")}
+        </p>
+        <DevProfileCompact dev={{
+          handle: target.handle,
+          bundle_slug: target.bundle_slug,
+          badge: target.status ?? null,
+          badgeTone: target.status === "outdated" ? "warn" : "ok",
+          test_ratio: target.test_ratio,
+          last_bundle_at: target.last_bundle_at,
+          ecosystems: target.ecosystems,
+        }} />
+      </div>
+
+      <Callout role="status">
+        {t("contact.shell.callout_prefix")}<b>{handle}</b>{t("contact.shell.callout_mid")}
+        <b>{t("contact.action_respond")}</b>{t("contact.shell.callout_suffix")}
+        <span className="dimline">{t("contact.shell.callout_dim")}</span>
+      </Callout>
+
+      {prevMessages.length > 0 && <History items={prevMessages} companyName={company} />}
+
+      <ComposeForm
+        handle={handle}
+        pinned={pinned}
+        pinnedTitle={pendingThread?.job_title ?? null}
+        openPositions={openPositions}
+        jobTitle={jobTitle}
+        onJobTitle={setJobTitle}
+        body={body}
+        onBody={setBody}
+        devTestRatio={target.test_ratio ?? null}
+        sending={sending}
+        canSend={canSend && !sending}
+        error={error}
+        isFirstMessage={prevMessages.length === 0}
+        onSubmit={handleSubmit}
+      />
+    </>,
   );
 }
 
-// Mensagens que esta empresa já enviou a este dev — contexto antes de mandar
-// outra. As pendentes (sem resposta) ganham destaque; as respondidas mostram
-// a resposta do dev.
-// Agrupa as mensagens anteriores pela vaga que originou cada contato. Cada
-// vaga vira um <details> colapsável; abrir revela a conversa (mensagem +
-// resposta do dev). Grupos com mensagem pendente abrem por padrão.
-function groupByPosition(items: ContactPreviousMessage[]): { title: string | null; msgs: ContactPreviousMessage[] }[] {
+// ── history: threads agrupadas por vaga ─────────────────────────────────────
+
+interface ThreadGroup {
+  title: string | null;
+  msgs: ContactPreviousMessage[];
+  latest: ContactPreviousMessage;
+  status: "pending" | "responded" | "ignored";
+  statusAt: string;
+}
+
+function groupByPosition(items: ContactPreviousMessage[]): ThreadGroup[] {
   const order: (string | null)[] = [];
   const map = new Map<string | null, ContactPreviousMessage[]>();
   for (const m of items) {
@@ -383,153 +252,261 @@ function groupByPosition(items: ContactPreviousMessage[]): { title: string | nul
     if (!map.has(key)) { map.set(key, []); order.push(key); }
     map.get(key)!.push(m);
   }
-  return order.map((title) => ({ title, msgs: map.get(title)! }));
+  return order.map((title) => {
+    const msgs = map.get(title)!;
+    const latest = msgs[msgs.length - 1];
+    const pending = msgs.find((m) => m.status === "pending");
+    const responded = [...msgs].reverse().find((m) => m.status === "responded");
+    const status = pending ? "pending" as const : responded ? "responded" as const : "ignored" as const;
+    const statusAt = pending?.sent_at ?? responded?.responded_at ?? latest.sent_at;
+    return { title, msgs, latest, status, statusAt };
+  });
 }
 
-// Acordeão controlado pelo pai: `openKey` é a vaga aberta (só uma por vez) e
-// `onToggle` reporta a troca — o pai usa isso para espelhar a vaga em foco no
-// campo travado "Cargo da vaga".
-function PreviousMessages({ items, openKey, onToggle }: {
-  items: ContactPreviousMessage[];
-  openKey: string | null;
-  onToggle: (key: string | null) => void;
+function History({ items, companyName }: { items: ContactPreviousMessage[]; companyName: string | null }) {
+  const t = useT();
+  const fmt = useFmt();
+  const groups = groupByPosition(items);
+  const initial = (companyName ?? "?").trim().charAt(0).toUpperCase() || "?";
+
+  return (
+    <section>
+      <div className="history__h">
+        <h2>{t("contact.prev.heading")} <span className="n">{items.length}</span></h2>
+        <span className="meta">{t("contact.shell.history_meta")}</span>
+      </div>
+      <div className="history__stack">
+        {groups.map((g) => (
+          <ThreadCard key={g.title ?? "__none__"} group={g} initial={initial} fmt={fmt} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ThreadCard({ group: g, initial, fmt }: { group: ThreadGroup; initial: string; fmt: Formatters }) {
+  const t = useT();
+  const date = (iso: string) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? iso : fmt.date(d, { day: "2-digit", month: "2-digit", year: "numeric" });
+  };
+  return (
+    <div className="thread">
+      <div className="thread__h">
+        <span className="pos">
+          <span className="lab">{t("contact.shell.thread_label")}</span>
+          {g.title ?? t("contact.form.no_position")}
+          <span className="ct">{g.msgs.length}</span>
+        </span>
+        <span className="status">
+          {g.status === "pending" && (
+            <>
+              <span className="dot" aria-hidden="true" />
+              {t("contact.prev.sent", { date: date(g.statusAt) })}{" · "}
+              <span className="wait">{t("contact.prev.status_pending")}</span>
+            </>
+          )}
+          {g.status === "responded" && (
+            <>
+              <span className="dot dot--ok" aria-hidden="true" />
+              <span className="ok">{t("contact.shell.thread_responded", { date: date(g.statusAt) })}</span>
+            </>
+          )}
+          {g.status === "ignored" && <>{t("contact.shell.thread_declined")}</>}
+        </span>
+      </div>
+      <div className="thread__msg">
+        <span className="av" aria-hidden="true">{initial}</span>
+        <p className="body">
+          {g.latest.body.length > 240 ? g.latest.body.slice(0, 240) + "…" : g.latest.body}
+          {g.latest.reply_body && (
+            <span className="reply">
+              <span className="lab">{t("contact.prev.reply_heading")}</span>
+              {g.latest.reply_body}
+            </span>
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── compose form ────────────────────────────────────────────────────────────
+
+function ComposeForm({ handle, pinned, pinnedTitle, openPositions, jobTitle, onJobTitle, body, onBody, devTestRatio, sending, canSend, error, isFirstMessage, onSubmit }: {
+  handle: string;
+  pinned: boolean;
+  pinnedTitle: string | null;
+  openPositions: Position[];
+  jobTitle: string;
+  onJobTitle: (v: string) => void;
+  body: string;
+  onBody: (v: string) => void;
+  devTestRatio: number | null;
+  sending: boolean;
+  canSend: boolean;
+  error: string | null;
+  isFirstMessage: boolean;
+  onSubmit: (e: FormEvent<HTMLFormElement>) => void;
 }) {
   const t = useT();
-  const fmtI18n = useFmt();
-  const fmt = (iso: string) => {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return fmtI18n.date(iso, { day: "2-digit", month: "2-digit", year: "numeric" });
-  };
-  const groups = groupByPosition(items);
-  const keyOf = (g: { title: string | null }) => g.title ?? "__none__";
+  const len = body.length;
+  const short = body.trim().length > 0 && body.trim().length < MIN_BODY;
+
+  const selected = useMemo(
+    () => openPositions.find((p) => p.title === jobTitle) ?? null,
+    [openPositions, jobTitle],
+  );
+
+  function useTemplate() {
+    const pos = pinned ? pinnedTitle : jobTitle;
+    onBody(t("contact.shell.template", { handle, position: pos || t("contact.form.no_position") }));
+  }
+
   return (
-    <div style={{ marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid var(--rule-soft)" }}>
-      <div className="font-mono uppercase"
-           style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em", marginBottom: 10 }}>
-        {t("contact.prev.heading")} · {items.length}
+    <form className="form-card" onSubmit={onSubmit}>
+      <div className="form-card__h">
+        <h2>{t("contact.shell.form_title")}</h2>
+        <span className={`meta${error ? " warn" : ""}`}>
+          {error
+            ? t("contact.shell.status_error")
+            : sending
+              ? t("contact.form.submitting")
+              : t("contact.shell.status_draft")}
+        </span>
       </div>
 
-      <div className="grid" style={{ gap: 8 }}>
-        {groups.map((g) => {
-          const key = keyOf(g);
-          const isOpen = openKey === key;
-          return (
-            <details key={key} open={isOpen}
-                     style={{ border: "1px solid var(--rule)" }}>
-              <summary className="font-mono uppercase"
-                       onClick={(e) => { e.preventDefault(); onToggle(isOpen ? null : key); }}
-                       style={{ cursor: "pointer", listStyle: "none", padding: "9px 12px",
-                                display: "flex", alignItems: "center", justifyContent: "space-between",
-                                gap: 8, color: "var(--text)", fontSize: 11, letterSpacing: "0.06em",
-                                background: "var(--surface)" }}>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {g.title ? t("contact.prev.group", { title: g.title }) : t("contact.prev.group_none")}
-                </span>
-                <span style={{ color: "var(--muted-soft)", fontFeatureSettings: '"tnum"', flexShrink: 0 }}>
-                  {g.msgs.length}
-                </span>
-              </summary>
+      <div className="form-card__b">
+        {error && <Callout variant="warn">{error}</Callout>}
 
-              <div className="grid" style={{ gap: 12, padding: "12px" }}>
-                {g.msgs.map((m) => {
-                  const pending = m.status === "pending";
-                  return (
-                    <div key={m.id}
-                         style={{ borderLeft: `2px solid ${pending ? "var(--muted)" : m.status === "responded" ? "var(--ok)" : "var(--warn)"}`,
-                                  paddingLeft: 10 }}>
-                      <div className="font-mono"
-                           style={{ color: "var(--muted-soft)", fontSize: 11, letterSpacing: "0.04em", marginBottom: 3,
-                                    fontFeatureSettings: '"tnum"' }}>
-                        {t("contact.prev.sent", { date: fmt(m.sent_at) })}
-                        {" · "}
-                        <span style={{ color: pending ? "var(--muted)" : m.status === "responded" ? "var(--ok)" : "var(--warn)" }}>
-                          {pending ? t("contact.prev.status_pending") : m.status === "responded" ? t("contact.prev.status_responded") : t("contact.prev.status_ignored")}
-                        </span>
-                      </div>
-                      <div style={{ color: "var(--text)", fontSize: 13.5, lineHeight: 1.55,
-                                    whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                        {m.body}
-                      </div>
-                      {m.reply_body && (
-                        <div className="mt-2" style={{ borderLeft: "2px solid var(--ok)", paddingLeft: 10 }}>
-                          <div className="font-mono uppercase" style={{ color: "var(--ok)", fontSize: 9, letterSpacing: "0.14em", marginBottom: 2 }}>
-                            {t("contact.prev.reply_heading")}
-                          </div>
-                          <div style={{ color: "var(--text)", fontSize: 13, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                            {m.reply_body}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+        {/* cargo da vaga */}
+        <div className="field">
+          <span className="field__label" id="position-label">
+            {t("contact.form.job_title_label")}
+            <span className="hint">
+              {pinned ? t("contact.shell.pos_hint_pinned") : t("contact.shell.pos_hint_open")}
+            </span>
+          </span>
+
+          {pinned ? (
+            <>
+              <div className="pinned-pos" aria-disabled="true" aria-labelledby="position-label"
+                   title={t("contact.shell.pin_tooltip")}>
+                <span className="l">
+                  <span className="lock" aria-hidden="true">⏏</span>
+                  {pinnedTitle ?? t("contact.form.no_position")}
+                </span>
+                <span className="r">
+                  <span className="dot" aria-hidden="true" />
+                  {t("contact.shell.pinned")}
+                </span>
               </div>
-            </details>
-          );
-        })}
+              <input type="hidden" name="job_title" value={pinnedTitle ?? ""} />
+            </>
+          ) : openPositions.length > 0 ? (
+            <>
+              <select value={jobTitle} aria-labelledby="position-label"
+                      disabled={sending}
+                      onChange={(e) => onJobTitle(e.target.value)}>
+                <option value="">{t("contact.form.select_position")}</option>
+                {openPositions.map((p) => <option key={p.id} value={p.title}>{p.title}</option>)}
+              </select>
+              {selected && <CriteriaHint position={selected} devTestRatio={devTestRatio} />}
+            </>
+          ) : (
+            <>
+              <input type="text" value={jobTitle} disabled={sending}
+                     aria-labelledby="position-label"
+                     onChange={(e) => onJobTitle(e.target.value)}
+                     style={{
+                       fontFamily: "var(--mono)", fontSize: 13.5, padding: "10px 12px",
+                       color: "var(--ink)", background: "var(--bg)",
+                       border: "1px solid var(--line-2)", borderRadius: 0, outline: "none",
+                     }} />
+              <span className="crit-hint">
+                {t("contact.shell.no_positions")}{" "}
+                <Link to="/company/dashboard#posicoes" style={{ color: "var(--signal-ink)" }}>
+                  {t("company.shell.cta.new_position")}
+                </Link>
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* mensagem */}
+        <div className="field">
+          <label className="field__label" htmlFor="msg">
+            {t("contact.form.message_label")}
+            <span className="hint">{t("contact.form.message_hint")}</span>
+          </label>
+          <textarea id="msg" className="textarea" value={body}
+                    maxLength={MAX_BODY} required disabled={sending}
+                    placeholder={t("contact.shell.msg_placeholder", { handle })}
+                    onChange={(e) => onBody(e.target.value)} />
+          <div className="field__below">
+            <span className={`count${short ? " warn" : ""}`} aria-live="polite" aria-atomic="true">
+              <b>{len}</b> / {MAX_BODY} {t("contact.shell.chars")}
+              {short && <> · {t("contact.shell.min_chars", { min: MIN_BODY })}</>}
+            </span>
+            <span className="tips">
+              {isFirstMessage && <span>{t("contact.shell.first_message")}</span>}
+              <button type="button" disabled={body.length > 0 || sending} onClick={useTemplate}>
+                {t("contact.shell.use_template")}
+              </button>
+            </span>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <div className="form-card__foot">
+        <span className="keep">{t("contact.shell.keep_line")}</span>
+        <span className="actions">
+          <Link to="/company/dashboard#mensagens" className="btn">
+            {t("contact.form.back")}
+          </Link>
+          <ShellButton primary type="submit" disabled={!canSend} icon={PlaneIcon}>
+            {sending ? t("contact.form.submitting") : t("contact.form.submit")}
+          </ShellButton>
+        </span>
+      </div>
+    </form>
   );
 }
 
-function Card({ children }: { children: ReactNode }) {
+// Sanity-check do match: critério principal da vaga + se o dev passa nele
+// (só temos test_ratio do dev neste payload — outros sinais ficam sem o
+// "este dev passa").
+function CriteriaHint({ position, devTestRatio }: { position: Position; devTestRatio: number | null }) {
+  const t = useT();
+  const top = [...(position.priorities ?? [])].sort((a, b) => a.ranking - b.ranking)[0];
+  if (!top) return null;
+  const th = (position.thresholds ?? []).find((x) => x.signal === top.signal);
+  if (!th) return null;
+
+  const label = t(`company.positions.signal.${top.signal as PositionSignal}.label`);
+  let desc = "";
+  if ("items" in th.value) desc = `inclui ${th.value.items.join(", ")}`;
+  else if (top.signal === "test_ratio") desc = `≥ ${th.value.number}%`;
+  else desc = `≤ ${th.value.number}d`;
+
+  const passes = top.signal === "test_ratio" && devTestRatio != null && "number" in th.value
+    ? devTestRatio >= th.value.number
+    : null;
+
   return (
-    <div style={{ background: "var(--card-bg)", border: "1px solid var(--rule)", padding: 24 }}>
-      {children}
-    </div>
+    <span className="crit-hint">
+      {t("contact.shell.crit_main")} {label} {desc}
+      {passes != null && (
+        passes
+          ? <span className="ok"> · {t("contact.shell.crit_passes", { ratio: Math.round(devTestRatio!) })}</span>
+          : <span className="warn"> · {t("contact.shell.crit_fails", { ratio: Math.round(devTestRatio!) })}</span>
+      )}
+    </span>
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    <label className="grid gap-1.5">
-      <span className="font-mono uppercase"
-            style={{ color: "var(--muted)", fontSize: 10, letterSpacing: "0.14em" }}>
-        {label}
-        {hint && <span style={{ color: "var(--muted-soft)", letterSpacing: 0, textTransform: "none" }}> · {hint}</span>}
-      </span>
-      {children}
-    </label>
-  );
-}
-
-function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input {...props}
-           style={{
-             font: "inherit", fontSize: 14,
-             padding: "10px 12px",
-             color: "var(--text)", background: "var(--bg)",
-             border: "1px solid var(--rule)",
-             borderRadius: 0, outline: "none",
-             ...(props.style ?? {}),
-           }} />
-  );
-}
-
-function PrimaryButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button {...props}
-            style={{
-              font: "inherit", fontSize: 13,
-              padding: "8px 18px",
-              background: "var(--text)", color: "var(--bg)",
-              border: "1px solid var(--text)",
-              borderRadius: 0, letterSpacing: "0.02em",
-              cursor: props.disabled ? "not-allowed" : "pointer",
-              opacity: props.disabled ? 0.5 : 1,
-              ...(props.style ?? {}),
-            }} />
-  );
-}
-
-function linkStyle(): React.CSSProperties {
-  return {
-    fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace",
-    fontSize: 11, color: "var(--muted)", letterSpacing: "0.14em",
-    textTransform: "uppercase",
-    textDecoration: "underline", textDecorationColor: "var(--rule)", textUnderlineOffset: 3,
-  };
-}
-
+const PlaneIcon = (
+  <svg viewBox="0 0 12 12" fill="none" width="12" height="12">
+    <path d="M11 1L5.5 6.5M11 1L7.5 11l-2-4.5L1 4.5 11 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+  </svg>
+);

@@ -1,0 +1,284 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * App shell — compose / contact view (extends app-shell.css +
+ * app-company.css). Ported from design_handoff_contato/reference/
+ * app-contact.css, scoped under `.app-v2`.
+ * ───────────────────────────────────────────────────────────────────── */
+
+.app-v2 .compose { display: grid; gap: 28px; }
+
+/* ---------- back link ---------- */
+.app-v2 .back-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em;
+  color: var(--ink-4); text-decoration: none;
+  padding: 6px 0;
+  transition: color 0.12s;
+}
+.app-v2 .back-link:hover,
+.app-v2 .back-link:focus-visible { color: var(--signal-ink); }
+.app-v2 .back-link .arrow { display: inline-block; transition: transform 0.12s; }
+.app-v2 .back-link:hover .arrow { transform: translateX(-2px); }
+
+/* ---------- profile card (top) ---------- */
+.app-v2 .profile-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: grid; grid-template-columns: 1fr auto; gap: 26px;
+  padding: 22px 24px;
+  align-items: center;
+}
+.app-v2 .profile-card__l { display: flex; flex-direction: column; gap: 10px; }
+.app-v2 .profile-card__handle {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-family: var(--mono); font-weight: 600; font-size: 20px;
+  color: var(--ink); letter-spacing: -0.01em;
+}
+.app-v2 .profile-card__handle a { color: inherit; text-decoration: none; }
+.app-v2 .profile-card__handle a:hover { color: var(--signal-ink); }
+.app-v2 .profile-card__handle .tier {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--signal-ink); border: 1px solid var(--signal); padding: 3px 8px;
+  background: var(--signal-dim); font-weight: 400;
+}
+.app-v2 .profile-card__handle .tier--warn {
+  color: var(--amber); border-color: var(--amber); background: var(--amber-dim);
+}
+.app-v2 .profile-card__meta { display: flex; gap: 16px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--ink-3); flex-wrap: wrap; }
+.app-v2 .profile-card__meta > span { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.app-v2 .profile-card__meta .sep { color: var(--ink-5); }
+.app-v2 .profile-card__meta b { color: var(--ink); font-weight: 600; }
+.app-v2 .profile-card__ecos { display: flex; gap: 6px; flex-wrap: wrap; }
+.app-v2 .profile-card__ecos span {
+  font-family: var(--mono); font-size: 11px;
+  padding: 4px 9px; background: var(--bg); border: 1px solid var(--line-2);
+  color: var(--ink-2);
+}
+.app-v2 .profile-card__r { display: flex; align-items: center; gap: 12px; }
+.app-v2 .profile-card__r a {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-3); text-decoration: none;
+  border: 1px solid var(--line-2); padding: 8px 12px;
+  transition: 0.12s;
+}
+.app-v2 .profile-card__r a:hover,
+.app-v2 .profile-card__r a:focus-visible { color: var(--signal-ink); border-color: var(--signal); }
+
+/* ---------- privacy callout (confirmation, NOT alarm) ---------- */
+.app-v2 .callout {
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-left: 2px solid var(--signal);
+  padding: 14px 18px;
+  display: flex; gap: 14px; align-items: flex-start;
+  font-size: 13.5px; color: var(--ink-2); line-height: 1.55;
+}
+.app-v2 .callout .ic {
+  flex: none; width: 22px; height: 22px; display: grid; place-items: center;
+  border: 1px solid var(--signal); color: var(--signal-ink);
+  font-family: var(--mono); font-size: 12px; margin-top: 1px;
+  background: var(--signal-dim);
+}
+.app-v2 .callout b { color: var(--ink); font-weight: 600; }
+.app-v2 .callout .dimline { display: block; margin-top: 6px; color: var(--ink-4); font-size: 12.5px; }
+.app-v2 .callout--warn { border-left-color: var(--amber); }
+.app-v2 .callout--warn .ic { color: var(--amber); border-color: var(--amber); background: var(--amber-dim); }
+
+/* ---------- history section ---------- */
+.app-v2 .history__h {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 12px; gap: 12px; flex-wrap: wrap;
+}
+.app-v2 .history__h h2 {
+  font-family: var(--sans); font-size: 14px; color: var(--ink); margin: 0;
+  font-weight: 600;
+}
+.app-v2 .history__h h2 .n { color: var(--signal-ink); margin-left: 6px; font-family: var(--mono); }
+.app-v2 .history__h .meta { font-family: var(--mono); font-size: 11.5px; color: var(--ink-4); }
+.app-v2 .history__stack { display: grid; gap: 16px; }
+
+.app-v2 .thread {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: grid;
+}
+.app-v2 .thread > * + * { border-top: 1px solid var(--line); }
+.app-v2 .thread__h {
+  padding: 14px 20px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+  background: var(--surface-2);
+}
+.app-v2 .thread__h .pos {
+  display: flex; align-items: center; gap: 12px;
+  font-family: var(--mono); font-size: 13px; color: var(--ink);
+}
+.app-v2 .thread__h .pos .lab {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-4);
+}
+.app-v2 .thread__h .ct {
+  display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 6px;
+  background: var(--bg); border: 1px solid var(--line-2); color: var(--ink-3);
+  font-family: var(--mono); font-size: 11px;
+}
+.app-v2 .thread__h .status {
+  font-family: var(--mono); font-size: 11.5px; color: var(--ink-4);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.app-v2 .thread__h .status .dot { width: 7px; height: 7px; background: var(--amber); display: inline-block; }
+.app-v2 .thread__h .status .dot--ok { background: var(--signal); border-radius: 50%; }
+.app-v2 .thread__h .status .wait { color: var(--amber); }
+.app-v2 .thread__h .status .ok { color: var(--signal-ink); }
+
+.app-v2 .thread__msg {
+  padding: 18px 20px;
+  display: grid; grid-template-columns: 26px 1fr; gap: 16px;
+  align-items: start;
+}
+.app-v2 .thread__msg .av {
+  width: 26px; height: 26px;
+  background: var(--bg); border: 1px solid var(--line-2);
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+}
+.app-v2 .thread__msg .body { color: var(--ink-2); font-size: 14.5px; line-height: 1.55; margin: 0; overflow-wrap: anywhere; }
+.app-v2 .thread__msg .body b { color: var(--ink); }
+.app-v2 .thread__msg .body .reply {
+  display: block; margin-top: 10px; padding-left: 12px;
+  border-left: 2px solid var(--signal);
+  color: var(--ink-2); font-size: 13.5px;
+}
+.app-v2 .thread__msg .body .reply .lab {
+  display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--signal-ink); margin-bottom: 2px;
+}
+
+/* ---------- compose form ---------- */
+.app-v2 .form-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.app-v2 .form-card__h {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.app-v2 .form-card__h h2 { font-family: var(--sans); font-size: 16px; color: var(--ink); margin: 0; font-weight: 600; }
+.app-v2 .form-card__h .meta { font-family: var(--mono); font-size: 11px; color: var(--ink-4); letter-spacing: 0.06em; text-transform: uppercase; }
+.app-v2 .form-card__h .meta.warn { color: var(--amber); }
+.app-v2 .form-card__h .meta.ok { color: var(--signal-ink); }
+
+.app-v2 .form-card__b { padding: 22px; display: grid; gap: 22px; }
+
+.app-v2 .field { display: grid; gap: 8px; }
+.app-v2 .field__label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-3);
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;
+}
+.app-v2 .field__label .hint {
+  text-transform: none; letter-spacing: 0; color: var(--ink-4); font-size: 12px;
+}
+
+/* pinned position pill (locked dropdown) */
+.app-v2 .pinned-pos {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--bg-2); border: 1px solid var(--line-2);
+  padding: 14px 16px;
+  font-family: var(--mono);
+}
+.app-v2 .pinned-pos .l {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 14px; color: var(--ink); min-width: 0;
+}
+.app-v2 .pinned-pos .l .lock {
+  flex: none;
+  width: 22px; height: 22px; display: grid; place-items: center;
+  border: 1px solid var(--line-2); color: var(--ink-3); font-size: 12px;
+}
+.app-v2 .pinned-pos .r {
+  flex: none;
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.app-v2 .pinned-pos .r .dot { width: 6px; height: 6px; background: var(--amber); display: inline-block; }
+
+/* position select (same look as the directory filters select) */
+.app-v2 .field select {
+  width: 100%;
+  padding: 12px 14px; background: var(--bg); border: 1px solid var(--line-2);
+  font-family: var(--mono); font-size: 13px; color: var(--ink);
+  border-radius: 0; outline: none; cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0l4 6 4-6z' fill='%23565b58'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.app-v2 .field select:focus-visible { border-color: var(--signal); }
+
+/* criteria sanity-check hint under the select */
+.app-v2 .field .crit-hint { font-family: var(--mono); font-size: 11.5px; color: var(--ink-4); }
+.app-v2 .field .crit-hint .ok { color: var(--signal-ink); }
+.app-v2 .field .crit-hint .warn { color: var(--amber); }
+
+.app-v2 .textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--line-2);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 14px 16px;
+  resize: vertical;
+  min-height: 200px;
+  outline: 0;
+  transition: border-color 0.12s;
+}
+.app-v2 .textarea:focus { border-color: var(--signal); box-shadow: 0 0 0 1px var(--signal); }
+.app-v2 .textarea::placeholder { color: var(--ink-5); }
+
+.app-v2 .field__below {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 11.5px; color: var(--ink-4);
+}
+.app-v2 .field__below .count b { color: var(--ink-3); font-weight: 400; }
+.app-v2 .field__below .count.warn b { color: var(--amber); }
+.app-v2 .field__below .tips { display: flex; gap: 14px; }
+.app-v2 .field__below .tips button {
+  background: none; border: 0; cursor: pointer;
+  font-family: var(--mono); font-size: 11.5px;
+  color: var(--ink-4); text-decoration: none;
+  border-bottom: 1px solid var(--line-2); padding: 0 0 1px;
+  transition: color 0.12s, border-color 0.12s;
+}
+.app-v2 .field__below .tips button:hover { color: var(--signal-ink); border-color: var(--signal); }
+
+.app-v2 .form-card__foot {
+  border-top: 1px solid var(--line);
+  padding: 14px 20px;
+  display: flex; justify-content: space-between; align-items: center; gap: 14px;
+}
+.app-v2 .form-card__foot .keep {
+  font-family: var(--mono); font-size: 11.5px; color: var(--ink-4);
+}
+.app-v2 .form-card__foot .actions { display: flex; gap: 10px; align-items: center; }
+.app-v2 .form-card__foot .actions a.btn { text-decoration: none; }
+
+/* ── Override do tema claro: pill de verificação do perfil — o halo
+ * --signal-dim some no papel; fundo sólido + texto branco. */
+html[data-theme-v2="light"] .app-v2 .profile-card__handle .tier {
+  color: #ffffff; background: var(--signal-ink); border-color: var(--signal-ink);
+}
+html[data-theme-v2="light"] .app-v2 .profile-card__handle .tier--warn {
+  color: #ffffff; background: var(--amber); border-color: var(--amber);
+}
+
+/* responsive */
+@media (max-width: 980px) {
+  .app-v2 .profile-card { grid-template-columns: 1fr; }
+  .app-v2 .profile-card__r { justify-content: flex-start; }
+}
+@media (max-width: 720px) {
+  .app-v2 .thread__h { flex-direction: column; align-items: flex-start; }
+  .app-v2 .form-card__foot { flex-direction: column; align-items: stretch; }
+  .app-v2 .form-card__foot .actions { justify-content: flex-end; }
+}
