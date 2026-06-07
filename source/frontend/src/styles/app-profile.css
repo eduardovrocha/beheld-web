@@ -4,8 +4,14 @@
  * under `.app-v2`; tema claro via html[data-theme-v2="light"].
  * ───────────────────────────────────────────────────────────────────── */
 
-/* topbar variant: sem sidebar */
-.app-v2.app--public { grid-template-columns: 1fr; }
+/* topbar variant: sem sidebar.
+ * grid-template-rows nav/main/footer = auto 1fr auto: só o main absorve a
+ * sobra de altura. Sem isso, o `align-content: normal` (≈ stretch) do grid
+ * estica TODAS as linhas auto quando o conteúdo é curto (ex.: login) —
+ * inflando a altura da nav. Com `1fr` no main, a nav e o footer ficam na
+ * altura do conteúdo (nav = 60px) em qualquer página, e o footer encosta
+ * no rodapé do viewport em telas curtas. */
+.app-v2.app--public { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
 .app-v2.app--public .app__main { padding: 38px clamp(20px, 4vw, 48px) 60px; }
 .app-v2.app--public .app__main > .wrap-inner { max-width: 1180px; }
 
