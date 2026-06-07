@@ -35,8 +35,10 @@ export function BrandGlyph({ size = 24 }: BrandGlyphProps) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <path d="M46 28 H30 V92 H46" stroke="#eef0ee" strokeWidth={sw} fill="none" />
-      <path d="M74 28 H90 V92 H74" stroke="#eef0ee" strokeWidth={sw} fill="none" />
+      {/* currentColor: os colchetes herdam a cor do contexto (var(--ink)),
+          então o glyph adapta ao tema claro/escuro. */}
+      <path d="M46 28 H30 V92 H46" stroke="currentColor" strokeWidth={sw} fill="none" />
+      <path d="M74 28 H90 V92 H74" stroke="currentColor" strokeWidth={sw} fill="none" />
       <rect x={53} y={45} width={14} height={30} fill="#58d36c" />
     </svg>
   );

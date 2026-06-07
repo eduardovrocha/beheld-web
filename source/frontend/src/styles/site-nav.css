@@ -1,16 +1,15 @@
 /* ─────────────────────────────────────────────────────────────────────────
  * SiteNav — nav padrão das páginas públicas (components/SiteNav.tsx).
  *
- * Regras extraídas do nav da landing (landing-v2-kit.css) e escopadas
- * em `.site-nav` para valerem em qualquer shell. Os TOKENS
+ * Regras portadas do kit landing-v2-integration-nav e escopadas em
+ * `.site-nav` para valerem em qualquer shell. Os TOKENS
  * (--ink/--line/--signal/--mono…) não são definidos aqui de propósito:
  * vêm do escopo pai — .landing-v2-kit na landing, .app-v2 nas telas de
- * app — então o nav tematiza junto com a página
- * (html[data-theme-v2="light"]).
+ * app — então o nav tematiza junto com a página.
  *
- * O theme-toggle usa `.nav.site-nav` (especificidade acima de
- * `.app-v2 .theme-toggle` do app-shell.css) para manter a variante
- * borderless do nav independente da ordem dos imports no bundle.
+ * Tema claro = html[data-theme-v2="light"] (o sistema do app, NÃO o
+ * `data-theme`/dp-theme legado do kit). O ícone de tema mostra o tema
+ * ATUAL: lua no escuro, sol no claro.
  * ───────────────────────────────────────────────────────────────────── */
 
 .site-nav {
@@ -31,26 +30,101 @@
   letter-spacing: 0.02em; transition: color 0.15s;
 }
 .site-nav .nav__links a:hover { color: var(--signal-ink); }
-.site-nav .nav__right { display: flex; align-items: center; gap: 22px; }
 .site-nav .nav__free { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--signal-ink); }
 
-/* theme toggle — tipografia do nav; borderless de propósito (não compete
-   com a marca nem com o badge). Lua no dark / sol no light (tema ATUAL). */
-.nav.site-nav .theme-toggle {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: transparent; border: 0; padding: 4px 2px;
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-3); cursor: pointer;
-  transition: color 0.15s;
-}
-.nav.site-nav .theme-toggle:hover,
-.nav.site-nav .theme-toggle:focus-visible { color: var(--signal-ink); border-color: transparent; }
-.nav.site-nav .theme-toggle svg { width: 12px; height: 12px; display: block; }
-.nav.site-nav .theme-toggle .sun { display: none; }
-html[data-theme-v2="light"] .nav.site-nav .theme-toggle .moon { display: none; }
-html[data-theme-v2="light"] .nav.site-nav .theme-toggle .sun  { display: inline-block; }
+/* ── NAV ACTIONS (cluster à direita) ──────────────────────────────────── */
+.site-nav .nav__actions { display: flex; align-items: center; gap: 14px; }
 
-@media (max-width: 760px) { .site-nav .nav__links { display: none; } }
-@media (max-width: 560px) { .site-nav .nav__free { display: none; } }
-/* em telas estreitas o label sai; só o ícone fica (não aperta o lockup) */
-@media (max-width: 560px) { .nav.site-nav .theme-toggle .label { display: none; } }
+/* dropdown genérico (empresa / idioma) */
+.site-nav .dd { position: relative; }
+.site-nav .dd__t {
+  appearance: none; background: none;
+  border: 1px solid transparent;
+  padding: 6px 10px; height: 32px;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.02em;
+  color: var(--ink-3); cursor: pointer; border-radius: 2px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.site-nav .dd__t:hover,
+.site-nav .dd[data-open="1"] .dd__t {
+  color: var(--ink); border-color: var(--line); background: var(--surface);
+}
+.site-nav .dd__chev { transition: transform 0.2s ease; opacity: 0.7; }
+.site-nav .dd[data-open="1"] .dd__chev { transform: rotate(180deg); }
+
+.site-nav .dd__menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  min-width: 230px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 2px;
+  padding: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.42), 0 2px 8px rgba(0, 0, 0, 0.28);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+  z-index: 100;
+}
+.site-nav .dd[data-open="1"] .dd__menu {
+  opacity: 1; visibility: visible; transform: translateY(0);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0s;
+}
+.site-nav .dd__menu--narrow { min-width: 180px; }
+
+.site-nav .dd__lab {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-4); padding: 8px 10px 6px;
+}
+.site-nav .dd__item {
+  appearance: none; background: none; border: 0;
+  width: 100%; text-align: left;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 10px 12px;
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink-2);
+  text-decoration: none; cursor: pointer; border-radius: 2px;
+  transition: background 0.12s, color 0.12s;
+}
+.site-nav .dd__item:hover { background: var(--surface-2); color: var(--ink); }
+.site-nav .dd__item--primary { color: var(--ink); font-weight: 600; }
+.site-nav .dd__item--primary:hover { background: var(--signal-dim); color: var(--signal-ink); }
+.site-nav .dd__item--muted { color: var(--ink-3); }
+.site-nav .dd__ar {
+  font-family: var(--mono); font-size: 13px; color: var(--ink-4);
+  transition: color 0.12s, transform 0.12s;
+}
+.site-nav .dd__item:hover .dd__ar { color: var(--signal-ink); transform: translateX(2px); }
+.site-nav .dd__sep { height: 1px; background: var(--line); margin: 6px 4px; }
+
+/* itens de idioma */
+.site-nav .dd__item--lang { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.02em; }
+.site-nav .dd__code { color: var(--ink); font-weight: 600; width: 26px; flex-shrink: 0; }
+.site-nav .dd__name { flex: 1; color: var(--ink-3); }
+.site-nav .dd__check { color: var(--signal-ink); opacity: 0; }
+.site-nav .dd__item--lang.is-active .dd__check { opacity: 1; }
+.site-nav .dd__item--lang.is-active .dd__name { color: var(--ink); }
+
+/* botão de ícone (tema) */
+.site-nav .nav__icon {
+  appearance: none; background: none; border: 1px solid transparent;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-3); cursor: pointer; border-radius: 2px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.site-nav .nav__icon:hover {
+  color: var(--ink); border-color: var(--line); background: var(--surface);
+}
+.site-nav .nav__icon .ic { display: block; }
+.site-nav .nav__icon .ic--sun { display: none; }
+html[data-theme-v2="light"] .site-nav .nav__icon .ic--moon { display: none; }
+html[data-theme-v2="light"] .site-nav .nav__icon .ic--sun  { display: block; }
+
+/* responsivo */
+@media (max-width: 1100px) { .site-nav .nav__free { display: none; } }
+@media (max-width: 760px) {
+  .site-nav .nav__links { display: none; }
+  .site-nav .dd__t span:not(.dd__chev) { font-size: 12px; }
+  .site-nav .dd[data-dd]:not(.dd--lang) .dd__t { padding: 6px 8px; }
+}
+@media (max-width: 480px) {
+  .site-nav .dd:not(.dd--lang) { display: none; }
+}

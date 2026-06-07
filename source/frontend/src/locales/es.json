@@ -627,6 +627,7 @@
   "clogin.sending": "enviando…",
   "clogin.retry": "intentar de nuevo",
   "clogin.err.email": "Email inválido.",
+  "clogin.err.not_registered": "Email no registrado. Verifica la dirección o crea tu cuenta.",
   "clogin.err.rate_limited": "Demasiados pedidos. Intenta de nuevo en unos minutos.",
   "clogin.err.network": "Algo salió mal — verifica la conexión e intenta de nuevo.",
   "clogin.trust_prefix": "Beheld ",
@@ -1422,5 +1423,12 @@
   "errors.session_invalid": "Sesión expirada o inválida. Inicia sesión de nuevo.",
   "errors.profile_unavailable": "Perfil no disponible.",
 
-  "landingV2.nav.links.companies": "Para empresas"
+  "landingV2.nav.companies.trigger": "Para empresas",
+  "landingV2.nav.companies.existingLabel": "¿ya tienes cuenta?",
+  "landingV2.nav.companies.signIn": "Iniciar sesión",
+  "landingV2.nav.companies.newLabel": "nueva empresa",
+  "landingV2.nav.companies.createAccount": "Crear cuenta empresarial",
+  "landingV2.nav.companies.sales": "Hablar con ventas",
+  "landingV2.nav.theme.aria": "alternar tema",
+  "landingV2.nav.language.aria": "idioma"
 }

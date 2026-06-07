@@ -30,7 +30,7 @@ export function PublicFooter({ landing = false }: PublicFooterProps) {
     <footer className="site-foot">
       <div className="wrap site-foot__grid">
         <div>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 12 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 12, color: "var(--ink)" }}>
             <BrandGlyph size={22} />
             <span className="lk-word" style={{ fontSize: 22 }}>
               <span className="b">b</span>eheld

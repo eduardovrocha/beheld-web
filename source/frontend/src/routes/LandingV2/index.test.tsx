@@ -57,10 +57,20 @@ describe("LandingV2 (kit landing-v2-integration)", () => {
     }
   });
 
-  it("renders the companies entry point in the nav (translated, not the raw key)", () => {
+  it("renders the company menu in the nav actions cluster (translated trigger)", () => {
     const { container } = render(<LandingV2 />);
-    const link = container.querySelector('.nav__links a[href="/empresa/cadastro"]');
-    expect(link?.textContent).toBe("Para empresas");
+    const trigger = container.querySelector(".nav__actions .dd .dd__t");
+    expect(trigger?.textContent).toContain("Para empresas");
+    // itens do dropdown apontam para as rotas reais de empresa
+    expect(container.querySelector('.dd__menu a[href="/empresa/entrar"]')).not.toBeNull();
+    expect(container.querySelector('.dd__menu a[href="/empresa/cadastro"]')).not.toBeNull();
+  });
+
+  it("renders the language menu with the active locale checked", () => {
+    const { container } = render(<LandingV2 />);
+    const active = container.querySelector(".dd--lang .dd__item--lang.is-active");
+    // provider de fallback resolve em pt → PT ativo
+    expect(active?.querySelector(".dd__code")?.textContent).toBe("PT");
   });
 
   it("renders the numbered eyebrows in order (01–07 + dotted beat)", () => {
