@@ -10,8 +10,8 @@ import { CompanyMessages } from "./routes/CompanyMessages";
 import { Compromisso } from "./routes/Compromisso";
 import { Dashboard } from "./routes/Dashboard";
 import { Directory } from "./routes/Directory";
-import { Home } from "./routes/Home";
 import { HowItWorks } from "./routes/HowItWorks";
+import { LandingV2 } from "./routes/LandingV2";
 import { MeetB3 } from "./routes/MeetB3";
 import { RealSessions } from "./routes/RealSessions";
 import { VerifyLocal } from "./routes/VerifyLocal";
@@ -20,9 +20,10 @@ import { VerifyPublic } from "./routes/VerifyPublic";
 /**
  * Routing.
  *
- * `/` (landing v5), `/dashboard` (dev dashboard), `/company/dashboard`
- * and `/directory` (company dashboard) render OUTSIDE <Layout> on
- * purpose: the landing owns its own Constellation, topbar and footer;
+ * `/` (landing — kit landing-v2-integration, routes/LandingV2; a Home
+ * anterior segue no repo sem rota), `/dashboard` (dev dashboard),
+ * `/company/dashboard` and `/directory` (company dashboard) render
+ * OUTSIDE <Layout> on purpose: the landing owns its own nav and footer;
  * the dashboards own the full app shell (sticky TopBar + Sidebar — see
  * design_handoff_dev / design_handoff_empresa). Every other route is
  * nested under a <Layout /> parent route, which provides the global
@@ -32,7 +33,7 @@ import { VerifyPublic } from "./routes/VerifyPublic";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<LandingV2 />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/company/dashboard" element={<CompanyDashboardPage />} />
       <Route path="/directory" element={<Directory />} />
