@@ -2,8 +2,8 @@
  * /companies/new (alias /empresa/cadastro) — cadastro de empresa,
  * app-shell v2 (design_handoff_cadastro_empresa). Página PÚBLICA no
  * shell `.app--public`, com o SiteNav padrão das páginas públicas
- * ("já tem conta? entrar" + theme/locale toggles no nav__right).
- * Renders OUTSIDE <Layout>.
+ * (idêntico ao da home: dropdown de empresa + tema + idioma). Renders
+ * OUTSIDE <Layout>.
  *
  * A história visual: o stepper de 3 passos (cadastro → email
  * corporativo → DNS TXT) logo sob o hero — empresa = chave verificada,
@@ -128,14 +128,9 @@ export function CompaniesNew() {
   return (
     <div className="app-v2 app--public">
       <a className="skip-link" href="#main">{t("landing.a11y.skip")}</a>
-      <SiteNav
-        extraRight={
-          <span className="topnav">
-            {t("csignup.top.has_account")}{" "}
-            <Link to="/sessions/company/new">{t("csignup.top.signin")}</Link>
-          </span>
-        }
-      />
+      {/* Nav idêntica à da home (SiteNav): o acesso ao login já vive no
+          dropdown "Para empresas" → Entrar, então não passamos extraRight. */}
+      <SiteNav />
       <main className="app__main" id="main">
         <div className="wrap-inner">
           <header className="signup-hero">

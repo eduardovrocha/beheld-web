@@ -45,7 +45,8 @@ describe("CompaniesNew (cadastro de empresa, app-shell v2)", () => {
     const { container } = renderPage();
 
     expect(container.querySelector(".app--public")).not.toBeNull();
-    expect(container.querySelector(".site-nav .topnav")).not.toBeNull();
+    // nav idêntica à da home: dropdown de empresa no cluster de ações
+    expect(container.querySelector(".site-nav .nav__actions .dd__t")).not.toBeNull();
 
     const steps = container.querySelectorAll(".stepper .step");
     expect(steps.length).toBe(3);
