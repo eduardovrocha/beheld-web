@@ -20,8 +20,11 @@ import { VerifyPublic } from "./routes/VerifyPublic";
 /**
  * Routing.
  *
- * `/` (landing v5) renders OUTSIDE <Layout> on purpose: the landing
- * owns its own Constellation, topbar and footer. Every other route is
+ * `/` (landing v5), `/dashboard` (dev dashboard), `/company/dashboard`
+ * and `/directory` (company dashboard) render OUTSIDE <Layout> on
+ * purpose: the landing owns its own Constellation, topbar and footer;
+ * the dashboards own the full app shell (sticky TopBar + Sidebar — see
+ * design_handoff_dev / design_handoff_empresa). Every other route is
  * nested under a <Layout /> parent route, which provides the global
  * Constellation, floating Locale/Theme toggle box and width
  * constraint.
@@ -30,6 +33,15 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/company/dashboard" element={<CompanyDashboardPage />} />
+      <Route path="/directory" element={<Directory />} />
+      <Route path="/accounts/:account_id/contact" element={<AccountContact />} />
+      <Route path="/v/:id" element={<VerifyPublic />} />
+      <Route path="/companies/new" element={<CompaniesNew />} />
+      <Route path="/empresa/cadastro" element={<CompaniesNew />} />
+      <Route path="/sessions/company/new" element={<CompanyLogin />} />
+      <Route path="/empresa/entrar" element={<CompanyLogin />} />
 
       <Route element={<Layout />}>
         <Route path="/compromisso" element={<Compromisso />} />
@@ -39,16 +51,9 @@ export default function App() {
         <Route path="/real-sessions" element={<RealSessions />} />
         <Route path="/b3" element={<MeetB3 />} />
         <Route path="/b3h31d" element={<MeetB3 />} />
-        <Route path="/v/:id" element={<VerifyPublic />} />
         <Route path="/verify" element={<VerifyLocal />} />
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboard/companies/:company" element={<CompanyMessages />} />
-        <Route path="/directory" element={<Directory />} />
-        <Route path="/company/dashboard" element={<CompanyDashboardPage />} />
-        <Route path="/companies/new" element={<CompaniesNew />} />
-        <Route path="/sessions/company/new"    element={<CompanyLogin />} />
         <Route path="/sessions/company/verify" element={<CompanyVerify />} />
-        <Route path="/accounts/:account_id/contact" element={<AccountContact />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
