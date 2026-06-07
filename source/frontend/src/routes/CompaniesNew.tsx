@@ -2,7 +2,7 @@
  * /companies/new (alias /empresa/cadastro) — cadastro de empresa,
  * app-shell v2 (design_handoff_cadastro_empresa). Página PÚBLICA no
  * shell `.app--public` (topbar sem sidebar de nav, "já tem conta?
- * entrar" + theme toggle). Renders OUTSIDE <Layout>.
+ * entrar" + theme/locale toggles). Renders OUTSIDE <Layout>.
  *
  * A história visual: o stepper de 3 passos (cadastro → email
  * corporativo → DNS TXT) logo sob o hero — empresa = chave verificada,
@@ -20,6 +20,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
+import { LocaleToggle } from "@/components/LocaleToggle";
 import { ShellThemeToggle } from "@/components/app/ShellThemeToggle";
 import { ShellButton } from "@/components/app/PageHeader";
 import { TopBar } from "@/components/app/TopBar";
@@ -135,6 +136,7 @@ export function CompaniesNew() {
                     <Link to="/sessions/company/new">{t("csignup.top.signin")}</Link>
                   </span>
                   <ShellThemeToggle />
+                  <LocaleToggle />
                 </>
               } />
       <main className="app__main" id="main">
