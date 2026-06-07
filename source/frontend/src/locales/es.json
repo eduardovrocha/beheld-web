@@ -1420,5 +1420,7 @@
   "profile.foot.created_at": "bundle creado en {ts}",
   "errors.session_expired": "Sesión expirada, inicia sesión para continuar.",
   "errors.session_invalid": "Sesión expirada o inválida. Inicia sesión de nuevo.",
-  "errors.profile_unavailable": "Perfil no disponible."
+  "errors.profile_unavailable": "Perfil no disponible.",
+
+  "landingV2.nav.links.companies": "Para empresas"
 }

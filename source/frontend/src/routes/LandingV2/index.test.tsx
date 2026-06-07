@@ -57,6 +57,12 @@ describe("LandingV2 (kit landing-v2-integration)", () => {
     }
   });
 
+  it("renders the companies entry point in the nav (translated, not the raw key)", () => {
+    const { container } = render(<LandingV2 />);
+    const link = container.querySelector('.nav__links a[href="/empresa/cadastro"]');
+    expect(link?.textContent).toBe("Para empresas");
+  });
+
   it("renders the numbered eyebrows in order (01–07 + dotted beat)", () => {
     const { container } = render(<LandingV2 />);
     const idxs = Array.from(container.querySelectorAll(".eyebrow .idx")).map(
