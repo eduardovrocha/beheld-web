@@ -1,8 +1,8 @@
 /**
  * /sessions/company/new (alias /empresa/entrar) — login passwordless da
  * empresa, app-shell v2 (design_handoff_login_empresa). Página PÚBLICA
- * no shell `.app--public` (topbar com theme/locale toggles). Renders
- * OUTSIDE <Layout>.
+ * no shell `.app--public`, com o SiteNav padrão das páginas públicas
+ * (theme/locale toggles). Renders OUTSIDE <Layout>.
  *
  * State machine: checking → (redirect | idle) → submitting → sent;
  * sent → idle só via reenviar pós-cooldown. Banner âmbar (429/rede) é
@@ -22,10 +22,8 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import { LocaleToggle } from "@/components/LocaleToggle";
-import { ShellThemeToggle } from "@/components/app/ShellThemeToggle";
+import { SiteNav } from "@/components/SiteNav";
 import { ShellButton } from "@/components/app/PageHeader";
-import { TopBar } from "@/components/app/TopBar";
 import { useT } from "@/i18n/I18nProvider";
 import { requestCompanyLink } from "@/lib/companyApi";
 import { getDashboard, CompanyAuthError } from "@/lib/companyDashboardApi";
@@ -145,15 +143,7 @@ export function CompanyLogin() {
   return (
     <div className="app-v2 app--public">
       <a className="skip-link" href="#main">{t("landing.a11y.skip")}</a>
-      <TopBar
-        crumb={["empresa", "acesso"]}
-        right={
-          <>
-            <ShellThemeToggle />
-            <LocaleToggle />
-          </>
-        }
-      />
+      <SiteNav />
       <main className="app__main" id="main">
         <div className="login-shell" data-state={state}>
           <header className="login-hero">

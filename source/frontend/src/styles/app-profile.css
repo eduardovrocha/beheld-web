@@ -9,18 +9,18 @@
 .app-v2.app--public .app__main { padding: 38px clamp(20px, 4vw, 48px) 60px; }
 .app-v2.app--public .app__main > .wrap-inner { max-width: 1180px; }
 
-.app-v2 .app__top .public-cta {
+.app-v2 :is(.app__top, .site-nav) .public-cta {
   display: inline-flex; align-items: center; gap: 8px;
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--signal-ink); border: 1px solid var(--signal); background: var(--signal-dim);
   padding: 7px 12px; text-decoration: none;
   transition: 0.12s;
 }
-.app-v2 .app__top .public-cta:hover,
-.app-v2 .app__top .public-cta:focus-visible { background: var(--signal); color: #07120a; }
+.app-v2 :is(.app__top, .site-nav) .public-cta:hover,
+.app-v2 :is(.app__top, .site-nav) .public-cta:focus-visible { background: var(--signal); color: #07120a; }
 /* claro: CTA sempre sólido (halo verde some no papel) */
-html[data-theme-v2="light"] .app-v2 .app__top .public-cta { color: #fff; background: var(--signal); border-color: var(--signal); }
-html[data-theme-v2="light"] .app-v2 .app__top .public-cta:hover { background: var(--signal-ink); border-color: var(--signal-ink); color: #fff; }
+html[data-theme-v2="light"] .app-v2 :is(.app__top, .site-nav) .public-cta { color: #fff; background: var(--signal); border-color: var(--signal); }
+html[data-theme-v2="light"] .app-v2 :is(.app__top, .site-nav) .public-cta:hover { background: var(--signal-ink); border-color: var(--signal-ink); color: #fff; }
 
 .app-v2 .app__top__r { display: flex; gap: 12px; align-items: center; }
 

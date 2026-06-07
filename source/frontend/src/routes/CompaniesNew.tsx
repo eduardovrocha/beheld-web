@@ -1,8 +1,9 @@
 /**
  * /companies/new (alias /empresa/cadastro) — cadastro de empresa,
  * app-shell v2 (design_handoff_cadastro_empresa). Página PÚBLICA no
- * shell `.app--public` (topbar sem sidebar de nav, "já tem conta?
- * entrar" + theme/locale toggles). Renders OUTSIDE <Layout>.
+ * shell `.app--public`, com o SiteNav padrão das páginas públicas
+ * ("já tem conta? entrar" + theme/locale toggles no nav__right).
+ * Renders OUTSIDE <Layout>.
  *
  * A história visual: o stepper de 3 passos (cadastro → email
  * corporativo → DNS TXT) logo sob o hero — empresa = chave verificada,
@@ -20,10 +21,8 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-import { LocaleToggle } from "@/components/LocaleToggle";
-import { ShellThemeToggle } from "@/components/app/ShellThemeToggle";
+import { SiteNav } from "@/components/SiteNav";
 import { ShellButton } from "@/components/app/PageHeader";
-import { TopBar } from "@/components/app/TopBar";
 import { VerificationStepper, type StepDef } from "@/components/company/VerificationStepper";
 import { useT } from "@/i18n/I18nProvider";
 import { signupCompany } from "@/lib/companyApi";
@@ -128,17 +127,14 @@ export function CompaniesNew() {
   return (
     <div className="app-v2 app--public">
       <a className="skip-link" href="#main">{t("landing.a11y.skip")}</a>
-      <TopBar crumb={["empresa", "cadastro"]}
-              right={
-                <>
-                  <span className="topnav">
-                    {t("csignup.top.has_account")}{" "}
-                    <Link to="/sessions/company/new">{t("csignup.top.signin")}</Link>
-                  </span>
-                  <ShellThemeToggle />
-                  <LocaleToggle />
-                </>
-              } />
+      <SiteNav
+        extraRight={
+          <span className="topnav">
+            {t("csignup.top.has_account")}{" "}
+            <Link to="/sessions/company/new">{t("csignup.top.signin")}</Link>
+          </span>
+        }
+      />
       <main className="app__main" id="main">
         <div className="wrap-inner">
           <header className="signup-hero">

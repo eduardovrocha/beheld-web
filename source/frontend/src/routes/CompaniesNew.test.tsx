@@ -45,7 +45,7 @@ describe("CompaniesNew (cadastro de empresa, app-shell v2)", () => {
     const { container } = renderPage();
 
     expect(container.querySelector(".app--public")).not.toBeNull();
-    expect(container.querySelector(".app__top .topnav")).not.toBeNull();
+    expect(container.querySelector(".site-nav .topnav")).not.toBeNull();
 
     const steps = container.querySelectorAll(".stepper .step");
     expect(steps.length).toBe(3);

@@ -1,0 +1,56 @@
+/* ─────────────────────────────────────────────────────────────────────────
+ * SiteNav — nav padrão das páginas públicas (components/SiteNav.tsx).
+ *
+ * Regras extraídas do nav da landing (landing-v2-kit.css) e escopadas
+ * em `.site-nav` para valerem em qualquer shell. Os TOKENS
+ * (--ink/--line/--signal/--mono…) não são definidos aqui de propósito:
+ * vêm do escopo pai — .landing-v2-kit na landing, .app-v2 nas telas de
+ * app — então o nav tematiza junto com a página
+ * (html[data-theme-v2="light"]).
+ *
+ * O theme-toggle usa `.nav.site-nav` (especificidade acima de
+ * `.app-v2 .theme-toggle` do app-shell.css) para manter a variante
+ * borderless do nav independente da ordem dos imports no bundle.
+ * ───────────────────────────────────────────────────────────────────── */
+
+.site-nav {
+  position: sticky; top: 0; z-index: 50;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(12px);
+}
+.site-nav .wrap { max-width: 1560px; margin: 0 auto; padding: 0 clamp(24px, 4.5vw, 88px); }
+.site-nav .nav__in { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+.site-nav .nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.site-nav .nav__glyph svg { display: block; }
+.site-nav .lk-word { font-family: var(--mono); font-weight: 700; font-size: 20px; letter-spacing: -0.04em; color: var(--ink); }
+.site-nav .lk-word .b { color: var(--signal-ink); }
+.site-nav .nav__links { display: flex; gap: 28px; }
+.site-nav .nav__links a {
+  font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); text-decoration: none;
+  letter-spacing: 0.02em; transition: color 0.15s;
+}
+.site-nav .nav__links a:hover { color: var(--signal-ink); }
+.site-nav .nav__right { display: flex; align-items: center; gap: 22px; }
+.site-nav .nav__free { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--signal-ink); }
+
+/* theme toggle — tipografia do nav; borderless de propósito (não compete
+   com a marca nem com o badge). Lua no dark / sol no light (tema ATUAL). */
+.nav.site-nav .theme-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: transparent; border: 0; padding: 4px 2px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-3); cursor: pointer;
+  transition: color 0.15s;
+}
+.nav.site-nav .theme-toggle:hover,
+.nav.site-nav .theme-toggle:focus-visible { color: var(--signal-ink); border-color: transparent; }
+.nav.site-nav .theme-toggle svg { width: 12px; height: 12px; display: block; }
+.nav.site-nav .theme-toggle .sun { display: none; }
+html[data-theme-v2="light"] .nav.site-nav .theme-toggle .moon { display: none; }
+html[data-theme-v2="light"] .nav.site-nav .theme-toggle .sun  { display: inline-block; }
+
+@media (max-width: 760px) { .site-nav .nav__links { display: none; } }
+@media (max-width: 560px) { .site-nav .nav__free { display: none; } }
+/* em telas estreitas o label sai; só o ícone fica (não aperta o lockup) */
+@media (max-width: 560px) { .nav.site-nav .theme-toggle .label { display: none; } }

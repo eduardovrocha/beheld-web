@@ -11,7 +11,7 @@
  *
  *   .landing-v2-kit
  *     <a .skip-link>                  (a11y: pula para #main)
- *     <Nav />                         (sticky: brand + âncoras + toggles)
+ *     <SiteNav landing />             (nav padrão das páginas públicas)
  *     <main id="main">
  *       <Hero />                      (#top · variantes + counter + install + term)
  *       <TriangleBand />              (GitHub prova / LinkedIn prova / Beheld atesta)
@@ -41,10 +41,11 @@
  */
 import { useEffect } from "react";
 
+import { SiteNav } from "@/components/SiteNav";
 import { useRevealMany } from "@/hooks/useReveal";
 
 import { T, useT } from "./T";
-import { Nav, Footer } from "./sections/Chrome";
+import { Footer } from "./sections/Chrome";
 import { Hero } from "./sections/Hero";
 import {
   TriangleBand,
@@ -90,7 +91,7 @@ export function LandingV2() {
       <a className="skip-link" href="#main">
         <T k="a11y.skip" />
       </a>
-      <Nav />
+      <SiteNav landing />
       <main id="main">
         <Hero />
         <TriangleBand />

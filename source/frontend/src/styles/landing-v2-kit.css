@@ -354,42 +354,8 @@ html[data-theme-v2="light"] .landing-v2-kit ::selection { color: #ffffff; }
 .landing-v2-kit .site-foot .fm a:hover { color: var(--signal-ink); }
 
 /* ── NAV ───────────────────────────────────────────────────────────────── */
-.landing-v2-kit .nav {
-  position: sticky; top: 0; z-index: 50;
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(12px);
-}
-.landing-v2-kit .nav__in { display: flex; align-items: center; justify-content: space-between; height: 60px; }
-.landing-v2-kit .nav__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-.landing-v2-kit .nav__brand .lk-word { font-size: 20px; }
-.landing-v2-kit .nav__glyph svg { display: block; }
-.landing-v2-kit .nav__links { display: flex; gap: 28px; }
-.landing-v2-kit .nav__links a {
-  font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); text-decoration: none;
-  letter-spacing: 0.02em; transition: color 0.15s;
-}
-.landing-v2-kit .nav__links a:hover { color: var(--signal-ink); }
-.landing-v2-kit .nav__right { display: flex; align-items: center; gap: 22px; }
-.landing-v2-kit .nav__free { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--signal-ink); }
-/* theme toggle — tipografia do nav; borderless de propósito (não compete
-   com a marca nem com o badge). Lua no dark / sol no light (tema ATUAL). */
-.landing-v2-kit .theme-toggle {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: transparent; border: 0; padding: 4px 2px;
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-3); cursor: pointer;
-  transition: color 0.15s;
-}
-.landing-v2-kit .theme-toggle:hover { color: var(--signal-ink); }
-.landing-v2-kit .theme-toggle svg { width: 12px; height: 12px; display: block; }
-.landing-v2-kit .theme-toggle .sun { display: none; }
-html[data-theme-v2="light"] .landing-v2-kit .theme-toggle .moon { display: none; }
-html[data-theme-v2="light"] .landing-v2-kit .theme-toggle .sun  { display: inline-block; }
-
-@media (max-width: 760px) { .landing-v2-kit .nav__links { display: none; } }
-@media (max-width: 560px) { .landing-v2-kit .nav__free { display: none; } }
-@media (max-width: 560px) { .landing-v2-kit .theme-toggle .label { display: none; } }
+/* O nav vive em components/SiteNav.tsx + styles/site-nav.css (padrão de
+   todas as páginas públicas); os tokens vêm deste escopo. */
 
 /* ── HERO ──────────────────────────────────────────────────────────────── */
 /* hero variants: stacked in one grid cell so they crossfade in place */

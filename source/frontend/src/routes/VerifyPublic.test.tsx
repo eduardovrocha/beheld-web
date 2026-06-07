@@ -93,13 +93,13 @@ beforeEach(() => {
 });
 
 describe("VerifyPublic (perfil público, app-shell v2)", () => {
-  it("renders the public shell: topbar CTA, no sidebar, hero h1 + signal pills", async () => {
+  it("renders the public shell: SiteNav CTA, no sidebar, hero h1 + signal pills", async () => {
     const { container } = renderPage();
     await waitFor(() => expect(container.querySelector(".profile-hero")).not.toBeNull());
 
     expect(container.querySelector(".app--public")).not.toBeNull();
     expect(container.querySelector(".app__side")).toBeNull();
-    expect(container.querySelector(".app__top .public-cta")).not.toBeNull();
+    expect(container.querySelector(".site-nav .public-cta")).not.toBeNull();
 
     // sem attestation → handle "dev"; bundle assinado → pill verde ✓ assinado
     const h1 = container.querySelector("h1.profile-hero__handle");
@@ -168,10 +168,10 @@ describe("VerifyPublic (perfil público, app-shell v2)", () => {
     expect(container.querySelector<HTMLButtonElement>(".verify-foot__bottom .copy")?.disabled).toBe(true);
   });
 
-  it("renders state D (not found) with the brand topbar", async () => {
+  it("renders state D (not found) with the brand nav", async () => {
     fetchBundleWithAccount.mockRejectedValue(new Error("Bundle não encontrado ou expirado."));
     const { container } = renderPage();
     await waitFor(() => expect(screen.getByText("Esse perfil não existe no beheld")).toBeInTheDocument());
-    expect(container.querySelector(".app__top")).not.toBeNull();
+    expect(container.querySelector(".site-nav")).not.toBeNull();
   });
 });

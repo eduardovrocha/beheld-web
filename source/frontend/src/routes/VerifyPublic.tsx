@@ -4,7 +4,8 @@
  * O momento de confiança do produto: sinais na frente, verificado vs
  * limitado marcado explicitamente, e o rodapé de verificação como prova
  * + pedagogia. Renders OUTSIDE <Layout>; shell público (`.app--public`,
- * topbar sem sidebar + CTA "criar minha conta →"). Tema claro/escuro via
+ * SiteNav padrão das páginas públicas + CTA "criar minha conta →" no
+ * nav__right). Tema claro/escuro via
  * data-theme-v2 (design_handoff_temas).
  *
  * Wiring (handoff "Data Sources & Wiring", adaptado à API real — não há
@@ -26,8 +27,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { ShellThemeToggle } from "@/components/app/ShellThemeToggle";
-import { TopBar } from "@/components/app/TopBar";
+import { SiteNav } from "@/components/SiteNav";
 import { SaveDevButton } from "@/components/company/SaveDevButton";
 import { useT, useTp, useFmt } from "@/i18n/I18nProvider";
 import { fetchBundleWithAccount } from "@/lib/api";
@@ -98,14 +98,12 @@ export function VerifyPublic() {
   return (
     <div className="app-v2 app--public">
       <a className="skip-link" href="#main">{t("landing.a11y.skip")}</a>
-      <TopBar crumb={[t("profile.crumb"), derived?.handle ?? (id ?? "—")]}
-              right={
-                <>
-                  <ShellThemeToggle />
-                  {/* entry point do cadastro de empresa (design_handoff_cadastro_empresa) */}
-                  <Link className="public-cta" to="/companies/new">{t("profile.cta_signup")} →</Link>
-                </>
-              } />
+      <SiteNav
+        extraRight={
+          /* entry point do cadastro de empresa (design_handoff_cadastro_empresa) */
+          <Link className="public-cta" to="/companies/new">{t("profile.cta_signup")} →</Link>
+        }
+      />
       <main className="app__main" id="main">
         <div className="wrap-inner">
           {phase.kind === "loading" && <ProfileSkeleton />}
