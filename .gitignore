@@ -39,3 +39,16 @@ source/dashboard/
 # prod key remains the only source of truth shipped to release builds.
 source/backend/keys/platform/*-dev.pub
 source/backend/keys/platform/*-dev.info.json
+
+# Design handoff snapshots / landing integration references (generated artifacts)
+design_handoff_*/
+landing-v2-integration/
+landing-v2-integration-nav/
+
+# npm lockfile (frontend uses bun / bun.lock, not npm)
+source/frontend/package-lock.json
+
+# Analysis artifacts (graphify, playwright results)
+source/graphify-out/
+source/dashboard/playwright-results/
+test-results/
