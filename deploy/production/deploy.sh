@@ -64,7 +64,9 @@ docker compose ps
 
 echo
 echo "→ sanity: GET /api/platform-keys via Caddy"
-response="$(curl -fsS http://127.0.0.1/api/platform-keys)"
+# Caddy virtual-hosts on beheld.dev — must send the Host header or the
+# request falls through to the default handler (SPA) instead of Rails.
+response="$(curl -fsS -H 'Host: beheld.dev' http://127.0.0.1/api/platform-keys)"
 echo "$response" | head -c 300
 echo
 if echo "$response" | grep -q '"key_id":"beheld-platform-'; then
