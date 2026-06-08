@@ -29,6 +29,11 @@ Rails.application.routes.draw do
   post "api/install/register" => "installs#register", as: :api_install_register
   get  "api/install/count"    => "installs#count",    as: :api_install_count
 
+  # CLI version advertisement — consumido por `beheld update`. Fonte da
+  # verdade: VersionsController::LATEST_CLI_VERSION (override por
+  # BEHELD_LATEST_CLI_VERSION em prod).
+  get "api/version" => "versions#show", as: :api_version
+
   # GitHub OAuth flow for identity attestation (Phase 5 / F5.6.1).
   get  "api/auth/github/start"    => "auth#github_start",    as: :api_auth_github_start
   get  "api/auth/github/callback" => "auth#github_callback", as: :api_auth_github_callback
