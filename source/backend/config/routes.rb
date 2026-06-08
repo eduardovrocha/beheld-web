@@ -82,6 +82,19 @@ Rails.application.routes.draw do
   # Dev auth — challenge/response with the account's Ed25519 keypair.
   namespace :api do
     namespace :v1 do
+      # Public reference docs (CLI) — populated by `rake docs:cli:ingest`.
+      # Cacheable, no auth. Latest redirects to the version tagged "latest"
+      # (or the most recent published if none).
+      namespace :docs do
+        get "cli/versions", to: "cli#versions",
+            as: :cli_versions
+        get "cli/latest",   to: "cli#latest",
+            as: :cli_latest
+        get "cli/:version", to: "cli#show",
+            as: :cli_show,
+            constraints: { version: %r{[\w.\-]+} }
+      end
+
       post   "auth/challenge", to: "auth#challenge"
       post   "auth/verify",    to: "auth#verify"
       delete "auth/session",   to: "auth#destroy"

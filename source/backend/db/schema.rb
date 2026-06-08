@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_31_170637) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_08_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -72,6 +72,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_31_170637) do
     t.index ["account_id"], name: "index_bundles_on_account_id"
     t.index ["last_bundle_at"], name: "index_bundles_on_last_bundle_at"
     t.index ["url_slug"], name: "index_bundles_on_url_slug", unique: true
+  end
+
+  create_table "cli_docs", force: :cascade do |t|
+    t.string "version", null: false
+    t.string "commit_sha", null: false
+    t.datetime "published_at", null: false
+    t.string "tag"
+    t.text "markdown", null: false
+    t.string "checksum", null: false
+    t.jsonb "meta", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["published_at"], name: "index_cli_docs_on_published_at"
+    t.index ["tag"], name: "index_cli_docs_on_tag"
+    t.index ["version"], name: "index_cli_docs_on_version", unique: true
   end
 
   create_table "companies", force: :cascade do |t|
