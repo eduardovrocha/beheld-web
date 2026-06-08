@@ -38,5 +38,33 @@ RSpec.describe "CLI version endpoint", type: :request do
       5.times { get "/api/version" }
       expect(response).to have_http_status(:ok)
     end
+
+    it "ENV vazia ('') é tratada como override válido (fetch retorna a string vazia)" do
+      # `ENV.fetch("KEY", default)` só usa o default quando a chave é
+      # AUSENTE. Uma string vazia é considerada presente — registra esse
+      # comportamento como contrato para que ops saiba unset != set-to-empty.
+      ENV["BEHELD_LATEST_CLI_VERSION"] = ""
+      get "/api/version"
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)).to eq("version" => "")
+    end
+
+    it "payload tem exatamente a chave 'version' — sem extras" do
+      get "/api/version"
+      expect(JSON.parse(response.body).keys).to eq(["version"])
+    end
+
+    it "LATEST_CLI_VERSION default segue o formato semver" do
+      # A constante é o que vai pro ar quando ENV não está setada — ela
+      # PRECISA ser semver válido para o CLI conseguir comparar com
+      # ===. Defesa em profundidade contra um typo no bump.
+      expect(VersionsController::LATEST_CLI_VERSION).to match(/\A\d+\.\d+\.\d+\z/)
+    end
+
+    it "named route api_version_path resolve para /api/version" do
+      # Acoplamento de roteamento — caça regressão se alguém renomear o
+      # alias e o CLI passar a bater num path errado.
+      expect(api_version_path).to eq("/api/version")
+    end
   end
 end
