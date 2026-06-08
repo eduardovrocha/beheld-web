@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { AppShell } from "@/components/app/AppShell";
 import { Sidebar, SideFoot, SideItem, SideSection, GridIcon, EnvelopeIcon, GearIcon, DocIcon, PlusIcon } from "@/components/app/Sidebar";
 import { TopBar } from "@/components/app/TopBar";
+import { CompanyTopActions } from "@/components/company/CompanyTopActions";
 import { useT } from "@/i18n/I18nProvider";
 import { logoutCompany } from "@/lib/companyApi";
 
@@ -66,7 +67,6 @@ export function CompanyShell({ page, activeTab, companyName, counts, crumbExtra,
 
   const sidebar = (
     <Sidebar>
-      <SideSection label={`empresa · ${name}`} />
       {page === "dashboard" ? (
         <SideItem icon={GridIcon} active onSelect={() => jump("messages")}>
           {t("company.shell.nav.dashboard")}
@@ -123,7 +123,7 @@ export function CompanyShell({ page, activeTab, companyName, counts, crumbExtra,
   const crumb = crumbExtra ? ["empresa", name, crumbExtra] : ["empresa", name];
 
   return (
-    <AppShell topBar={<TopBar crumb={crumb} handle={name} />} sidebar={sidebar}>
+    <AppShell topBar={<TopBar crumb={crumb} right={<CompanyTopActions companyName={companyName} />} />} sidebar={sidebar}>
       {children}
     </AppShell>
   );

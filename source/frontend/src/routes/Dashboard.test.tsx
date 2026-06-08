@@ -69,12 +69,11 @@ describe("Dashboard (app-shell v2)", () => {
     const { container } = renderDashboard();
     await waitFor(() => expect(getDashboard).toHaveBeenCalled());
 
-    // topbar — wordmark + authed handle on the right
+    // topbar — wordmark + handle on the account-menu trigger (right cluster)
     expect(container.querySelector(".app__top .lk-word")?.textContent).toBe("beheld");
-    expect(container.querySelector(".app__user .you")?.textContent).toBe("@dev-511ac8da");
+    expect(container.querySelector(".app__actions .dd__t--user .you")?.textContent).toBe("@dev-511ac8da");
 
-    // sidebar — sections + foot
-    expect(container.querySelector(".app__side .sec")?.textContent).toContain("@dev-511ac8da");
+    // sidebar — foot
     expect(container.querySelector(".app__side .foot")).not.toBeNull();
 
     // page header — h1 + full fingerprint + copy button

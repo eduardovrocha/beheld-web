@@ -493,9 +493,6 @@ function PositionsView({ positions, wantNew, onConsumeWantNew, onCreate, onUpdat
             </button>
           </div>
         </div>
-        <ShellButton icon={PlusGlyph} primary onClick={() => setMode({ kind: "new" })}>
-          {t("company.shell.cta.new_position")}
-        </ShellButton>
       </div>
 
       {/* list + detail */}

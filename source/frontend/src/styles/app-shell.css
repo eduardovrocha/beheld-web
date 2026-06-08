@@ -571,3 +571,114 @@ html[data-theme-v2="light"] .app-v2 .skip-link { color: #ffffff; }
 @media (prefers-reduced-motion: reduce) {
   .app-v2 *, .app-v2 *::before, .app-v2 *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- topbar actions cluster (theme · language · account) ----------
+   Shared by the dev and company dashboards (TopActions.tsx, injected via
+   TopBar's `right` prop). Mirrors the public SiteNav identity (the .dd
+   vocabulary of site-nav.css) inside the authenticated shell. Scoped to
+   .app-v2 so it never collides with .site-nav. */
+.app-v2 .app__actions { display: flex; align-items: center; gap: 10px; }
+
+.app-v2 .dd { position: relative; }
+.app-v2 .dd__t {
+  appearance: none; background: none; border: 1px solid transparent;
+  padding: 6px 10px; height: 32px;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.02em;
+  color: var(--ink-3); cursor: pointer; border-radius: 2px;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.app-v2 .dd__t:hover,
+.app-v2 .dd[data-open="1"] .dd__t {
+  color: var(--ink); border-color: var(--line); background: var(--surface);
+}
+.app-v2 .dd__chev { transition: transform .2s ease; opacity: .7; }
+.app-v2 .dd[data-open="1"] .dd__chev { transform: rotate(180deg); }
+
+.app-v2 .dd__menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  min-width: 240px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 2px;
+  padding: 8px;
+  box-shadow: 0 12px 36px rgba(0,0,0,.42), 0 2px 8px rgba(0,0,0,.28);
+  opacity: 0; visibility: hidden; transform: translateY(-4px);
+  transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+  z-index: 100;
+}
+.app-v2 .dd[data-open="1"] .dd__menu {
+  opacity: 1; visibility: visible; transform: translateY(0);
+  transition: opacity .18s ease, transform .18s ease, visibility 0s linear 0s;
+}
+.app-v2 .dd__menu--narrow { min-width: 180px; }
+
+.app-v2 .dd__item {
+  appearance: none; background: none; border: 0;
+  width: 100%; text-align: left;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 10px 12px;
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink-2);
+  text-decoration: none; cursor: pointer; border-radius: 2px;
+  transition: background .12s, color .12s;
+}
+.app-v2 .dd__item:hover { background: var(--surface-2); color: var(--ink); }
+.app-v2 .dd__item--muted { color: var(--ink-3); }
+.app-v2 .dd__ar {
+  font-family: var(--mono); font-size: 13px; color: var(--ink-4);
+  transition: color .12s, transform .12s;
+}
+.app-v2 .dd__item:hover .dd__ar { color: var(--signal-ink); transform: translateX(2px); }
+.app-v2 .dd__sep { height: 1px; background: var(--line); margin: 6px 4px; }
+
+/* disabled "em breve" items (rota ainda não existe) */
+.app-v2 .dd__item--soon { color: var(--ink-4); cursor: default; }
+.app-v2 .dd__item--soon:hover { background: none; color: var(--ink-4); }
+.app-v2 .dd__soon {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-4);
+  border: 1px solid var(--line); border-radius: 2px; padding: 1px 5px;
+}
+
+/* danger item (sair) */
+.app-v2 .dd__item--danger { color: var(--ink-3); }
+.app-v2 .dd__item--danger:hover { background: rgba(255,90,90,0.08); color: #ff7a7a; }
+.app-v2 .dd__item--danger:hover .dd__ar { color: #ff7a7a; }
+
+/* language items */
+.app-v2 .dd__item--lang { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.02em; }
+.app-v2 .dd__code { color: var(--ink); font-weight: 600; width: 26px; flex-shrink: 0; }
+.app-v2 .dd__name { flex: 1; color: var(--ink-3); }
+.app-v2 .dd__check { color: var(--signal-ink); opacity: 0; }
+.app-v2 .dd__item--lang.is-active .dd__check { opacity: 1; }
+.app-v2 .dd__item--lang.is-active .dd__name { color: var(--ink); }
+
+/* user trigger + menu header — the green dot keeps the "authed/online" vibe */
+.app-v2 .dd__t--user .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--signal); box-shadow: 0 0 0 3px var(--signal-dim);
+  animation: bh-pulse 2.4s infinite;
+}
+.app-v2 .dd__t--user .you { color: var(--ink); }
+.app-v2 .dd__usr { padding: 10px 12px 4px; }
+.app-v2 .dd__usr-name { display: block; font-family: var(--mono); font-size: 13px; color: var(--ink); }
+.app-v2 .dd__usr-org { display: block; font-family: var(--mono); font-size: 11px; color: var(--ink-4); margin-top: 2px; letter-spacing: 0.04em; }
+
+/* icon button (theme) — parallel to .nav__icon on the public site */
+.app-v2 .app__icon {
+  appearance: none; background: none; border: 1px solid transparent;
+  width: 32px; height: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--ink-3); cursor: pointer; border-radius: 2px;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.app-v2 .app__icon:hover {
+  color: var(--ink); border-color: var(--line); background: var(--surface);
+}
+.app-v2 .app__icon .ic { display: block; }
+.app-v2 .app__icon .ic--sun { display: none; }
+html[data-theme-v2="light"] .app-v2 .app__icon .ic--moon { display: none; }
+html[data-theme-v2="light"] .app-v2 .app__icon .ic--sun  { display: block; }
+
+/* responsive — handle collapses to just the dot below 720px */
+@media (max-width: 720px) {
+  .app-v2 .dd__t--user .you { display: none; }
+}
