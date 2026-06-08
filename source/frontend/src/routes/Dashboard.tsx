@@ -34,9 +34,11 @@ import { SubTabs } from "@/components/app/SubTabs";
 import { TierLadder, LADDER_TIERS } from "@/components/app/TierLadder";
 import { TopBar } from "@/components/app/TopBar";
 import { VerificationChain, type VerificationLayer } from "@/components/app/VerificationChain";
+import { DevTopActions } from "@/components/dev/DevTopActions";
 import { useT, useTp, useFmt } from "@/i18n/I18nProvider";
 import type { Formatters } from "@/i18n/format";
 import type { TrustTier } from "@/lib/cli-shared/tier";
+import { docsCliUrl } from "@/lib/docsUrl";
 import {
   clearSessionToken,
   getDashboard,
@@ -221,7 +223,6 @@ export function Dashboard() {
   const daysSince = data?.evolution.days_since_last ?? null;
   const sidebar = (
     <Sidebar>
-      <SideSection label={`dev · ${handle}`} />
       <SideItem icon={GridIcon} active={view === "overview"} onSelect={() => selectView("overview")}>
         {t("dashboard.tab.overview.label")}
       </SideItem>
@@ -234,7 +235,7 @@ export function Dashboard() {
       </SideItem>
 
       <SideSection label={t("dashboard.side.resources")} />
-      <SideItem icon={DocIcon} to="/como-funciona">{t("dashboard.side.docs")}</SideItem>
+      <SideItem icon={DocIcon} to={docsCliUrl()}>{t("dashboard.side.docs")}</SideItem>
       <SideItem icon={PlusIcon} href="mailto:hi@beheld.dev">{t("dashboard.side.support")}</SideItem>
 
       <SideFoot>
@@ -254,7 +255,7 @@ export function Dashboard() {
   );
 
   const shell = (children: ReactNode) => (
-    <AppShell topBar={<TopBar crumb={["dashboard", handle]} handle={handle} />} sidebar={sidebar}>
+    <AppShell topBar={<TopBar crumb={["dashboard", handle]} right={<DevTopActions handle={handle} tier={tier} onSignOut={signOut} />} />} sidebar={sidebar}>
       {children}
     </AppShell>
   );

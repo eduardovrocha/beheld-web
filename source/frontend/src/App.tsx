@@ -9,6 +9,7 @@ import { CompanyDashboardPage } from "./routes/company/Dashboard";
 import { CompanyMessages } from "./routes/CompanyMessages";
 import { Compromisso } from "./routes/Compromisso";
 import { Dashboard } from "./routes/Dashboard";
+import { CliDocs, CliDocsRedirect } from "./routes/docs/CliDocs";
 import { Directory } from "./routes/Directory";
 import { HowItWorks } from "./routes/HowItWorks";
 import { LandingV2 } from "./routes/LandingV2";
@@ -43,6 +44,11 @@ export default function App() {
       <Route path="/empresa/cadastro" element={<CompaniesNew />} />
       <Route path="/sessions/company/new" element={<CompanyLogin />} />
       <Route path="/empresa/entrar" element={<CompanyLogin />} />
+
+      {/* Documentação CLI versionada — shell próprio, fora do <Layout> */}
+      <Route path="/docs" element={<Navigate to="/docs/cli" replace />} />
+      <Route path="/docs/cli" element={<CliDocsRedirect />} />
+      <Route path="/docs/cli/:version" element={<CliDocs />} />
 
       <Route element={<Layout />}>
         <Route path="/compromisso" element={<Compromisso />} />

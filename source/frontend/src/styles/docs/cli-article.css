@@ -1,0 +1,348 @@
+/* ============================================================
+   beheld — regras específicas da view /docs/cli
+   estende app-docs.css; aplica overrides do mockup "Documentação CLI v2"
+   ============================================================ */
+
+/* h1 do MD é escondido — já mostramos no page header */
+.art > h1 { display: none; }
+
+/* Strong header acima de linhas de assinatura: "**Assinatura:** ..." */
+.art p strong:first-child {
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+/* Code spans dentro de parágrafos */
+.art p > code,
+.art li > code,
+.art td > code,
+.art th > code,
+.art strong > code {
+  font-family: var(--mono); font-size: 12.5px;
+  background: var(--surface-2); color: var(--ink);
+  padding: 1px 6px; border: 1px solid var(--line);
+}
+
+/* Tabelas do markdown — adotam o look de .dtable */
+.art table {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 14px 0 6px;
+  background: var(--surface);
+}
+.art table th, .art table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  color: var(--ink-2);
+}
+.art table thead th {
+  background: var(--surface-2);
+  font-family: var(--mono); font-weight: 600;
+  font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.art table tbody tr:last-child td { border-bottom: 0; }
+.art table tbody tr:hover { background: var(--surface-2); }
+
+/* Code blocks (terminal output) */
+.art pre {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  padding: 14px 16px;
+  margin: 12px 0;
+  overflow-x: auto;
+  white-space: pre;
+}
+:root[data-theme="light"] .art pre { background: #fafaf7; }
+.art pre code {
+  font-family: var(--mono); background: transparent; border: 0; padding: 0;
+  color: inherit; font-size: inherit;
+}
+
+/* In-line terminal coloring (set by post-processing) */
+.art pre .ok    { color: var(--signal-ink); }
+.art pre .err   { color: #ff6b6b; }
+:root[data-theme="light"] .art pre .err { color: #b3261e; }
+.art pre .warn  { color: var(--amber); }
+.art pre .arrow { color: var(--signal-ink); }
+.art pre .pmt   { color: var(--signal-ink); }
+.art pre .hl    { color: var(--ink); font-weight: 600; }
+.art pre .dim   { color: var(--ink-4); }
+
+/* Markdown blockquote → note style */
+.art blockquote {
+  border-left: 2px solid var(--signal);
+  background: var(--signal-dim);
+  margin: 14px 0;
+  padding: 12px 16px;
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+.art blockquote p { margin: 0 0 6px; font-size: 13.5px; color: var(--ink-2); }
+.art blockquote p:last-child { margin-bottom: 0; }
+.art blockquote code { background: var(--surface); }
+
+/* Listas do markdown */
+.art ol, .art ul {
+  padding-left: 22px; margin: 10px 0;
+  list-style: none; counter-reset: li;
+}
+.art ol > li {
+  counter-increment: li;
+  padding: 4px 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  position: relative;
+}
+.art ol > li::before {
+  content: counter(li) ".";
+  position: absolute; left: -22px; top: 4px;
+  color: var(--signal-ink);
+  font-family: var(--mono);
+  font-size: 12px;
+  width: 18px;
+}
+.art ul > li {
+  padding: 4px 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  position: relative;
+}
+.art ul > li::before {
+  content: "–";
+  position: absolute; left: -18px; top: 4px;
+  color: var(--ink-5);
+  font-family: var(--mono);
+}
+
+/* HR entre comandos */
+.art hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 36px 0 18px;
+}
+
+/* H2 com auto anchor */
+.art h2 {
+  font-size: 22px; letter-spacing: -0.01em;
+  margin: 44px 0 10px;
+  color: var(--ink); font-weight: 600;
+  padding-top: 22px; border-top: 1px solid var(--line);
+  scroll-margin-top: 80px;
+  display: flex; align-items: baseline; gap: 12px;
+}
+.art h2:first-of-type { padding-top: 0; border-top: 0; margin-top: 8px; }
+.art h2::before {
+  content: "§"; color: var(--signal-ink); font-family: var(--mono);
+  font-size: 18px; opacity: 0.7;
+}
+.art h2 .anchor {
+  font-family: var(--mono); font-size: 13px; color: var(--ink-5);
+  text-decoration: none; opacity: 0; transition: opacity .12s, color .12s;
+  border-bottom: 0;
+}
+.art h2:hover .anchor { opacity: 1; color: var(--signal-ink); }
+
+/* H3 = comando — renderiza como card header */
+.art h3 {
+  font-size: 16px;
+  font-family: var(--mono); font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+  margin: 26px 0 10px;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--signal);
+  scroll-margin-top: 80px;
+  display: flex; align-items: baseline; gap: 12px;
+}
+.art h3 code {
+  background: transparent; border: 0; padding: 0;
+  color: var(--signal-ink); font-size: 14.5px;
+}
+.art h3 .anchor {
+  margin-left: auto;
+  font-family: var(--mono); font-size: 12px; color: var(--ink-5);
+  text-decoration: none; opacity: 0; transition: opacity .12s, color .12s;
+  border-bottom: 0;
+}
+.art h3:hover .anchor { opacity: 1; color: var(--signal-ink); }
+
+/* H4 vindo do "**Flags**" via post-processing */
+.art h4 {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-4);
+  margin: 22px 0 6px; font-weight: 600;
+}
+
+/* parágrafos */
+.art p { font-size: 14px; color: var(--ink-2); margin: 8px 0; }
+.art p strong { color: var(--ink); }
+
+/* Loading state */
+.docs-loading {
+  display: flex; align-items: center; gap: 12px;
+  padding: 40px 0; color: var(--ink-4); font-family: var(--mono); font-size: 13px;
+}
+.docs-loading .spinner {
+  width: 10px; height: 10px; background: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-dim);
+  animation: pulse 1.4s infinite;
+}
+.docs-error {
+  border: 1px solid var(--amber); background: var(--amber-dim);
+  padding: 18px; margin: 20px 0;
+  font-family: var(--mono); font-size: 13px; color: var(--ink-2);
+}
+.docs-error b { color: var(--ink); display: block; margin-bottom: 6px; }
+.docs-error code { background: var(--surface); padding: 2px 6px; border: 1px solid var(--line); color: var(--ink); }
+
+/* TOC: h2 link (no children case) e o section-link h2 com filhos */
+.toc__sec--link, .toc__h2 {
+  display: block !important;
+  color: var(--ink-2) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 10.5px;
+  padding: 18px 14px 8px 16px !important;
+  border-left: 0 !important;
+  text-decoration: none;
+}
+.toc__sec--link:hover, .toc__h2:hover { color: var(--ink) !important; }
+.toc__sec--link.active, .toc__h2.active {
+  color: var(--signal-ink) !important; border-left: 2px solid var(--signal) !important;
+}
+.toc__hint {
+  color: var(--ink-4); font-size: 11px;
+  font-family: var(--mono); margin-left: 6px;
+}
+
+/* ===== Sidebar Documentação sub-menu ===== */
+.app__side__docs {
+  display: flex; flex-direction: column;
+  margin: 4px 0 0;
+  padding: 0;
+  border-left: 1px solid var(--line);
+  margin-left: 18px;
+}
+.app__side__docs .docs-search { margin: 8px 8px 8px 10px; }
+.app__side__docs .docs-search input {
+  font-size: 11.5px; padding: 7px 10px 7px 28px;
+}
+.app__side__docs .docs-search .ic { left: 8px; font-size: 11px; }
+.app__side__docs .docs-search .kbd { display: none; }
+
+.app__side__docs .toc__sec {
+  display: block;
+  padding: 10px 12px 4px 12px;
+  font-family: var(--mono);
+  font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-5);
+}
+.app__side__docs a {
+  display: block;
+  padding: 5px 12px 5px 14px;
+  color: var(--ink-3) !important;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+  background: transparent;
+  line-height: 1.5;
+  transition: color .12s, border-color .12s, background .12s;
+}
+.app__side__docs a:hover {
+  color: var(--ink) !important;
+  background: var(--surface) !important;
+}
+.app__side__docs a.active {
+  color: var(--ink) !important;
+  border-left-color: var(--signal) !important;
+  background: var(--surface) !important;
+}
+.app__side__docs a code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: transparent; border: 0; padding: 0;
+  color: inherit;
+}
+.app__side__docs a.active code { color: var(--signal-ink); }
+.app__side__docs a .toc__hint { font-size: 10px; }
+
+/* group label (h2 in TOC) dentro do sidebar */
+.app__side__docs .toc__sec--link, .app__side__docs .toc__h2 {
+  display: block !important;
+  color: var(--ink-3) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 9.5px !important;
+  padding: 12px 12px 4px 14px !important;
+  border-left: 0 !important;
+  background: transparent !important;
+  font-family: var(--mono);
+}
+.app__side__docs .toc__sec--link:hover, .app__side__docs .toc__h2:hover {
+  color: var(--ink) !important; background: transparent !important;
+}
+.app__side__docs .toc__sec--link.active, .app__side__docs .toc__h2.active {
+  color: var(--signal-ink) !important; border-left: 0 !important;
+  background: transparent !important;
+}
+
+/* Documentação trigger: chevron rotativo */
+.app__side .docs-trigger { position: relative; }
+.app__side .docs-trigger .chev {
+  margin-left: auto; color: var(--ink-4);
+  font-family: var(--mono); font-size: 10px;
+  transition: transform .15s;
+}
+.app__side .docs-trigger.is-open .chev { transform: rotate(180deg); color: var(--signal-ink); }
+
+/* Collapsed state */
+.app__side__docs.is-collapsed { display: none; }
+
+/* Sidebar com scroll independente quando o TOC é longo */
+.app__side {
+  position: sticky;
+  top: var(--topbar);
+  max-height: calc(100vh - var(--topbar));
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.app__side::-webkit-scrollbar { width: 4px; }
+.app__side::-webkit-scrollbar-thumb { background: var(--line); }
+.app__side::-webkit-scrollbar-thumb:hover { background: var(--line-2); }
+
+/* Artigo: full width agora (sem coluna TOC separada) */
+.docs { display: block; }
+.art { max-width: 1080px; }
+
+/* Print: esconde sidebar e topbar */
+@media print {
+  .app__top, .app__side { display: none; }
+  .app__main { padding: 0; }
+  .art { max-width: none; }
+}
+
+/* Focus visible para acessibilidade */
+.app__side__docs a:focus-visible,
+.app__side .docs-trigger:focus-visible,
+.ver__btn:focus-visible,
+.ver__opt:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
