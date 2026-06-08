@@ -2,9 +2,10 @@
  * /sessions/company/new (login empresa, app-shell v2) — smoke render.
  * Mocks companyApi (requestCompanyLink) + companyDashboardApi (session
  * pre-check). Asserta: pre-check sem flicker (redirect quando logado),
- * gating do submit, transição pro sent com o email EXATO digitado
- * (inclusive not_registered — sem vazar contas), cooldown do reenviar,
- * linha suave após 3 reenvios e banner âmbar pro 429 sem sair do sent.
+ * gating do submit, transição pro sent com o email EXATO digitado,
+ * erro no campo para email não cadastrado (sem fingir envio), cooldown
+ * do reenviar, linha suave após 3 reenvios e banner âmbar pro 429 sem
+ * sair do sent.
  */
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -94,16 +95,21 @@ describe("CompanyLogin (login empresa, app-shell v2)", () => {
     expect(container.querySelector(".login-trust")).toBeNull();
   });
 
-  it("shows the same sent UX for unregistered emails (no account leak)", async () => {
+  it("shows a field error for unregistered emails instead of faking the sent state", async () => {
     requestCompanyLink.mockResolvedValue({ ok: false, reason: "not_registered", status: 404 });
     const user = userEvent.setup();
     const { container } = renderPage();
     await waitFor(() => expect(container.querySelector(".login-card")).not.toBeNull());
 
     await submitValid(user, container, "ghost@nowhere.dev");
-    await waitFor(() => expect(container.querySelector(".login-sent")).not.toBeNull());
-    expect(container.querySelector(".login-sent")?.textContent).toContain("ghost@nowhere.dev");
-    expect(container.querySelector(".login-alert")).toBeNull();
+    await waitFor(() =>
+      expect(container.querySelector("#email-err")?.textContent).toBe(
+        "Email não cadastrado. Confira o endereço ou crie sua conta.",
+      ),
+    );
+    // Permanece no form (sem fingir envio) e o input fica marcado inválido.
+    expect(container.querySelector(".login-sent")).toBeNull();
+    expect(container.querySelector("#email")?.getAttribute("aria-invalid")).toBe("true");
   });
 
   it("resend enters the 60s cooldown with a visible countdown", async () => {

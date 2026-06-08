@@ -10,9 +10,10 @@
  *
  * Wiring (adaptado à API real): o submit usa requestCompanyLink →
  * POST /api/v1/sessions/company/request (não existe
- * /api/auth/magic-link/request). SEGURANÇA: o estado "sent" aparece
- * SEMPRE que o pedido foi aceito — inclusive quando o backend responde
- * not_registered — pra nunca vazar quais emails têm conta.
+ * /api/auth/magic-link/request). Email não cadastrado (404
+ * not_registered) NÃO finge envio: permanece no form com erro no campo
+ * + CTA "crie uma" logo abaixo — decisão de produto (2026-06) de avisar
+ * explicitamente; o backend já distinguia o caso pelo status code.
  *
  * Sessão ativa: o stack é uma SPA Vite (sem SSR) — o "redirect antes de
  * renderizar" vira um pre-check no mount (GET autenticado via cookie);
@@ -115,13 +116,25 @@ export function CompanyLogin() {
     // usuário digitou (regra do handoff).
     const result = await requestCompanyLink(typedEmail.trim().toLowerCase());
 
-    // SEGURANÇA: not_registered → mesma UX de sucesso. Nunca vazar.
-    if (result.ok || result.reason === "not_registered" || result.reason === "missing_email") {
+    if (result.ok) {
       setSentTo(typedEmail.trim());
       setPhase("sent");
       // cooldown só depois de REENVIAR (handoff §Reenviar) — na chegada
       // ao estado sent o link fica imediatamente disponível.
       if (fromResend) { setResends((n) => n + 1); startCooldown(); }
+      return;
+    }
+
+    // Empresa não cadastrada: o sistema verifica o registro ANTES de
+    // enviar (404 not_registered do backend) e avisa no campo, em vez de
+    // fingir envio — o CTA "crie uma" fica logo abaixo do input.
+    if (result.reason === "not_registered" || result.reason === "missing_email") {
+      setFieldError(
+        result.reason === "not_registered"
+          ? t("clogin.err.not_registered")
+          : t("clogin.err.email"),
+      );
+      setPhase("idle");
       return;
     }
 
