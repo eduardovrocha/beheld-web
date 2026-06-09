@@ -34,6 +34,30 @@ services:
       retries: 5
       start_period: 30s
 
+  # Sidekiq worker. Reaproveita a image que backend acabou de buildar
+  # (mesmo Gemfile, mesmo app/), so troca o comando. Sem build:
+  # context — depends_on garante que backend ja construiu beheld-backend:prod.
+  # network_mode: host pra alcancar Redis em 127.0.0.1:6379 (nativo no VPS,
+  # mesmo padrao do backend). Concorrencia conservadora — pouco volume hoje.
+  sidekiq:
+    image: beheld-backend:prod
+    container_name: beheld-sidekiq
+    network_mode: host
+    environment:
+      RAILS_ENV: production
+      RAILS_LOG_TO_STDOUT: "true"
+    env_file:
+      - /etc/beheld/app.env
+      - /etc/beheld/postgres.env
+    command: bundle exec sidekiq -c 5
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    # Sem healthcheck: a image slim nao tem pgrep/ps, e o exit do processo
+    # ja dispara o restart policy. Pra observar estado, use docker logs ou
+    # `Sidekiq::ProcessSet.new.size` via rails runner.
+
   caddy:
     image: caddy:2-alpine
     container_name: beheld-caddy
