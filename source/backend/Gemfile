@@ -15,6 +15,13 @@ gem "redis", ">= 4.0.1"
 # fan out to the dashboard inbox, transactional mail, and outbound webhooks.
 gem "sidekiq", "~> 7.3"
 
+# Pinar abaixo de 3.x: Sidekiq 7.3.9 chama TimedStack#pop com argumento
+# posicional (ConnectionPool::TimedStack#pop(1)), mas connection_pool 3.0
+# mudou a assinatura — quebra silenciosamente a scheduler thread no boot,
+# fazendo retries e perform_in nunca dispararem. Remover quando upgradar
+# pra Sidekiq 7.4+ (com fix nativo).
+gem "connection_pool", "~> 2.4"
+
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
 
