@@ -1,0 +1,6 @@
+# Rails master key — NUNCA versionar. Descriptografa config/credentials.yml.enc.
+# (O credentials.yml.enc em si É versionado, encriptado; só a chave fica de fora.)
+/config/master.key
+
+# Variantes de credentials por ambiente, se existirem.
+/config/credentials/*.key
