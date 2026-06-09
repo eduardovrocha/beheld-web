@@ -5,8 +5,8 @@
  * (idêntico ao da home: dropdown de empresa + tema + idioma). Renders
  * OUTSIDE <Layout>.
  *
- * A história visual: o stepper de 3 passos (cadastro → email
- * corporativo → DNS TXT) logo sob o hero — empresa = chave verificada,
+ * A história visual: o stepper de 2 passos (cadastro → email
+ * corporativo) logo sob o hero — empresa = chave verificada,
  * igual ao dev. Form enxuto: Empresa + Administrador + Termos.
  *
  * Wiring (handoff "Validação & Submit", adaptado à API real): o backend
@@ -121,7 +121,6 @@ export function CompaniesNew() {
   const steps: StepDef[] = useMemo(() => [
     { label: t("csignup.step.label", { n: "01" }), title: t("csignup.step1.title"), when: t("csignup.step1.when") },
     { label: t("csignup.step.label", { n: "02" }), title: t("csignup.step2.title"), when: t("csignup.step2.when") },
-    { label: t("csignup.step.label", { n: "03" }), title: t("csignup.step3.title"), when: t("csignup.step3.when") },
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [t]);
 

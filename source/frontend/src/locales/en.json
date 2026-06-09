@@ -663,8 +663,6 @@
   "csignup.step1.when": "you are here",
   "csignup.step2.title": "corporate email",
   "csignup.step2.when": "1 click",
-  "csignup.step3.title": "domain DNS TXT",
-  "csignup.step3.when": "~5 min",
   "csignup.sec1.title": "Your company",
   "csignup.sec2.title": "Account administrator",
   "csignup.sec3.title": "Terms",
@@ -709,7 +707,7 @@
   "csignup.side.b4.d": "Messages, replies and decisions stay on record.",
   "csignup.free.lead": "Devs never pay.",
   "csignup.free.body": "Companies only pay above 5 simultaneous active positions — no card to start.",
-  "csignup.sent.next": "Next step: click the link in the email to confirm. Then comes domain verification (a TXT record in the DNS).",
+  "csignup.sent.next": "Next step: click the link in the email to confirm.",
 
   "profile.crumb": "public profile",
   "profile.cta_signup": "create my account",

@@ -663,8 +663,6 @@
   "csignup.step1.when": "estás aquí",
   "csignup.step2.title": "email corporativo",
   "csignup.step2.when": "1 click",
-  "csignup.step3.title": "DNS TXT del dominio",
-  "csignup.step3.when": "~5 min",
   "csignup.sec1.title": "Tu empresa",
   "csignup.sec2.title": "Administrador de la cuenta",
   "csignup.sec3.title": "Términos",
@@ -709,7 +707,7 @@
   "csignup.side.b4.d": "Mensajes, respuestas y decisiones quedan registradas.",
   "csignup.free.lead": "Los devs nunca pagan.",
   "csignup.free.body": "Las empresas pagan solo por encima de 5 vacantes activas simultáneas — sin tarjeta para empezar.",
-  "csignup.sent.next": "Próximo paso: haz clic en el link del email para confirmar. Después viene la verificación del dominio (registro TXT en el DNS).",
+  "csignup.sent.next": "Próximo paso: haz clic en el link del email para confirmar.",
 
   "profile.crumb": "perfil público",
   "profile.cta_signup": "crear mi cuenta",

@@ -1,7 +1,7 @@
 /**
  * /companies/new (cadastro de empresa, app-shell v2) — smoke render.
- * Mocks lib/companyApi. Asserta o shell público + stepper (aria-current
- * no passo 01), as validações do handoff (domínio hostname, email no
+ * Mocks lib/companyApi. Asserta o shell público + stepper de 2 passos
+ * (aria-current no passo 01), as validações do handoff (domínio hostname, email no
  * mesmo domínio, termos obrigatórios), o placeholder dinâmico do email
  * e o fluxo de sucesso (stepper avança pro passo 02).
  */
@@ -41,7 +41,7 @@ beforeEach(() => {
 });
 
 describe("CompaniesNew (cadastro de empresa, app-shell v2)", () => {
-  it("renders the public shell with the 3-step verification stepper", () => {
+  it("renders the public shell with the 2-step verification stepper", () => {
     const { container } = renderPage();
 
     expect(container.querySelector(".app--public")).not.toBeNull();
@@ -49,11 +49,11 @@ describe("CompaniesNew (cadastro de empresa, app-shell v2)", () => {
     expect(container.querySelector(".site-nav .nav__actions .dd__t")).not.toBeNull();
 
     const steps = container.querySelectorAll(".stepper .step");
-    expect(steps.length).toBe(3);
+    expect(steps.length).toBe(2);
     expect(steps[0].classList.contains("is-now")).toBe(true);
     expect(steps[0].getAttribute("aria-current")).toBe("step");
     expect(steps[0].textContent).toContain("você está aqui");
-    expect(steps[2].textContent).toContain("DNS TXT");
+    expect(steps[1].textContent).toContain("email corporativo");
   });
 
   it("updates the email placeholder live from the domain field", async () => {
