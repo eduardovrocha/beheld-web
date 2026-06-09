@@ -232,6 +232,7 @@ function MessagesPanel({ messages }: { messages: CompanyMessage[] }) {
 
   return (
     <Panel flush={visible.length > 0}
+           style={{ paddingTop: 0, paddingBottom: 0 }}
            header={<PanelHeader
              title={t("company.shell.messages.title")}
              meta={t("company.shell.messages.meta", { total: messages.length, responded, pending, declined })}
@@ -293,6 +294,7 @@ function SavedPanel({ savedDevs, onUpdateNote, onRemove }: {
   const t = useT();
   return (
     <Panel flush={savedDevs.length > 0}
+           style={{ paddingTop: 0, paddingBottom: 0 }}
            header={<PanelHeader title={t("company.dashboard.tabs.devs.label")}
                                 meta={t("company.shell.saved.meta", { count: savedDevs.length })} />}>
       {savedDevs.length === 0 ? (
@@ -475,7 +477,7 @@ function PositionsView({ positions, wantNew, onConsumeWantNew, onCreate, onUpdat
   }
 
   return (
-    <section>
+    <section style={{ paddingTop: 0, paddingBottom: 0 }}>
       {/* toolbar */}
       <div className="pos-toolbar">
         <div className="grp">

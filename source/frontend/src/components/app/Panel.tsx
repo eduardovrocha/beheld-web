@@ -8,15 +8,16 @@
  * `flush` removes body padding (lists with their own hairlines: ladder,
  * vchain, publication rows).
  */
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
-export function Panel({ header, flush = false, children }: {
+export function Panel({ header, flush = false, style, children }: {
   header: ReactNode;
   flush?: boolean;
+  style?: CSSProperties;
   children: ReactNode;
 }) {
   return (
-    <section className="panel">
+    <section className="panel" style={style}>
       {header}
       <div className={`panel__b${flush ? " panel__b--flush" : ""}`}>{children}</div>
     </section>

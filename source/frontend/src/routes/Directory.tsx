@@ -134,7 +134,7 @@ export function Directory() {
                         busy={busy}
                         onApply={apply} onClear={clearFilters} />
 
-          <section>
+          <section style={{ paddingTop: 0, paddingBottom: 0 }}>
             <div className="dir-res-h">
               <h3>{t("directory.shell.results")} <b>{total}</b></h3>
               <label className="sort">

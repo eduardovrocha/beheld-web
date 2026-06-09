@@ -332,6 +332,7 @@ export function Dashboard() {
           {overviewSub === "verifications" && (
             <>
               <Panel flush
+                     style={{ paddingTop: 0, paddingBottom: 0 }}
                      header={<PanelHeader title={t("dashboard.tab.verifications.label")}
                                           meta={t("dashboard.vchain.meta", { active: tiersPassed })}
                                           right={<span className="meta">tier · {tier}</span>} />}>
@@ -346,7 +347,8 @@ export function Dashboard() {
       {view === "messages" && <MessagesView messages={messages} />}
 
       {view === "settings" && (
-        <Panel header={<PanelHeader title={t("dashboard.tab.settings.label")}
+        <Panel style={{ paddingTop: 0, paddingBottom: 0 }}
+               header={<PanelHeader title={t("dashboard.tab.settings.label")}
                                     meta={t("dashboard.tab.settings.subtitle")} />}>
           <SettingsForm account={account} busy={busy}
                         onSubmit={(patch) => refresh(() => updateSettings(patch))} />
@@ -492,6 +494,7 @@ function PublicationsPanel({ bundles, visibleCount, busy, onToggle, onRevoke }: 
   const t = useT();
   return (
     <Panel flush={bundles.length > 0}
+           style={{ paddingTop: 0, paddingBottom: 0 }}
            header={<PanelHeader title={t("dashboard.tab.bundles.label")}
                                 meta={t("dashboard.pubs.meta", { count: bundles.length, urls: visibleCount })}
                                 right={<span className="meta">{t("dashboard.pubs.revocable")}</span>} />}>
@@ -572,6 +575,7 @@ function ReceivedVerifications({ notifications }: { notifications: DashboardNoti
   const fmt = useFmt();
   return (
     <Panel flush={notifications.length > 0}
+           style={{ paddingTop: 0, paddingBottom: 0 }}
            header={<PanelHeader title={t("dashboard.received.title")}
                                 meta={t("dashboard.received.meta", { count: notifications.length })} />}>
       {notifications.length === 0 ? (
@@ -633,7 +637,8 @@ function MessagesView({ messages }: { messages: DashboardMessage[] }) {
   const t = useT();
   if (messages.length === 0) {
     return (
-      <Panel header={<PanelHeader title={t("dashboard.tab.messages.label")}
+      <Panel style={{ paddingTop: 0, paddingBottom: 0 }}
+             header={<PanelHeader title={t("dashboard.tab.messages.label")}
                                   meta={t("dashboard.tab.messages.subtitle")} />}>
         <EmptyState icon="✉" title={t("dashboard.messages.empty_title")}
                     description={t("dashboard.messages.empty")} />

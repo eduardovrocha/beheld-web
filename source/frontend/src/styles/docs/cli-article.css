@@ -304,7 +304,12 @@
 }
 
 /* Documentação trigger: chevron rotativo */
-.app__side .docs-trigger { position: relative; }
+.app__side .docs-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
 .app__side .docs-trigger .chev {
   margin-left: auto; color: var(--ink-4);
   font-family: var(--mono); font-size: 10px;
