@@ -73,9 +73,30 @@ Rails.application.configure do
   # caching is enabled.
   config.action_mailer.perform_caching = false
 
-  # Ignore bad email addresses and do not raise email delivery errors.
-  # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  # SMTP em produção. Credenciais vêm de /etc/beheld/app.env (env_file no
+  # docker-compose) — nunca hardcoded. Porta 465 = TLS implícito (SMTPS);
+  # se algum dia trocar para 587 (STARTTLS), trocar `tls: true` por
+  # `enable_starttls_auto: true`.
+  config.action_mailer.delivery_method        = :smtp
+  config.action_mailer.raise_delivery_errors  = true
+  config.action_mailer.perform_deliveries     = true
+  config.action_mailer.smtp_settings = {
+    address:        ENV.fetch("SMTP_HOST", "smtpout.secureserver.net"),
+    port:           ENV.fetch("SMTP_PORT", "465").to_i,
+    domain:         ENV.fetch("SMTP_DOMAIN", "beheld.dev"),
+    user_name:      ENV.fetch("SMTP_USERNAME"),
+    password:       ENV.fetch("SMTP_PASSWORD"),
+    authentication: ENV.fetch("SMTP_AUTHENTICATION", "login").to_sym,
+    tls:            ENV.fetch("SMTP_TLS", "true") == "true",
+  }
+
+  # Host usado pelos URL helpers de mailer (`*_url`). O magic link
+  # propriamente dito é montado em CompanyMailer a partir de
+  # PORTAL_PUBLIC_URL — os dois devem apontar pro mesmo host.
+  config.action_mailer.default_url_options = {
+    host:     ENV.fetch("MAILER_DEFAULT_HOST", "beheld.dev"),
+    protocol: ENV.fetch("MAILER_DEFAULT_PROTOCOL", "https"),
+  }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
