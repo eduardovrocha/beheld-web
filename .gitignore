@@ -54,5 +54,7 @@ source/dashboard/playwright-results/
 test-results/
 
 # Local dev artifacts (not project state)
-/handoff.zip                 # handoff archive — não é código
-/scripts/dev-login.sh        # helper local: emite DevSession de 24h p/ o dashboard
+# handoff.zip — handoff archive, não é código
+/handoff.zip
+# scripts/dev-login.sh — helper local: emite DevSession de 24h p/ o dashboard
+/scripts/dev-login.sh
